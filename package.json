@@ -1,0 +1,25 @@
+{
+  "name": "robot-helper",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently vite \"nodemon --exec electron . --watch ./ --ext .js,.html,.css,.vue\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "concurrently": "^9.1.2",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "electron": "^35.0.0",
+    "nodemon": "^3.1.9",
+    "vite": "^6.1.0",
+    "vite-plugin-vue-devtools": "^7.7.2"
+  }
+}
