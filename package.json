@@ -1,25 +1,33 @@
 {
-  "name": "robot-helper",
-  "version": "0.0.0",
-  "private": true,
-  "type": "commonjs",
-  "main": "electron/main.js",
+  "name": "hiloop",
+  "productName": "HiLoop",
+  "version": "0.0.1",
+  "description": "Hi, have a good day!",
+  "main": "src/main.js",
   "scripts": {
-    "dev": "concurrently vite \"nodemon --exec electron . --watch ./ --ext .js,.html,.css,.vue\"",
-    "build": "vite build",
-    "preview": "vite preview",
-    "start": "electron ."
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
   },
+  "keywords": [],
+  "author": {
+    "name": "Baday19",
+    "email": "1556330234@qq.com"
+  },
+  "license": "MIT",
   "dependencies": {
-    "concurrently": "^9.1.2",
-    "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
+    "electron-squirrel-startup": "^1.0.0",
+    "sqlite3": "^5.1.6",
+    "vue": "^3.2.47"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.2.1",
-    "electron": "^35.0.0",
-    "nodemon": "^3.1.9",
-    "vite": "^6.1.0",
-    "vite-plugin-vue-devtools": "^7.7.2"
+    "@electron-forge/cli": "^6.1.1",
+    "@electron-forge/maker-deb": "^6.1.1",
+    "@electron-forge/maker-rpm": "^6.1.1",
+    "@electron-forge/maker-squirrel": "^6.1.1",
+    "@electron-forge/maker-zip": "^6.1.1",
+    "electron": "24.1.2"
   }
 }
