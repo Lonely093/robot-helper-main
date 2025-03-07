@@ -106,11 +106,11 @@ const app = Vue.createApp({
         });
       }
 
-      console.log("minDist ", minDist )
-      console.log("closestEdge ", closestEdge )
+      console.log("minDist ", minDist)
+      console.log("closestEdge ", closestEdge)
       console.log("SNAP_THRESHOLD", SNAP_THRESHOLD)
       // 执行吸附
-      if (minDist  <= SNAP_THRESHOLD) {
+      if (minDist <= SNAP_THRESHOLD) {
         let newX = winBounds.x;
         let newY = winBounds.y;
 
@@ -128,6 +128,7 @@ const app = Vue.createApp({
             newY = workArea.y + workArea.height - rect.top - rect.height;
             break;
         }
+        this.isNotMore = true;
         console.log("set-win-position", newX, newY)
         // 更新窗口位置
         ipcRenderer.send('set-win-position', {
@@ -147,6 +148,10 @@ const app = Vue.createApp({
     showTodo() {
       if (calcS())
         ipcRenderer.send("showTodo", "show")
+    },
+    showTip() {
+      if (calcS())
+        ipcRenderer.send("showTip", "show")
     },
     showSimTodo() {
       if (calcS())
@@ -168,8 +173,7 @@ const app = Vue.createApp({
       moveS[1] = e.screenY - biasY
       document.addEventListener('mousemove', handleMove)
     },
-    handleMouseUp(e) {
-      this.snapToEdge();
+    async handleMouseUp(e) {
       moveS[2] = e.screenX - e.x
       moveS[3] = e.screenY - e.y
       console.log(e.screenX, e.screenX);
@@ -178,7 +182,25 @@ const app = Vue.createApp({
       biasX = 0
       biasY = 0
       document.removeEventListener('mousemove', handleMove)
+      await this.snapToEdge();
+      console.log("this.isNotMore", this.isNotMore)
     },
+
+
+  },
+  watch: {
+    isNotMore(newValue) {
+      if (newValue == false) {
+        ipcRenderer.send("showTip", "show")
+      }
+      console.log(calcS(),"close-tip")
+      if (newValue == true) {
+        console.log("close-tip")
+        ipcRenderer.send('close-tip');
+      }
+
+      console.log("isNotMore changed to:", newValue);
+    }
 
 
   },
