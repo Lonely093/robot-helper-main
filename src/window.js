@@ -1,5 +1,7 @@
 const { BrowserWindow, screen } = require('electron');
 const path = require('path');
+const AudioRecorder  = require('./utils/recorder');
+const recorder = new AudioRecorder();
 
 // 悬浮球
 const createSuspensionWindow = (suspensionConfig) => {
@@ -17,17 +19,20 @@ const createSuspensionWindow = (suspensionConfig) => {
       contextIsolation: false,
       enableRemoteModule: true,
       webSecurity: false,
+      enableBlinkFeatures: 'AudioVideoTracks',
       preload: path.join(__dirname, 'preload.js'),
     },
   });
-
+  
+  
   win.loadFile(path.join(__dirname, 'views/FloatBall/index.html'));
+  recorder.initialize();
   const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 150, top: screen.getPrimaryDisplay().workAreaSize.height - 100 }
   // mainWindow.setBounds({ x: left, y: top, width: suspensionConfig.width, height: suspensionConfig.height })
   win.setPosition(left, top)
   // mainWindow.setIgnoreMouseEvents(true, { forward: true })
-  // win.webContents.openDevTools({mode:'detach'})
-
+  win.webContents.openDevTools({mode:'detach'})
+  
   return win
 };
 
@@ -44,11 +49,17 @@ const createEssayWindow = () => {
       nodeIntegration: true,
       contextIsolation: false,
       enableRemoteModule: true,
+      webSecurity: false,
+      enableBlinkFeatures: 'AudioVideoTracks',
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+ 
+
   win.loadFile(path.join(__dirname, 'views/Essay/index.html'));
-  // win.webContents.openDevTools()
+  win.webContents.openDevTools()
+  recorder.initialize();
   return win
 }
 
@@ -65,11 +76,14 @@ const createTodoWindow = () => {
       nodeIntegration: true,
       contextIsolation: false,
       enableRemoteModule: true,
+      webSecurity: false,
+      enableBlinkFeatures: 'AudioVideoTracks',
       preload: path.join(__dirname, 'preload.js'),
     },
   });
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
-  // win.webContents.openDevTools()
+  recorder.initialize();
+  win.webContents.openDevTools()
   return win
 }
 
@@ -87,11 +101,14 @@ const createConfigWindow = () => {
       nodeIntegration: true,
       contextIsolation: false,
       enableRemoteModule: true,
+      webSecurity: false,
+      enableBlinkFeatures: 'AudioVideoTracks',
       preload: path.join(__dirname, 'preload.js'),
     },
   });
   win.loadFile(path.join(__dirname, 'views/Config/index.html'));
-  // win.webContents.openDevTools()
+  recorder.initialize();
+  win.webContents.openDevTools()
   return win
 }
 

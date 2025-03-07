@@ -4,6 +4,11 @@ const { initDb, addEssay, changeEssayStatus, getAllEssay, getAllTodo, addTodo, c
 const { createSuspensionWindow, createEssayWindow, createTodoWindow, createConfigWindow } = require("./window.js")
 // Menu.setApplicationMenu(null);
 
+//注册麦克风录音
+// const AudioRecorder = require('./utils/recorder');
+// const recorder = new AudioRecorder();
+// recorder.initialize();
+
 // 初始化数据库，生成库和表
 initDb()
 
