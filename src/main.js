@@ -1,4 +1,4 @@
-const { app, Menu, BrowserWindow, ipcMain } = require('electron');
+const { app, Menu, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const { initDb, addEssay, changeEssayStatus, getAllEssay, getAllTodo, addTodo, changeTodoStatus, getBallData } = require('./utils/database.js')
 const { createSuspensionWindow, createEssayWindow, createTodoWindow, createConfigWindow } = require("./window.js")
@@ -141,6 +141,8 @@ ipcMain.on('setFloatIgnoreMouse', (e, data) => {
   pages.suspensionWin.setIgnoreMouseEvents(data, { forward: true })
 })
 
+// main.js
+
 ipcMain.on('essay', (e, data) => {
   console.log(data.name)
   if (data.name == "getAll") {
@@ -199,4 +201,29 @@ ipcMain.on('updateBall', (e, data) => {
 
 ipcMain.on('updateConfig', (e, data) => {
   pages.suspensionWin.webContents.send('config', data)
+})
+
+ipcMain.handle('get-win-content-bounds', (event) => {
+  // 从发送请求的渲染进程获取对应的 BrowserWindow 实例
+  const win = BrowserWindow.fromWebContents(event.sender);
+
+  // 返回窗口内容区域的边界信息（相对于屏幕）
+  return win.getContentBounds();
+});
+ipcMain.handle('get-display-nearest-point', (event, point) => {
+  // point 参数结构：{ x: number, y: number }
+  return screen.getDisplayNearestPoint({
+    x: Math.round(point.x),
+    y: Math.round(point.y)
+  })
+});
+ipcMain.on('set-win-position', (event, position) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  console.log("set-win-position",event, position)
+  // 设置窗口位置（单位：像素）
+  win.setPosition(
+    Math.round(position.x), 
+    Math.round(position.y),
+    true // 启用动画
+  )
 })
