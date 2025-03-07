@@ -1,7 +1,7 @@
-const { app, Menu, BrowserWindow, ipcMain } = require('electron');
+const { app, Menu, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const { initDb, addEssay, changeEssayStatus, getAllEssay, getAllTodo, addTodo, changeTodoStatus, getBallData } = require('./utils/database.js')
-const { createSuspensionWindow, createEssayWindow, createTodoWindow, createConfigWindow } = require("./window.js")
+const { createSuspensionWindow, createEssayWindow, createTodoWindow, createTipWindow, createConfigWindow } = require("./window.js")
 // Menu.setApplicationMenu(null);
 
 //注册麦克风录音
@@ -29,6 +29,7 @@ const pages = {
   essayWin: undefined,
   todoWin: undefined,
   configWin: undefined,
+  tipWin: undefined,
 }
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -88,6 +89,21 @@ ipcMain.on('showTodo', (e, data) => {
   })
 })
 
+ipcMain.on('showTip', (e, data) => {
+  if (pages.tipWin) {
+    pages.tipWin.close()
+    pages.tipWin = null
+  }
+  pages.tipWin = createTipWindow()
+  pages.tipWin.on('close', (e, data) => {
+    pages.tipWin = null
+  })
+})
+
+ipcMain.on('close-tip', (event) => {
+  if (pages.tipWin) pages.tipWin.close();
+});
+
 ipcMain.on('ballWindowMove', (e, data) => {
   pages.suspensionWin.setBounds({ x: data.x, y: data.y, width: suspensionConfig.width, height: suspensionConfig.height })
   // pages.floatWin.setPosition(data.x, data.y)
@@ -98,26 +114,26 @@ let topFlag = true
 ipcMain.on('openMenu', (e) => {
   if (!suspensionMenu) {
     suspensionMenu = Menu.buildFromTemplate([
-      {
-        label: '配置',
-        click: () => {
-          if (pages.configWin) {
-            pages.configWin.close()
-            pages.configWin = null
-          }
-          pages.configWin = createConfigWindow()
-          pages.configWin.on('close', (e, data) => {
-            pages.configWin = null
-          })
-        }
-      },
-      {
-        label: '置顶/取消',
-        click: () => {
-          topFlag = !topFlag
-          pages.suspensionWin.setAlwaysOnTop(topFlag)
-        }
-      },
+      // {
+      //   label: '配置',
+      //   click: () => {
+      //     if (pages.configWin) {
+      //       pages.configWin.close()
+      //       pages.configWin = null
+      //     }
+      //     pages.configWin = createConfigWindow()
+      //     pages.configWin.on('close', (e, data) => {
+      //       pages.configWin = null
+      //     })
+      //   }
+      // },
+      // {
+      //   label: '置顶/取消',
+      //   click: () => {
+      //     topFlag = !topFlag
+      //     pages.suspensionWin.setAlwaysOnTop(topFlag)
+      //   }
+      // },
       {
         label: '开发者工具',
         click: () => {
@@ -145,6 +161,8 @@ ipcMain.on('openMenu', (e) => {
 ipcMain.on('setFloatIgnoreMouse', (e, data) => {
   pages.suspensionWin.setIgnoreMouseEvents(data, { forward: true })
 })
+
+// main.js
 
 ipcMain.on('essay', (e, data) => {
   console.log(data.name)
@@ -204,4 +222,29 @@ ipcMain.on('updateBall', (e, data) => {
 
 ipcMain.on('updateConfig', (e, data) => {
   pages.suspensionWin.webContents.send('config', data)
+})
+
+ipcMain.handle('get-win-content-bounds', (event) => {
+  // 从发送请求的渲染进程获取对应的 BrowserWindow 实例
+  const win = BrowserWindow.fromWebContents(event.sender);
+
+  // 返回窗口内容区域的边界信息（相对于屏幕）
+  return win.getContentBounds();
+});
+ipcMain.handle('get-display-nearest-point', (event, point) => {
+  // point 参数结构：{ x: number, y: number }
+  return screen.getDisplayNearestPoint({
+    x: Math.round(point.x),
+    y: Math.round(point.y)
+  })
+});
+ipcMain.on('set-win-position', (event, position) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  console.log("set-win-position", event, position)
+  // 设置窗口位置（单位：像素）
+  win.setPosition(
+    Math.round(position.x),
+    Math.round(position.y),
+    true // 启用动画
+  )
 })

@@ -87,6 +87,28 @@ const createTodoWindow = () => {
   return win
 }
 
+const createTipWindow = () => {
+  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 380, top: screen.getPrimaryDisplay().workAreaSize.height - 820 }
+  const win = new BrowserWindow({
+    width: 300,
+    minWidth: 300,
+    height: 100,
+    x: left,
+    y: top,
+    frame: false,
+    alwaysOnTop: true,
+    icon: path.join(__dirname, './assets/edit-green.png'),
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+  win.loadFile(path.join(__dirname, 'views/Tip/index.html'));
+  // win.webContents.openDevTools()
+  return win
+}
 const createConfigWindow = () => {
   const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 360, top: screen.getPrimaryDisplay().workAreaSize.height - 840 }
   const win = new BrowserWindow({
@@ -116,5 +138,6 @@ module.exports = {
   createSuspensionWindow,
   createEssayWindow,
   createTodoWindow,
-  createConfigWindow
+  createConfigWindow,
+  createTipWindow,
 }
