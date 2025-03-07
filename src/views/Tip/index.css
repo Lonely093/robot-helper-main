@@ -15,7 +15,8 @@ html {
   }
   .wrap {
     /* padding: 5px; */
-    color: #333;
+    background-color: rgb(53, 60, 156);
+    color: #ffffff;
     margin-bottom: 50px;
   }
   .btn-box {
@@ -23,7 +24,7 @@ html {
     height: 50px;
     bottom: 0;
     width: 100%;
-    background-color: white;
+    background-color: rgb(54, 61, 150);
     display: flex;
     align-items: center;
     justify-content: flex-end;

@@ -95,15 +95,15 @@ const app = Vue.createApp({
       console.log("winBounds", winBounds)
       console.log("display", display)
       // 吸附阈值（20px）
-      const SNAP_THRESHOLD = 200;
+      const SNAP_THRESHOLD = 400;
       const workArea = display.workArea;
 
       // 计算与各边的距离
       const edges = {
         left: screenX - workArea.x,
         right: workArea.x + workArea.width - (screenX + rect.width),
-        top: screenY - workArea.y,
-        bottom: workArea.y + workArea.height - (screenY + rect.height)
+        // top: screenY - workArea.y,
+        // bottom: workArea.y + workArea.height - (screenY + rect.height)
       };
       console.log("edges", edges)
       // 找到最近边缘
@@ -129,9 +129,9 @@ const app = Vue.createApp({
         });
       }
 
-      console.log("minDist ", minDist)
-      console.log("closestEdge ", closestEdge)
-      console.log("SNAP_THRESHOLD", SNAP_THRESHOLD)
+      // console.log("minDist ", minDist)
+      // console.log("closestEdge ", closestEdge)
+      // console.log("SNAP_THRESHOLD", SNAP_THRESHOLD)
       // 执行吸附
       if (minDist <= SNAP_THRESHOLD) {
         let newX = winBounds.x;
@@ -144,12 +144,12 @@ const app = Vue.createApp({
           case 'right':
             newX = workArea.x + workArea.width - rect.left - rect.width;
             break;
-          case 'top':
-            newY = workArea.y - rect.top;
-            break;
-          case 'bottom':
-            newY = workArea.y + workArea.height - rect.top - rect.height;
-            break;
+          // case 'top':
+          //   newY = workArea.y - rect.top;
+          //   break;
+          // case 'bottom':
+          //   newY = workArea.y + workArea.height - rect.top - rect.height;
+          //   break;
         }
         this.isNotMore = true;
         console.log("set-win-position", newX, newY)
@@ -338,14 +338,14 @@ const app = Vue.createApp({
     async handleMouseUp(e) {
       moveS[2] = e.screenX - e.x
       moveS[3] = e.screenY - e.y
-      console.log(e.screenX, e.screenX);
-      console.log(e.x, e.x);
-      console.log(biasX, biasY);
+      // console.log(e.screenX, e.screenX);
+      // console.log(e.x, e.x);
+      // console.log(biasX, biasY);
       biasX = 0
       biasY = 0
       document.removeEventListener('mousemove', handleMove)
       await this.snapToEdge();
-      console.log("this.isNotMore", this.isNotMore)
+      // console.log("this.isNotMore", this.isNotMore)
     },
 
 
@@ -355,9 +355,9 @@ const app = Vue.createApp({
       if (newValue == false) {
         ipcRenderer.send("showTip", "show")
       }
-      console.log(calcS(),"close-tip")
+      // console.log(calcS(),"close-tip")
       if (newValue == true) {
-        console.log("close-tip")
+        // console.log("close-tip")
         ipcRenderer.send('close-tip');
       }
 

@@ -97,7 +97,8 @@ const createTipWindow = () => {
     y: top,
     frame: false,
     alwaysOnTop: true,
-    icon: path.join(__dirname, './assets/edit-green.png'),
+    // show: false,
+    // icon: path.join(__dirname, './assets/edit-green.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
