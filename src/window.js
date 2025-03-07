@@ -1,7 +1,5 @@
 const { BrowserWindow, screen } = require('electron');
 const path = require('path');
-const AudioRecorder  = require('./utils/recorder');
-const recorder = new AudioRecorder();
 
 // 悬浮球
 const createSuspensionWindow = (suspensionConfig) => {
@@ -23,10 +21,7 @@ const createSuspensionWindow = (suspensionConfig) => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
-  
-  
   win.loadFile(path.join(__dirname, 'views/FloatBall/index.html'));
-  recorder.initialize();
   const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 150, top: screen.getPrimaryDisplay().workAreaSize.height - 100 }
   // mainWindow.setBounds({ x: left, y: top, width: suspensionConfig.width, height: suspensionConfig.height })
   win.setPosition(left, top)
@@ -54,12 +49,8 @@ const createEssayWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
-
- 
-
   win.loadFile(path.join(__dirname, 'views/Essay/index.html'));
   win.webContents.openDevTools()
-  recorder.initialize();
   return win
 }
 
@@ -82,7 +73,6 @@ const createTodoWindow = () => {
     },
   });
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
-  recorder.initialize();
   win.webContents.openDevTools()
   return win
 }
@@ -129,7 +119,6 @@ const createConfigWindow = () => {
     },
   });
   win.loadFile(path.join(__dirname, 'views/Config/index.html'));
-  recorder.initialize();
   win.webContents.openDevTools()
   return win
 }
