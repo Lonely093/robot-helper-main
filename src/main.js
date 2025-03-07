@@ -4,13 +4,12 @@ const { initDb, addEssay, changeEssayStatus, getAllEssay, getAllTodo, addTodo, c
 const { createSuspensionWindow, createEssayWindow, createTodoWindow, createTipWindow, createConfigWindow } = require("./window.js")
 // Menu.setApplicationMenu(null);
 
-//注册麦克风录音
-// const AudioRecorder = require('./utils/recorder');
-// const recorder = new AudioRecorder();
-// recorder.initialize();
+const recorder   = require('./utils/recorder');
+//const recorder = new AudioRecorder();
+
 
 // 初始化数据库，生成库和表
-initDb()
+//initDb()
 
 // 悬浮球的一些设置
 const suspensionConfig = {
@@ -40,8 +39,15 @@ if (require('electron-squirrel-startup')) {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => {
+
+// 确保初始化顺序
+app.whenReady().then(() => {
+  console.log('[主进程] Electron准备就绪');
+  //注册麦克风录音
+  recorder.initialize();
   pages.suspensionWin = createSuspensionWindow(suspensionConfig)
+}).catch(err => {
+  console.error('应用启动失败:', err);
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -57,6 +63,9 @@ app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
+    console.log('activate [主进程] Electron准备就绪');
+    //注册麦克风录音
+    recorder.initialize();
     pages.suspensionWin = createSuspensionWindow(suspensionConfig)
   }
 });

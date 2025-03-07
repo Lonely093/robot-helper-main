@@ -7,71 +7,190 @@ class AudioRecorder {
     this.writer = null;
     this.filePath = '';
     this.isRecording = false;
+    this.initialized = false;
+    // 定义录音文件存储目录
+    this.recordDir = path.join(app.getAppPath(), 'RecorderFolder');
+    this.verifyStorageDir(); // 初始化时验证目录
+  }
+
+   // 验证并创建存储目录
+   verifyStorageDir() {
+    try {
+      if (!fs.existsSync(this.recordDir)) {
+        fs.mkdirSync(this.recordDir, { recursive: true });
+        console.log(`[存储] 已创建录音目录: ${this.recordDir}`);
+      }
+      // 验证目录可写性
+      fs.accessSync(this.recordDir, fs.constants.W_OK);
+    } catch (err) {
+      console.error(`[存储] 目录初始化失败: ${err.message}`);
+      throw new Error('无法创建录音存储目录');
+    }
   }
 
   initialize() {
-    console.log('[主进程] 初始化IPC监听器');
-    this.registerHandlers();
-  }
-
-  registerHandlers() {
-    ipcMain.handle('audio-start', () => this.start());
-    ipcMain.on('audio-chunk', (_, chunk) => this.writeChunk(chunk));
-    ipcMain.handle('audio-stop', () => this.stop());
-  }
-
-  start() {
-    console.log("start");
-    return new Promise((resolve, reject) => {
-      try {
-        this.filePath = path.join(
-          app.getPath('documents'),
-          `recording_${Date.now()}.webm`
-        );
-        this.writer = fs.createWriteStream(this.filePath);
-        this.isRecording = true;
-        console.log('[Recorder] 录音开始:', this.filePath);
-        resolve(this.filePath);
-      } catch (err) {
-        reject(`启动失败: ${err.message}`);
-      }
-    });
-  }
-
-  writeChunk(chunk) {
-    console.log("writeChunk");
-    if (!this.isRecording || !this.writer) {
-      console.error('[Recorder] 写入失败: 录音未启动');
+    if (this.initialized) {
+      console.warn('[Recorder] 模块已初始化');
       return;
     }
-    
+    try {
+      console.log('[Recorder] 开始初始化');
+      this.registerIPC();
+      this.initialized = true;
+      console.log('[Recorder] 初始化完成');
+    } catch (err) {
+      console.error('[Recorder] 初始化失败:', err);
+      throw new Error('录音模块初始化失败');
+    }
+  }
+
+  registerIPC() {
+    // 清理旧监听器
+    this.cleanupIPC();
+
+    // 注册新处理器
+    ipcMain.handle('audio-start', this.handleStart.bind(this));
+    ipcMain.on('audio-chunk', this.handleChunk.bind(this));
+    ipcMain.handle('audio-stop', this.handleStop.bind(this));
+
+    console.log('[Recorder] IPC事件注册成功:', ipcMain.eventNames());
+  }
+
+  cleanupIPC() {
+    try {
+      ipcMain.removeHandler('audio-start');
+      ipcMain.removeHandler('audio-stop');
+      ipcMain.removeAllListeners('audio-chunk');
+    } catch (err) {
+      console.error('[Recorder] 清理IPC失败:', err);
+    }
+  }
+
+
+  sanitizeFilename(name) {
+    return name.replace(/[/\\?%*:|"<>]/g, '_');
+  }
+
+  async handleStart() {
+    if (this.isRecording) {
+      throw new Error('录音已在进行中');
+    }
+    try {
+        // 生成安全文件名
+        const safePath = this.sanitizeFilename(`recording_${Date.now()}`);
+         // 生成带时间戳的文件名
+        this.filePath = path.join(
+        this.recordDir,
+          `${safePath}.webm`
+        );
+        // 验证路径可写性
+        try {
+          await fs.promises.access(path.dirname(this.filePath), fs.constants.W_OK);
+        } catch (err) {
+          throw new Error(`无写入权限: ${this.filePath}`);
+        }
+        this.writer = fs.createWriteStream(this.filePath);
+        this.isRecording = true;
+      
+        console.log(`[Recorder] 录音开始: ${this.filePath}`);
+        return { success: true, path: this.filePath };
+    } catch (err) {
+      this.isRecording = false;
+      throw new Error(`录音启动失败: ${err.message}`);
+    }
+  }
+
+  handleChunk(event, chunk) {
+    if (!this.isRecording || !this.writer) {
+      console.error('[Recorder] 无效的音频块写入请求');
+      return;
+    }
+
     try {
       this.writer.write(Buffer.from(chunk));
     } catch (err) {
-      console.error('[Recorder] 写入错误:', err);
+      console.error('[Recorder] 写入失败:', err);
       this.cleanup();
+      throw new Error('音频数据写入失败');
     }
   }
 
-  stop() {
-    console.log("stop");
+  async handleStop() {
     return new Promise((resolve, reject) => {
-      if (!this.isRecording) {
-        reject('录音未启动');
+
+      if (!this.writer) {
+        reject(new Error('写入流未初始化'));
         return;
       }
 
-      this.writer.end(() => {
-        console.log('[Recorder] 录音已保存:', this.filePath);
+    let cleanupCalled = false;
+    const finalCleanup = () => {
+      if (!cleanupCalled) {
         this.cleanup();
-        resolve(this.filePath);
-      });
+        cleanupCalled = true;
+      }
+    };
 
-      // 超时处理
+    this.writer.on('finish', async () => {
+      try {
+        const stats = await fs.promises.stat(this.filePath);
+        resolve({ success: true, size: stats.size });
+      } catch (err) {
+        reject(new Error('文件状态获取失败'));
+      } finally {
+        finalCleanup();
+      }
+    });
+
+    this.writer.on('error', (err) => {
+      reject(new Error(`写入错误: ${err.message}`));
+      finalCleanup();
+    });
+
+      this.writer.end(async () => {
+        try {
+          // 添加文件存在性验证
+          await this.verifyFile();
+          
+          const stats = fs.statSync(this.filePath);
+          console.log('[Recorder] 文件验证成功，大小:', stats.size);
+          
+          resolve({ 
+            success: true, 
+            path: this.filePath,
+            size: stats.size
+          });
+        } catch (err) {
+          reject(new Error(`文件验证失败: ${err.message}`));
+        } finally {
+          this.cleanup();
+        }
+      });
+  
       setTimeout(() => {
-        reject('文件保存超时');
+        reject(new Error('文件保存超时'));
         this.cleanup();
       }, 5000);
+    });
+  }
+
+  async verifyFile() {
+    return new Promise((resolve, reject) => {
+      const check = () => {
+        fs.access(this.filePath, fs.constants.F_OK, (err) => {
+          if (err) {
+            if (Date.now() - startTime < 5000) {
+              setTimeout(check, 100);
+            } else {
+              reject(new Error('文件未生成'));
+            }
+          } else {
+            resolve();
+          }
+        });
+      };
+      const startTime = Date.now();
+      check();
     });
   }
 
@@ -80,7 +199,7 @@ class AudioRecorder {
       try {
         this.writer.destroy();
       } catch (err) {
-        console.error('[Recorder] 清理错误:', err);
+        console.error('[Recorder] 流销毁失败:', err);
       }
     }
     
@@ -90,4 +209,4 @@ class AudioRecorder {
   }
 }
 
-module.exports = AudioRecorder;
+module.exports = new AudioRecorder();

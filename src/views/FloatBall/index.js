@@ -39,7 +39,8 @@ const app = Vue.createApp({
       mediaStream: null,
       audioContext: null,
       analyser: null,
-      silenceCount: 0
+      silenceCount: 0,
+      animationFrameId:null
     }
   },
 
@@ -161,6 +162,16 @@ const app = Vue.createApp({
       }
     },
 
+    // ***********************麦克风录音 ***************//
+
+    async toggleRecording() {
+      if (this.isRecording) {
+        await this.stopRecording();
+      } else {
+        await this.startRecording();
+      }
+    },
+
     async startRecording() {
       try {
         console.log("开始");
@@ -174,14 +185,19 @@ const app = Vue.createApp({
           return;
         }
         
-        // 启动主进程录音
-        await ipcRenderer.invoke('audio-start');
-        
-        // 设置音频分析
+        // 初始化音频分析
         this.setupAudioAnalysis();
-        this.startMonitoring();
-        
-        this.isRecording = true;
+
+        // 通知主进程开始录音
+        const { path } = await ipcRenderer.invoke('audio-start');
+        console.log(`[Renderer] 录音文件路径: ${path}`);
+
+         // 创建媒体录音器
+         this.mediaRecorder = new MediaRecorder(this.mediaStream);
+         this.setupDataHandler();
+
+         this.isRecording = true;
+         this.startMonitoring();
       } catch (err) {
         console.error('录音启动失败:', err);
       }
@@ -197,31 +213,47 @@ const app = Vue.createApp({
       console.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
     },
 
-    startMonitoring() {
-      const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-      console.log(dataArray);
-      const checkVolume = () => {
-        if (!this.isRecording) return;
-
-        this.analyser.getByteFrequencyData(dataArray);
-        const volume = Math.max(...dataArray) / 255;
-        this.handleVolume(volume);
-        
-        // 发送音频数据块
-        this.sendAudioChunk();
-        
-        requestAnimationFrame(checkVolume);
+    setupDataHandler() {
+      this.mediaRecorder.ondataavailable = async (e) => {
+        try {
+          const buffer = await e.data.arrayBuffer();
+          ipcRenderer.send('audio-chunk', buffer);
+        } catch (err) {
+          console.error('[Renderer] 数据处理失败:', err);
+          this.$emit('error', '音频数据发送失败');
+        }
       };
       
-      checkVolume();
+      this.mediaRecorder.start(1000); // 每1秒收集数据
+      console.log('[Renderer] 媒体录音器已启动');
     },
 
-    handleVolume(volume) {
-      const SILENCE_THRESHOLD = 0.2;
+    startMonitoring() {
+      const checkStatus = () => {
+        if (!this.isRecording) return;
+
+        // 分析音量
+        const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        this.analyser.getByteFrequencyData(dataArray);
+        const volume = Math.max(...dataArray) / 255;
+        
+        // 静音检测
+        this.checkSilence(volume);
+        
+        this.animationFrameId = requestAnimationFrame(checkStatus);
+      };
+
+      checkStatus();
+    },
+
+    checkSilence(volume) {
+      const SILENCE_THRESHOLD = 0.2; //可调整的静音阈值 最大值为1  
       console.log(volume);
+      //此处为超过2s检测到的麦克风电流小于0.2则停止录音
       if (volume < SILENCE_THRESHOLD) {
         this.silenceCount += 1/60;
-        if (this.silenceCount >= 1) {
+        if (this.silenceCount >= 2) {
+          console.log('[Renderer] 检测到持续静音，自动停止');
           this.stopRecording();
         }
       } else {
@@ -229,31 +261,46 @@ const app = Vue.createApp({
       }
     },
 
-    async sendAudioChunk() {
-      const recorder = this.mediaStream.getAudioTracks()[0].getSettings();
-      const audioData = await new Response(
-        new MediaStream([this.mediaStream.getAudioTracks()[0]])
-      ).arrayBuffer();
-      
-      window.electron.ipcRenderer.send('audio-chunk', audioData);
-    },
-
     async stopRecording() {
-      if (this.isRecording) {
-        this.cleanupResources();
-        await window.electron.ipcRenderer.invoke('audio-stop');
-        this.isRecording = false;
+      if (!this.isRecording) return;
+
+      try {
+        this.processing = true;
+        // 停止媒体录音器
+        if (this.mediaRecorder?.state === 'recording') {
+          this.mediaRecorder.stop();
+        }
+        // 通知主进程停止
+        const result = await ipcRenderer.invoke('audio-stop');
+        console.log('[Renderer] 录音保存结果:', result);
+        this.$emit('record-complete', result);
+      } catch (err) {
+        console.error('[Renderer] 停止失败:', err);
+        this.$emit('error', err.message);
+      } finally {
+        this.cleanup();
+        this.processing = false;
       }
     },
 
-    cleanupResources() {
-      if (this.audioContext) {
-        this.audioContext.close();
+    cleanup() {
+      // 清理资源
+      if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
       }
       if (this.mediaStream) {
         this.mediaStream.getTracks().forEach(track => track.stop());
       }
+      if (this.audioContext) {
+        this.audioContext.close();
+      }
+      
+      this.isRecording = false;
+      this.silenceCount = 0;
+      console.log('[Renderer] 资源已清理');
     },
+
+  // ***********************麦克风录音结束 ***************//
 
   async connectmqtt(){
       try {
