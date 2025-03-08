@@ -1,15 +1,11 @@
 const { app, Menu, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
-const { initDb, addEssay, changeEssayStatus, getAllEssay, getAllTodo, addTodo, changeTodoStatus, getBallData } = require('./utils/database.js')
 const { createSuspensionWindow, createEssayWindow, createTodoWindow, createTipWindow, createConfigWindow } = require("./window.js")
 // Menu.setApplicationMenu(null);
 
 const recorder   = require('./utils/recorder');
 //const recorder = new AudioRecorder();
 
-
-// 初始化数据库，生成库和表
-//initDb()
 
 // 悬浮球的一些设置
 const suspensionConfig = {
@@ -121,50 +117,30 @@ ipcMain.on('ballWindowMove', (e, data) => {
 let suspensionMenu
 let topFlag = true
 ipcMain.on('openMenu', (e) => {
-  if (!suspensionMenu) {
-    suspensionMenu = Menu.buildFromTemplate([
-      // {
-      //   label: '配置',
-      //   click: () => {
-      //     if (pages.configWin) {
-      //       pages.configWin.close()
-      //       pages.configWin = null
-      //     }
-      //     pages.configWin = createConfigWindow()
-      //     pages.configWin.on('close', (e, data) => {
-      //       pages.configWin = null
-      //     })
-      //   }
-      // },
-      // {
-      //   label: '置顶/取消',
-      //   click: () => {
-      //     topFlag = !topFlag
-      //     pages.suspensionWin.setAlwaysOnTop(topFlag)
-      //   }
-      // },
-      {
-        label: '开发者工具',
-        click: () => {
-          pages.suspensionWin.webContents.openDevTools({ mode: 'detach' })
-        }
-      },
-      {
-        label: '重启',
-        click: () => {
-          app.quit()
-          app.relaunch()
-        }
-      },
-      {
-        label: '退出',
-        click: () => {
-          app.quit();
-        }
-      },
-    ]);
-  }
-  suspensionMenu.popup({});
+  // if (!suspensionMenu) {
+  //   suspensionMenu = Menu.buildFromTemplate([
+  //     {
+  //       label: '开发者工具',
+  //       click: () => {
+  //         pages.suspensionWin.webContents.openDevTools({ mode: 'detach' })
+  //       }
+  //     },
+  //     {
+  //       label: '重启',
+  //       click: () => {
+  //         app.quit()
+  //         app.relaunch()
+  //       }
+  //     },
+  //     {
+  //       label: '退出',
+  //       click: () => {
+  //         app.quit();
+  //       }
+  //     },
+  //   ]);
+  // }
+  // suspensionMenu.popup({});
 });
 
 ipcMain.on('setFloatIgnoreMouse', (e, data) => {
@@ -173,60 +149,40 @@ ipcMain.on('setFloatIgnoreMouse', (e, data) => {
 
 // main.js
 
-ipcMain.on('essay', (e, data) => {
-  console.log(data.name)
-  if (data.name == "getAll") {
-    getAllEssay().then(res => {
-      e.returnValue = res
-    })
-  } else if (data.name == "change") {
-    changeEssayStatus(data.id, data.status)
-  } else if (data.name == "add") {
-    addEssay(data.content, data.time).then(
-      res => {
-        e.returnValue = res
-      },
-      e => {
-        console.log(e)
-      }
-    )
-  }
-})
-
 ipcMain.on('todo', (e, data) => {
-  console.log(data.name)
-  if (data.name == "getAll") {
-    getAllTodo(data.status).then(res => {
-      e.returnValue = res
-    }, e => {
-      console.log(e)
-    })
-  } else if (data.name == "change") {
-    changeTodoStatus(data.id, data.status)
-    getBallData().then(res => {
-      console.log(res)
-      pages.suspensionWin.webContents.send('update', res)
-    })
-  } else if (data.name == "add") {
-    addTodo(data.content, data.end_time).then(
-      res => {
-        getBallData().then(res => {
-          console.log(res)
-          pages.suspensionWin.webContents.send('update', res)
-        })
-        e.returnValue = res
-      },
-      e => {
-        console.log(e)
-      }
-    )
-  }
+  // console.log(data.name)
+  // if (data.name == "getAll") {
+  //   getAllTodo(data.status).then(res => {
+  //     e.returnValue = res
+  //   }, e => {
+  //     console.log(e)
+  //   })
+  // } else if (data.name == "change") {
+  //   changeTodoStatus(data.id, data.status)
+  //   getBallData().then(res => {
+  //     console.log(res)
+  //     pages.suspensionWin.webContents.send('update', res)
+  //   })
+  // } else if (data.name == "add") {
+  //   addTodo(data.content, data.end_time).then(
+  //     res => {
+  //       getBallData().then(res => {
+  //         console.log(res)
+  //         pages.suspensionWin.webContents.send('update', res)
+  //       })
+  //       e.returnValue = res
+  //     },
+  //     e => {
+  //       console.log(e)
+  //     }
+  //   )
+  // }
 })
 
 ipcMain.on('updateBall', (e, data) => {
-  getBallData().then(res => {
-    pages.suspensionWin.webContents.send('update', res)
-  })
+  // getBallData().then(res => {
+  //   pages.suspensionWin.webContents.send('update', res)
+  // })
 })
 
 ipcMain.on('updateConfig', (e, data) => {

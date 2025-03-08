@@ -2,7 +2,7 @@ const { ipcRenderer } = require("electron");
 const Vue = require('vue')
 const { formatterTime } = require("../../utils/date.js")
 const { getConfig, defaultConfig } = require("../../utils/store.js")
-const { showToast } = require("../../utils/toast.js")
+
 
 let currConfig = {}
 const app = Vue.createApp({
@@ -36,7 +36,7 @@ const app = Vue.createApp({
       localStorage.setItem('config', JSON.stringify(data))
       currConfig = data
       ipcRenderer.send('updateConfig', data)
-      showToast("更改成功", 1000)
+      //showToast("更改成功", 1000)
     },
     checkOpacity(e) {
       const flag = /^(1|(0\.[0-9]+))$/.test(this.opacity)
