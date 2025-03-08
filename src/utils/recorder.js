@@ -72,7 +72,7 @@ class AudioRecorder {
     return name.replace(/[/\\?%*:|"<>]/g, '_');
   }
 
-   handleStart() {
+  async handleStart() {
     if (this.isRecording) {
       throw new Error('录音已在进行中');
     }
@@ -86,7 +86,7 @@ class AudioRecorder {
         );
         // 验证路径可写性
         try {
-           fs.promises.access(path.dirname(this.filePath), fs.constants.W_OK);
+          await fs.promises.access(path.dirname(this.filePath), fs.constants.W_OK);
         } catch (err) {
           throw new Error(`无写入权限: ${this.filePath}`);
         }
@@ -103,11 +103,14 @@ class AudioRecorder {
 
   handleChunk(event, chunk) {
     if (!this.isRecording || !this.writer) {
-      throw new Error('无效的音频块写入请求');
+      console.error('[Recorder] 无效的音频块写入请求');
+      return;
     }
+
     try {
       this.writer.write(Buffer.from(chunk));
     } catch (err) {
+      console.error('[Recorder] 写入失败:', err);
       this.cleanup();
       throw new Error('音频数据写入失败');
     }
@@ -115,10 +118,12 @@ class AudioRecorder {
 
   async handleStop() {
     return new Promise((resolve, reject) => {
+
       if (!this.writer) {
         reject(new Error('写入流未初始化'));
         return;
       }
+
       let cleanupCalled = false;
       const finalCleanup = () => {
         if (!cleanupCalled) {
@@ -150,7 +155,7 @@ class AudioRecorder {
             message:""
           }
           resolve(result);
-          // var formData = FormData();
+          // var formData = new window.FormData();
           // const fileStream = fs.createReadStream(this.filePath);
           // formData.append('audio', fileStream, {
           //   filename: path.basename(filePath),
