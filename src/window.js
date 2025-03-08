@@ -23,17 +23,17 @@ const createSuspensionWindow = (suspensionConfig) => {
     },
   });
   win.loadFile(path.join(__dirname, 'views/FloatBall/index.html'));
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 150, top: screen.getPrimaryDisplay().workAreaSize.height - 100 }
+  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 85, top: screen.getPrimaryDisplay().workAreaSize.height - 100 }
   // mainWindow.setBounds({ x: left, y: top, width: suspensionConfig.width, height: suspensionConfig.height })
   win.setPosition(left, top)
   // mainWindow.setIgnoreMouseEvents(true, { forward: true })
-  win.webContents.openDevTools({mode:'detach'})
-  
+  win.webContents.openDevTools({ mode: 'detach' })
+
   return win
 };
 
 const createEssayWindow = () => {
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 400, top: screen.getPrimaryDisplay().workAreaSize.height - 800 }
+  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width * 0.2, top: screen.getPrimaryDisplay().workAreaSize.height * 0.1 }
   const win = new BrowserWindow({
     skipTaskbar: true, // 新增这行关闭任务栏显示
     width: 300,
@@ -57,7 +57,7 @@ const createEssayWindow = () => {
 }
 
 const createTodoWindow = () => {
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 380, top: screen.getPrimaryDisplay().workAreaSize.height - 820 }
+  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width * 0.8, top: screen.getPrimaryDisplay().workAreaSize.height * 0.2 }
   const win = new BrowserWindow({
     skipTaskbar: true, // 新增这行关闭任务栏显示
     width: 300,
@@ -65,6 +65,9 @@ const createTodoWindow = () => {
     height: 500,
     x: left,
     y: top,
+    show: false,
+    alwaysOnTop: true,
+    menuBarVisible: false,
     icon: path.join(__dirname, './assets/edit-green.png'),
     webPreferences: {
       nodeIntegration: true,
@@ -75,22 +78,27 @@ const createTodoWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+  win.once('ready-to-show', () => {
+    win.show()
+  })
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
-  win.webContents.openDevTools()
+  // win.webContents.openDevTools()
   return win
 }
 
 const createTipWindow = () => {
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 380, top: screen.getPrimaryDisplay().workAreaSize.height - 820 }
+  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 280, top: 100 }
   const win = new BrowserWindow({
-    width: 300,
-    minWidth: 300,
-    height: 100,
+    width: 200,
+    minWidth: 200,
+    height: 80,
     x: left,
     y: top,
     frame: false,
     alwaysOnTop: true,
     show: false,
+    transparent: true,         // 允许透明背景（可选）
+    backgroundColor: '#00000000', // 透明背景
     // icon: path.join(__dirname, './assets/edit-green.png'),
     webPreferences: {
       nodeIntegration: true,

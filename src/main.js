@@ -1,7 +1,7 @@
 const { app, Menu, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const { createSuspensionWindow, createEssayWindow, createTodoWindow, createTipWindow, createConfigWindow } = require("./window.js")
-// Menu.setApplicationMenu(null);
+Menu.setApplicationMenu(null);
 
 const recorder   = require('./utils/recorder');
 //const recorder = new AudioRecorder();
