@@ -401,6 +401,7 @@ const app = Vue.createApp({
     isNotMore(newValue) {
       if (newValue == false) {
         ipcRenderer.send("showTip", "show")
+        ipcRenderer.send("showTodo", "show")
       }
       // console.log(calcS(),"close-tip")
       if (newValue == true) {

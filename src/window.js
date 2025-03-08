@@ -65,6 +65,7 @@ const createTodoWindow = () => {
     height: 500,
     x: left,
     y: top,
+    show: false,
     icon: path.join(__dirname, './assets/edit-green.png'),
     webPreferences: {
       nodeIntegration: true,
@@ -75,8 +76,11 @@ const createTodoWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+  win.once('ready-to-show', () => {
+    win.show()
+  })
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
-  win.webContents.openDevTools()
+  // win.webContents.openDevTools()
   return win
 }
 
