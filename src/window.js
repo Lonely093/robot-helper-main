@@ -87,7 +87,7 @@ const createTipWindow = () => {
     y: top,
     frame: false,
     alwaysOnTop: true,
-    // show: false,
+    show: false,
     // icon: path.join(__dirname, './assets/edit-green.png'),
     webPreferences: {
       nodeIntegration: true,
@@ -96,6 +96,9 @@ const createTipWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+  win.once('ready-to-show', () => {
+    win.show()
+  })
   win.loadFile(path.join(__dirname, 'views/Tip/index.html'));
   // win.webContents.openDevTools()
   return win

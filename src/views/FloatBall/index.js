@@ -247,7 +247,7 @@ const app = Vue.createApp({
     },
 
     checkSilence(volume) {
-      const SILENCE_THRESHOLD = 0.2; //可调整的静音阈值 最大值为1  
+      const SILENCE_THRESHOLD = 0.5; //可调整的静音阈值 最大值为1  
       console.log(volume);
       //此处为超过2s检测到的麦克风电流小于0.2则停止录音
       if (volume < SILENCE_THRESHOLD) {
