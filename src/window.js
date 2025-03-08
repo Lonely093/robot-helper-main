@@ -68,7 +68,10 @@ const createTodoWindow = () => {
     show: false,
     alwaysOnTop: true,
     menuBarVisible: false,
-    icon: path.join(__dirname, './assets/edit-green.png'),
+    minimizable: false,   // 禁用最小化按钮
+    maximizable: false,   // 禁用最大化按钮
+    closable: true,        // 保留关闭按钮（默认已启用）
+
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -124,7 +127,6 @@ const createConfigWindow = () => {
     height: 500,
     x: left,
     y: top,
-    icon: path.join(__dirname, './assets/edit-green.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
