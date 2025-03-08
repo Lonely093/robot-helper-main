@@ -7,7 +7,8 @@ const { ref } = require('vue')
 const draggableElement = ref(null);
 
 const mqttClient= require("../../utils/mqtt")
-const apis= require("../../utils/api")
+const apis= require("../../utils/api");
+const { default: handle } = require("mqtt/lib/handlers/index");
 
 applyConfig()
 let biasX = 0
@@ -40,7 +41,9 @@ const app = Vue.createApp({
       audioContext: null,
       analyser: null,
       silenceCount: 0,
-      animationFrameId:null
+      animationFrameId:null,
+      isAllRuning:false,
+      commandList:[],
     }
   },
 
@@ -72,7 +75,13 @@ const app = Vue.createApp({
     //     console.log("请求失败:"+res?.msg);
     //   }
     // });
+
     this.startRecording();
+
+    //监听APP指令完成与APP消息
+    window.addEventListener('app-command-result', this.handleCommandResult);
+    window.addEventListener('app-message', this.handleAppMessage);
+
   },
   methods: {
 
@@ -163,7 +172,6 @@ const app = Vue.createApp({
     },
 
     // ***********************麦克风录音 ***************//
-
     async toggleRecording() {
       if (this.isRecording) {
         await this.stopRecording();
@@ -171,10 +179,11 @@ const app = Vue.createApp({
         await this.startRecording();
       }
     },
-
     async startRecording() {
+      if(this.isRecording || this.commandList.length>0){
+        return;
+      }
       try {
-        console.log("开始");
         // 初始化音频流
         try {
           this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -184,35 +193,28 @@ const app = Vue.createApp({
           this.$emit('error', '请允许麦克风访问权限');
           return;
         }
-        
         // 初始化音频分析
         this.setupAudioAnalysis();
-
         // 通知主进程开始录音
         const { path } = await ipcRenderer.invoke('audio-start');
         console.log(`[Renderer] 录音文件路径: ${path}`);
-
-         // 创建媒体录音器
-         this.mediaRecorder = new MediaRecorder(this.mediaStream);
-         this.setupDataHandler();
-
-         this.isRecording = true;
-         this.startMonitoring();
+        // 创建媒体录音器
+        this.mediaRecorder = new MediaRecorder(this.mediaStream);
+        this.setupDataHandler();
+        this.isRecording = true;
+        this.startMonitoring();
       } catch (err) {
         console.error('录音启动失败:', err);
       }
     },
-
     setupAudioAnalysis() {
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-      
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 2048;
       source.connect(this.analyser);
       console.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
     },
-
     setupDataHandler() {
       this.mediaRecorder.ondataavailable = async (e) => {
         try {
@@ -223,11 +225,9 @@ const app = Vue.createApp({
           this.$emit('error', '音频数据发送失败');
         }
       };
-      
       this.mediaRecorder.start(1000); // 每1秒收集数据
       console.log('[Renderer] 媒体录音器已启动');
     },
-
     startMonitoring() {
       const checkStatus = () => {
         if (!this.isRecording) return;
@@ -236,16 +236,12 @@ const app = Vue.createApp({
         const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
         this.analyser.getByteFrequencyData(dataArray);
         const volume = Math.max(...dataArray) / 255;
-        
         // 静音检测
         this.checkSilence(volume);
-        
         this.animationFrameId = requestAnimationFrame(checkStatus);
       };
-
       checkStatus();
     },
-
     checkSilence(volume) {
       const SILENCE_THRESHOLD = 0.5; //可调整的静音阈值 最大值为1  
       console.log(volume);
@@ -260,29 +256,30 @@ const app = Vue.createApp({
         this.silenceCount = 0;
       }
     },
-
     async stopRecording() {
       if (!this.isRecording) return;
-
+      const result= { 
+        success: false, 
+        message:""
+      }
       try {
         this.processing = true;
         // 停止媒体录音器
         if (this.mediaRecorder?.state === 'recording') {
           this.mediaRecorder.stop();
         }
-        // 通知主进程停止
-        const result = await ipcRenderer.invoke('audio-stop');
+        // 通知主进程停止 保存录音文件并上传接口，返回结果
+        result = await ipcRenderer.invoke('audio-stop');
         console.log('[Renderer] 录音保存结果:', result);
         this.$emit('record-complete', result);
       } catch (err) {
         console.error('[Renderer] 停止失败:', err);
         this.$emit('error', err.message);
       } finally {
-        this.cleanup();
         this.processing = false;
+        this.handlestopRecordAfter(result);
       }
     },
-
     cleanup() {
       // 清理资源
       if (this.animationFrameId) {
@@ -293,16 +290,16 @@ const app = Vue.createApp({
       }
       if (this.audioContext) {
         this.audioContext.close();
+        this.audioContext=null;
       }
-      
       this.isRecording = false;
       this.silenceCount = 0;
       console.log('[Renderer] 资源已清理');
     },
+   // ***********************麦克风录音结束 ***************//
 
-  // ***********************麦克风录音结束 ***************//
-
-  async connectmqtt(){
+   //********************** MQTT 连接 ***************//
+    async connectmqtt(){
       try {
         // 等待连接成功
         await mqttClient.connect()
@@ -312,15 +309,23 @@ const app = Vue.createApp({
           console.log(`Received message from ${topic}:`, message)
         })
 
-        //APP打开主题
-        mqttClient.subscribe('Command/Open', (message, topic) => {
+        //APP打开
+        mqttClient.subscribe('Command/Launch', (message, topic) => {
           console.log(`Received message from ${topic}:`, message)
         })
         
-        //APP关闭主题
-        mqttClient.subscribe('Command/Close', (message, topic) => {
+        //APP关闭
+        mqttClient.subscribe('Command/Exit', (message, topic) => {
           console.log(`Received message from ${topic}:`, message)
         })
+
+        //APP消息
+        mqttClient.subscribe('Command/Message', (message, topic) => {
+          console.log(`Received message from ${topic}:`, message)
+        })
+        
+        
+        //启动消息   App/Open/+  对应 App/Launch/+
         
 
         //AppCenter/Apps  //参见报文3
@@ -346,6 +351,68 @@ const app = Vue.createApp({
         console.error('MQTT连接失败:', error);
       }
     },
+
+    async handleCommandResult(event) {
+      const { appId, msg } = event.detail;
+    },
+
+    async handleAppMessage(event) {
+      const { appId, msg } = event.detail;
+    },
+
+    //********************** MQTT 连接结束 ***************//
+
+    //****************** HTTP接口处理 ****************/
+   async handlestopRecordAfter(){
+       //根据结果进行处理  成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
+       if(result.success && result.message){
+        try
+        {
+         await apis.hnc_tti(result.message).then((res) => {
+            console.log(res);
+            if(res&&res.code=="200"){
+              if(res.data.command_list)
+              {
+                //故障诊断
+                if(res.data.command_list[0].app_id=="fault_diagnosis"){
+
+                }
+                //需要处理的指令集合
+                else{
+                  this.commandList=res.data.command_list;
+                }
+              }
+            }else if(res?.code=="1001"||res?.code=="1002"){
+              //故障码 1001   APP不存在
+              //故障码 1002   指令不存在
+              //提示未能识别指令，请重试
+            }else{
+              //小提示框  提示网络故障，请重试
+            }
+          });
+        }
+        catch (err) {
+          //小提示框  提示网络故障，请重试
+        }
+        finally {
+          this.cleanup();
+        }
+      }else{
+        //小提示框  提示网络故障，请重试
+      }
+      //等所有的接口处理完成之后，在进行录音资源释放
+      this.cleanup();
+    },
+    
+    //处理指令
+    docommand(){
+      if(!this.commandList || this.commandList.length<=0){
+        return;
+      }
+      //将指令依次下发，需要等待返回结果后发送下一个
+    },
+    /****************** HTTP接口处理结束 ****************/
+
     showMore() {
       this.isNotMore = false
       // ipcRenderer.send('setFloatIgnoreMouse', false)
