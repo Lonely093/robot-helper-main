@@ -4,7 +4,6 @@ const { createSuspensionWindow, createEssayWindow, createTodoWindow, createTipWi
 Menu.setApplicationMenu(null);
 
 const recorder   = require('./utils/recorder');
-//const recorder = new AudioRecorder();
 
 
 // 悬浮球的一些设置

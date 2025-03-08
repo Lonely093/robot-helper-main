@@ -119,6 +119,8 @@ class AudioRecorder {
   async handleStop() {
     return new Promise((resolve, reject) => {
 
+      console.log("writer");
+      console.log(this.writer);
       if (!this.writer) {
         reject(new Error('写入流未初始化'));
         return;
@@ -154,21 +156,22 @@ class AudioRecorder {
             size: stats.size,
             message:""
           }
-          var formData = new window.FormData();
-          const fileStream = fs.createReadStream(this.filePath);
-          formData.append('audio', fileStream, {
-            filename: path.basename(filePath),
-            contentType: 'audio/webm'
-          });
-          apis.hnc_stt(formData).then((res)=>{
-            if(res && res.code=="200"){
-              result.success=true;
-              result.message=res.message;
-            }else{
-              result.message=res?.message;
-            }
-            resolve(result);
-          });
+          resolve(result);
+          // var formData = FormData();
+          // const fileStream = fs.createReadStream(this.filePath);
+          // formData.append('audio', fileStream, {
+          //   filename: path.basename(filePath),
+          //   contentType: 'audio/webm'
+          // });
+          // apis.hnc_stt(formData).then((res)=>{
+          //   if(res && res.code=="200"){
+          //     result.success=true;
+          //     result.message=res.message;
+          //   }else{
+          //     result.message=res?.message;
+          //   }
+          //   resolve(result);
+          // });
         } catch (err) {
           reject(new Error(`文件验证失败: ${err.message}`));
         } finally {

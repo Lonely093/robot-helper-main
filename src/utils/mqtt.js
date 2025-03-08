@@ -1,12 +1,13 @@
 const mqtt= require("mqtt");
 const stateStore = require("./mqtt_persistence");
+const appname="";
 
 class MqttClient {
   constructor(options = {}) {
     // 合并配置参数
     this.options = Object.assign({
       brokerUrl: 'ws://127.0.0.1:8083/mqtt',
-      clientId: `vue-mqtt-${Math.random().toString(16).substr(2, 8)}`,
+      clientId: `robot-ai${Math.random().toString(16).substr(2, 8)}`,
       username: '',
       password: '',
       clean: false,  //启用持久会话
@@ -18,7 +19,7 @@ class MqttClient {
       will: {
         topic:"App/Exit/",
         payload:{
-          "app_id": "",
+          "app_id": "robot-ai",
           "timestamp": Date.now(),
         },
         qos:2,
@@ -306,21 +307,24 @@ class MqttClient {
   AppLaunch(topic,message){
     const msg = this.parseMessage(message)
     var app= stateStore.getCurrentState(msg.app_id);
-    //var 
+    var appid="";
     if(app){
       app.state="1";
      stateStore.updateState(app.app_id,app);
+     appid=app.app_id;
     }else{
-      this.triggerAppLaunchEvent();
+      
     }
-    
+    this.triggerAppLaunchEvent(appid);
   }
 
   AppExit(topic,message){
     const msg = this.parseMessage(message)
     var app= stateStore.getCurrentState(msg.app_id);
-    app?.state="0";
-    stateStore.updateState(app.app_id,app);
+    if(app){
+      app.state="0";
+     stateStore.updateState(app.app_id,app);
+    }
   }
 
   AppReply(topic,message){

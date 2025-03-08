@@ -8,7 +8,7 @@ const draggableElement = ref(null);
 
 const mqttClient = require("../../utils/mqtt")
 const apis = require("../../utils/api");
-const { default: handle } = require("mqtt/lib/handlers/index");
+
 
 applyConfig()
 let biasX = 0
@@ -35,7 +35,7 @@ const app = Vue.createApp({
       opacity: 0.8,
       mainColor: '',
       subColor: '',
-
+      isStopRecording:false,
       isRecording: false,
       mediaStream: null,
       audioContext: null,
@@ -248,6 +248,7 @@ const app = Vue.createApp({
       checkStatus();
     },
     checkSilence(volume) {
+      if(this.isStopRecording) return;
       const SILENCE_THRESHOLD = 0.5; //可调整的静音阈值 最大值为1  
       console.log(volume);
       //此处为超过2s检测到的麦克风电流小于0.2则停止录音
@@ -263,12 +264,13 @@ const app = Vue.createApp({
     },
     async stopRecording() {
       if (!this.isRecording) return;
-      const result= { 
+      if(this.isStopRecording) return;
+      var result= { 
         success: false, 
         message:""
       }
       try {
-        this.processing = true;
+        this.isStopRecording = true;
         // 停止媒体录音器
         if (this.mediaRecorder?.state === 'recording') {
           this.mediaRecorder.stop();
@@ -281,8 +283,8 @@ const app = Vue.createApp({
         console.error('[Renderer] 停止失败:', err);
         this.$emit('error', err.message);
       } finally {
-        this.processing = false;
         this.handlestopRecordAfter(result);
+        this.isStopRecording = false;
       }
     },
     cleanup() {
@@ -369,7 +371,7 @@ const app = Vue.createApp({
     //********************** MQTT 连接结束 ***************//
 
     //****************** HTTP接口处理 ****************/
-   async handlestopRecordAfter(){
+   async handlestopRecordAfter(result){
        //根据结果进行处理  成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
        if(result.success && result.message){
         try
