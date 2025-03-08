@@ -1,4 +1,5 @@
 const mqtt= require("mqtt");
+const stateStore = require("./mqtt_persistence");
 
 class MqttClient {
   constructor(options = {}) {
@@ -8,7 +9,7 @@ class MqttClient {
       clientId: `vue-mqtt-${Math.random().toString(16).substr(2, 8)}`,
       username: '',
       password: '',
-      clean: true,
+      clean: false,  //启用持久会话
       reconnectPeriod: 5000, // 重连间隔
       connectTimeout: 30 * 1000, // 连接超时
       autoReconnect: true,         // 启用自动重连
@@ -20,8 +21,8 @@ class MqttClient {
           "app_id": "",
           "timestamp": Date.now(),
         },
-        qos:0,
-        retain:false,
+        qos:2,
+        retain:true,
       }, // 遗嘱消息配置
     }, options)
 
@@ -33,7 +34,8 @@ class MqttClient {
     this.pendingPublishes = [] // 待处理的发布队列
     this.reconnectAttempts = 0     // 当前重连尝试次数
     this.reconnectTimer = null      // 重连定时器
-    this.setoptions={qos:2,retain:false}  //设置发布订阅的消息等级
+    this.setoptions={qos:2,retain:true}  //设置发布订阅的消息等级  以及是否存储
+   
   }
 
     // 格式化遗嘱消息
@@ -108,6 +110,7 @@ class MqttClient {
         this.subscriptions.forEach((callback, topic) => {
             this.client.subscribe(topic,this.setoptions)
         })
+
         // 处理待订阅主题
         this.pendingSubscribes.forEach(({ topic, callback }) => {
             try {
@@ -189,7 +192,7 @@ class MqttClient {
     this.client.on('message', (topic, message) => {
       const msg = this.parseMessage(message)
       const callback = this.subscriptions.get(topic)
-      callback && callback(msg, topic)
+      callback && callback(topic,msg)
     })
   }
 
@@ -262,6 +265,102 @@ class MqttClient {
       return message.toString()
     }
   }
+
+  //初始化MQTT 订阅基础的APP注册，并根据获取到的注册结果，进行各个APP消息注册
+  initialize(){
+    //APP注册发布
+    this.subscriptions.set('AppCenter/Apps', ( topic,message) => {
+     //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
+     const msg = this.parseMessage(message)
+     if(msg.apps&&msg.apps.length>0){
+      msg.apps.forEach(app=>{
+        app.state="0";//默认设置为未启动
+        stateStore.updateState(app.app_id,app);
+
+        //根据app是否支持启动，来订阅  启动/关闭/指令执行功能
+        if(app.ai_interaction.action){
+          this.subscribe("App/Launch/"+app.app_id,(topic,message) => {
+            AppLaunch(topic,message)
+          });
+          this.subscribe("App/Exit/"+app.app_id,(message, topic) => {
+            AppExit(topic,message)
+          });
+          this.subscribe("App/Message/"+app.app_id,(message, topic) => {
+            AppExit(topic,message)
+          });
+        }
+        //是否可执行指令
+        if(app.ai_interaction.exec)
+        {
+          this.subscribe("App/Reply/"+app.app_id,(topic,message ) => {
+            AppReply(topic,message)
+          });
+        }
+
+      });
+     }
+    })
+    this.client.subscribe('AppCenter/Apps', this.setoptions);
+  }
+
+  AppLaunch(topic,message){
+    const msg = this.parseMessage(message)
+    var app= stateStore.getCurrentState(msg.app_id);
+    //var 
+    if(app){
+      app.state="1";
+     stateStore.updateState(app.app_id,app);
+    }else{
+      this.triggerAppLaunchEvent();
+    }
+    
+  }
+
+  AppExit(topic,message){
+    const msg = this.parseMessage(message)
+    var app= stateStore.getCurrentState(msg.app_id);
+    app?.state="0";
+    stateStore.updateState(app.app_id,app);
+  }
+
+  AppReply(topic,message){
+    const msg = this.parseMessage(message)
+     //逻辑处理
+    if(msg.command=="ok")
+    {
+
+    }else{
+
+    }
+    this.triggerCommandResultEvent(app.app_id,app.command);
+  }
+
+  AppMessage(topic,message){
+    const msg = this.parseMessage(message)
+    this.triggerAppMessagetEvent(app.app_id,app.message);
+  }
+
+  triggerAppLaunchEvent(appId) {
+    const event = new CustomEvent('app-launch', {
+      detail: { appId }
+    });
+    window.dispatchEvent(event);
+  }
+
+  triggerCommandResultEvent(appId, msg) {
+    const event = new CustomEvent('app-command-result', {
+      detail: { appId, msg }
+    });
+    window.dispatchEvent(event);
+  }
+
+  triggerAppMessagetEvent(appId, msg) {
+    const event = new CustomEvent('app-message', {
+      detail: { appId, msg }
+    });
+    window.dispatchEvent(event);
+  }
+
 }
 
 // 创建单例实例

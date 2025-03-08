@@ -1,6 +1,7 @@
 const { ipcMain, app } = require('electron');
 const fs = require('fs');
 const path = require('path');
+const apis=require('./api');
 
 class AudioRecorder {
   constructor() {
@@ -123,42 +124,50 @@ class AudioRecorder {
         return;
       }
 
-    let cleanupCalled = false;
-    const finalCleanup = () => {
-      if (!cleanupCalled) {
-        this.cleanup();
-        cleanupCalled = true;
-      }
-    };
+      let cleanupCalled = false;
+      const finalCleanup = () => {
+        if (!cleanupCalled) {
+          this.cleanup();
+          cleanupCalled = true;
+        }
+      };
 
-    this.writer.on('finish', async () => {
-      try {
-        const stats = await fs.promises.stat(this.filePath);
-        resolve({ success: true, size: stats.size });
-      } catch (err) {
-        reject(new Error('文件状态获取失败'));
-      } finally {
+      this.writer.on('error', (err) => {
+        reject(new Error(`写入错误: ${err.message}`));
         finalCleanup();
-      }
-    });
-
-    this.writer.on('error', (err) => {
-      reject(new Error(`写入错误: ${err.message}`));
-      finalCleanup();
-    });
+      });
 
       this.writer.end(async () => {
         try {
           // 添加文件存在性验证
           await this.verifyFile();
-          
           const stats = fs.statSync(this.filePath);
-          console.log('[Recorder] 文件验证成功，大小:', stats.size);
-          
-          resolve({ 
-            success: true, 
+          //console.log('[Recorder] 文件验证成功，大小:', stats.size);
+          //请求语音转文字接口
+          // 'audio/wav',
+          // 'audio/mpeg',
+          // 'audio/webm'
+          // 'application/octet-stream'
+          var result={ 
+            success: false, 
             path: this.filePath,
-            size: stats.size
+            size: stats.size,
+            message:""
+          }
+          var formData = new window.FormData();
+          const fileStream = fs.createReadStream(this.filePath);
+          formData.append('audio', fileStream, {
+            filename: path.basename(filePath),
+            contentType: 'audio/webm'
+          });
+          apis.hnc_stt(formData).then((res)=>{
+            if(res && res.code=="200"){
+              result.success=true;
+              result.message=res.message;
+            }else{
+              result.message=res?.message;
+            }
+            resolve(result);
           });
         } catch (err) {
           reject(new Error(`文件验证失败: ${err.message}`));
@@ -202,7 +211,6 @@ class AudioRecorder {
         console.error('[Recorder] 流销毁失败:', err);
       }
     }
-    
     this.writer = null;
     this.isRecording = false;
     this.filePath = '';
