@@ -72,7 +72,7 @@ const app = Vue.createApp({
     //     console.log("请求失败:"+res?.msg);
     //   }
     // });
-    this.startRecording();
+    // this.startRecording();
   },
   methods: {
 
@@ -392,6 +392,7 @@ const app = Vue.createApp({
       biasY = 0
       document.removeEventListener('mousemove', handleMove)
       await this.snapToEdge();
+      await this.toggleRecording();
       // console.log("this.isNotMore", this.isNotMore)
     },
 

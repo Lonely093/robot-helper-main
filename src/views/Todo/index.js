@@ -26,7 +26,6 @@ const app = Vue.createApp({
   },
 
   mounted() {
-    this.getTodoList()
     this.initForm()
   },
   methods: {
@@ -49,22 +48,7 @@ const app = Vue.createApp({
         this.form.month = 1
       }
     },
-    handleDate() {
-      // 懒得处理2月和小月了
-      // lazy to handle special cases
-      if (this.form.date > 31) {
-        this.form.date = 31
-      } else if (this.form.date < 1) {
-        this.form.date = 1
-      }
-    },
-    handleHour() {
-      if (this.form.hour > 23) {
-        this.form.hour = 23
-      } else if (this.form.hour < 0) {
-        this.form.hour = 0
-      }
-    },
+
     handleMin() {
       if (this.form.min > 59) {
         this.form.min = 59
@@ -95,32 +79,7 @@ const app = Vue.createApp({
       this.initForm()
       this.formVisible = false
     },
-    getTodoList() {
-      const list = ipcRenderer.sendSync("todo", { name: "getAll", status: 0 })
-      this.todoList = list.map(item => {
-        item.endTime = formatterTime(item.end_time)
-        return item
-      })
-      const fList = ipcRenderer.sendSync("todo", { name: "getAll", status: 1 })
-      this.finishList = fList.map(item => {
-        item.endTime = formatterTime(item.end_time)
-        return item
-      })
-    },
-    changeStatus(item, index) {
-      const id = item.id
-      const currStatus = item.status
-      ipcRenderer.send("todo", { name: "change", id: id, status: 1 - currStatus })
-      if (currStatus == 0) {
-        this.todoList.splice(index, 1)
-        item.status = 1 - currStatus
-        this.finishList.unshift(item)
-      } else {
-        this.finishList.splice(index, 1)
-        item.status = 1 - currStatus
-        this.todoList.unshift(item)
-      }
-    },
+   
     delTodo(item, index) {
       const id = item.id
       const currStatus = item.status
