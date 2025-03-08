@@ -1,8 +1,3 @@
-html {
-  background-color: #002fa7;
-  overflow: -moz-hidden-unscrollable;
-}
-
 body {
   padding: 0;
   margin: 0;
@@ -17,12 +12,50 @@ div {
   font-size: 12px;
 }
 
-.wrap {
-  color: #ffffff;
-  /* margin-top: 10px; */
-  padding: 10px;
+.tip-root {
+  background: linear-gradient(to right,
+      /* 渐变方向：从上到下 */
+      #000000,
+      /* 起始黑色 */
+      #1a1a1a 25%,
+      /* 中间过渡色 */
+      #003366 75%,
+      /* 蓝黑色过渡 */
+      #0000ff
+      /* 最终蓝色 */
+    );
+  width: 100vw;
+  height: 100vh;
+  padding: 8px;
+  border-radius: 10px;
+  /* 圆角大小 */
+  overflow: hidden;
+  /* 隐藏溢出内容 */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  /* 可选阴影 */
 }
+
+
 .content {
+  color: white;
+  margin: 0;
+  white-space: normal;
+  /* 覆盖可能的 nowrap 设置 */
+  word-wrap: break-word;
+  /* 允许单词内换行 (旧浏览器) */
+  overflow-wrap: break-word;
+  /* 现代标准换行方式 */
 
-
+  /* 中文优化 */
+  word-break: keep-all;
+  /* 保持中文完整性 */
+  hyphens: auto;
+  /* 英文连字符换行 */
+  font-size: 15px;
+  /* 排版美化 */
+  line-height: 1.6;
+  text-align: justify;
+  /* 两端对齐 */
+  max-width: 65ch;
+  /* 最佳可读宽度 */
 }

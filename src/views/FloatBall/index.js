@@ -6,8 +6,8 @@ const { defaultConfig, getConfig, applyConfig } = require("../../utils/store")
 const { ref } = require('vue')
 const draggableElement = ref(null);
 
-const mqttClient= require("../../utils/mqtt")
-const apis= require("../../utils/api")
+const mqttClient = require("../../utils/mqtt")
+const apis = require("../../utils/api")
 
 applyConfig()
 let biasX = 0
@@ -40,7 +40,7 @@ const app = Vue.createApp({
       audioContext: null,
       analyser: null,
       silenceCount: 0,
-      animationFrameId:null
+      animationFrameId: null
     }
   },
 
@@ -184,7 +184,7 @@ const app = Vue.createApp({
           this.$emit('error', '请允许麦克风访问权限');
           return;
         }
-        
+
         // 初始化音频分析
         this.setupAudioAnalysis();
 
@@ -192,12 +192,12 @@ const app = Vue.createApp({
         const { path } = await ipcRenderer.invoke('audio-start');
         console.log(`[Renderer] 录音文件路径: ${path}`);
 
-         // 创建媒体录音器
-         this.mediaRecorder = new MediaRecorder(this.mediaStream);
-         this.setupDataHandler();
+        // 创建媒体录音器
+        this.mediaRecorder = new MediaRecorder(this.mediaStream);
+        this.setupDataHandler();
 
-         this.isRecording = true;
-         this.startMonitoring();
+        this.isRecording = true;
+        this.startMonitoring();
       } catch (err) {
         console.error('录音启动失败:', err);
       }
@@ -206,7 +206,7 @@ const app = Vue.createApp({
     setupAudioAnalysis() {
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-      
+
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 2048;
       source.connect(this.analyser);
@@ -223,7 +223,7 @@ const app = Vue.createApp({
           this.$emit('error', '音频数据发送失败');
         }
       };
-      
+
       this.mediaRecorder.start(1000); // 每1秒收集数据
       console.log('[Renderer] 媒体录音器已启动');
     },
@@ -236,10 +236,10 @@ const app = Vue.createApp({
         const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
         this.analyser.getByteFrequencyData(dataArray);
         const volume = Math.max(...dataArray) / 255;
-        
+
         // 静音检测
         this.checkSilence(volume);
-        
+
         this.animationFrameId = requestAnimationFrame(checkStatus);
       };
 
@@ -251,7 +251,7 @@ const app = Vue.createApp({
       console.log(volume);
       //此处为超过2s检测到的麦克风电流小于0.2则停止录音
       if (volume < SILENCE_THRESHOLD) {
-        this.silenceCount += 1/60;
+        this.silenceCount += 1 / 60;
         if (this.silenceCount >= 2) {
           console.log('[Renderer] 检测到持续静音，自动停止');
           this.stopRecording();
@@ -294,19 +294,19 @@ const app = Vue.createApp({
       if (this.audioContext) {
         this.audioContext.close();
       }
-      
+
       this.isRecording = false;
       this.silenceCount = 0;
       console.log('[Renderer] 资源已清理');
     },
 
-  // ***********************麦克风录音结束 ***************//
+    // ***********************麦克风录音结束 ***************//
 
-  async connectmqtt(){
+    async connectmqtt() {
       try {
         // 等待连接成功
         await mqttClient.connect()
-        
+
         //测试主题
         mqttClient.subscribe('test/topic', (message, topic) => {
           console.log(`Received message from ${topic}:`, message)
@@ -316,12 +316,12 @@ const app = Vue.createApp({
         mqttClient.subscribe('Command/Open', (message, topic) => {
           console.log(`Received message from ${topic}:`, message)
         })
-        
+
         //APP关闭主题
         mqttClient.subscribe('Command/Close', (message, topic) => {
           console.log(`Received message from ${topic}:`, message)
         })
-        
+
 
         //AppCenter/Apps  //参见报文3
         //App/Launch/+    //参见报文10
@@ -329,19 +329,19 @@ const app = Vue.createApp({
         //App/Reply/+      //参见报文14
         //App/Message/+   //App主动向语音助手发送消息时使用  //参见报文31
 
-        
+
         //APP注册发布主题
         mqttClient.subscribe('AppCenter/Apps', (message, topic) => {
           console.log(`Received message from ${topic}:`, message)
         })
-                
+
         //发送主题
         mqttClient.publish('test/topic', {
           text: 'Hello from Vue',
           timestamp: Date.now()
         })
         console.log("发送主题");
-  
+
       } catch (error) {
         console.error('MQTT连接失败:', error);
       }
