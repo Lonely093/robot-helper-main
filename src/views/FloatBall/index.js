@@ -250,7 +250,7 @@ const app = Vue.createApp({
     checkSilence(volume) {
       if(this.isStopRecording) return;
       const SILENCE_THRESHOLD = 0.5; //可调整的静音阈值 最大值为1  
-      console.log(volume);
+      //console.log(volume);
       //此处为超过2s检测到的麦克风电流小于0.2则停止录音
       if (volume < SILENCE_THRESHOLD) {
         this.silenceCount += 1 / 60;
@@ -270,6 +270,7 @@ const app = Vue.createApp({
         message:""
       }
       try {
+        this.isRecording=false;
         this.isStopRecording = true;
         // 停止媒体录音器
         if (this.mediaRecorder?.state === 'recording') {
@@ -282,6 +283,7 @@ const app = Vue.createApp({
       } catch (err) {
         console.error('[Renderer] 停止失败:', err);
         this.$emit('error', err.message);
+        result.message=err.message;
       } finally {
         this.handlestopRecordAfter(result);
         this.isStopRecording = false;
