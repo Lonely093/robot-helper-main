@@ -19,9 +19,9 @@ const app = Vue.createApp({
   },
 
   mounted() {
-    window.addEventListener('floatball-todo', (event)=>{
+    window.addEventListener('floatball-todo', (event) => {
       //type 0 错误消息    1 正常 故障诊断消息
-      const { type,commandlist,message } = event.detail;
+      const { type, commandlist, message } = event.detail;
     });
   },
   methods: {
@@ -29,24 +29,27 @@ const app = Vue.createApp({
       ipcRenderer.send("close-todo")
     },
     sendMessage() {
-      if (userInput.value.trim() !== '') {
-        messages.value.push({ text: userInput.value, type: 'user' })
-        userInput.value = ''
-        // 模拟AI机器人回复
+      if (this.userInput.trim() !== '') {
+        this.messages.push({ text: this.userInput, type: 'user' })
+        this.userInput = ''
+
+        // 模拟AI回复
         setTimeout(() => {
-          messages.value.push({ text: '这是AI机器人的回复。', type: 'bot' })
-          // scrollToBottom()
+          this.messages.push({ text: '这是AI机器人的回复。', type: 'bot' })
+          this.scrollToBottom()
         }, 1000)
-        // 滚动到底部
-        // scrollToBottom()
+
+        this.scrollToBottom()
       }
     },
-    // scrollToBottom() {
-    //   nextTick(() => {
-    //     const messagesContainer = document.querySelector('.messages')
-    //     messagesContainer.scrollTop = messagesContainer.scrollHeight
-    //   })
-    // }
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const messagesContainer = document.querySelector('.messages')
+        if (messagesContainer) {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight
+        }
+      })
+    }
   }
 })
 
