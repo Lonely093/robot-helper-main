@@ -9,24 +9,28 @@
 
 <body>
   <div id="app">
-    <div class="wrap">
-      <div class="list-container">
-        <div class="todo-list">
-          <div class="list-title">待完成</div>
-          <div class="todo-item" v-for="(item,index) in todoList">
+    <div class="chatbot-container">
+   
 
-            <div class="main-content">
-              <div class="content">{{item.content}}</div>
+      <!-- 对话框界面 -->
+      <!-- <div class="messages">
+        <div v-for="(message, index) in messages" :key="index" :class="message.type">
+          <div class="message" :class="message.type">
+            <div class="message-content">
+              {{ message.text }}
             </div>
           </div>
         </div>
-       
-      </div>
-  
-      <div class="add-btn" @click="showForm(true)">
-        <img src="../../assets/add.png">
+      </div> -->
+
+      <!-- 输入框 -->
+      <div class="input-container">
+        <input v-model="userInput" placeholder="输入消息..." @keyup.enter="sendMessage" class="input-field">
+        </input>
+        <button @click="sendMessage" class="send-button">发送</button>
       </div>
     </div>
+
   </div>
   <script src="./index.js"></script>
 </body>
