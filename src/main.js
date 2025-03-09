@@ -5,6 +5,16 @@ Menu.setApplicationMenu(null);
 
 const recorder = require('./utils/recorder');
 
+const axios= require("axios");
+const FormData = require('form-data');
+const fs = require('fs');
+
+const  urlconfig={
+  hnc_stt:'http://172.20.11.80:9000/api/hnc_stt',
+  hnc_tti:'http://172.20.11.80:9001/api/hnc_tti',
+  hnc_fd:'http://172.20.11.80:9002/api/hnc_fd'
+};
+
 
 // 悬浮球的一些设置
 const suspensionConfig = {
@@ -30,6 +40,119 @@ const pages = {
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
+
+
+// 处理渲染进程发起的文件上传请求
+ipcMain.handle('hnc_stt', async (event, filePath) => {
+  try {
+    // 1. 创建 FormData
+    const form = new FormData();
+
+    // 2. 验证文件路径并附加到 FormData
+    const absolutePath = path.resolve(filePath);
+    if (!fs.existsSync(absolutePath)) {
+      return {code:"999",data:{message:"录音失败"}};
+    }
+
+    const fileStream = fs.createReadStream(absolutePath);
+    form.append('audio_file', fileStream, {
+      filename: path.basename(absolutePath), // 确保文件名正确
+      contentType: 'audio/wav'
+    });
+
+    // 3. 发送请求
+    const response = await axios(
+      {
+        method: 'post',
+        url: urlconfig.hnc_stt,
+        data:form,
+        headers: {
+          'accept': 'application/json',
+          //'Content-Type': 'multipart/form-data'
+          ...form.getHeaders(), // 自动生成 multipart/form-data 的 Content-Type 和 boundary
+        },
+       }
+    );
+    return response.data;
+    if (!response.ok) {
+      return {code:"999",data:{message:response.status}};
+    }
+    return await response.json();
+  } catch (error) {
+    return {code:"999",data:{message:error.message}};
+  }
+});
+
+// 处理渲染进程发起的文件上传请求
+ipcMain.handle('hnc_tti', async (event, info) => {
+  try {
+    
+    // 3. 发送请求
+    const response = await axios({
+      method: 'post',
+      url: urlconfig.hnc_tti,
+      data:{
+          "inputs":info
+      },
+      headers:{
+        'Content-Type': 'application/json' // ✅ 必须明确指定
+      }
+   });
+   return response.data;
+    if (!response.ok) {
+      return {code:"999",data:{message:response.status}};
+    }
+    return await response.json();
+  } catch (error) {
+    return {code:"999",data:{message:error.message}};
+  }
+});
+
+// 处理渲染进程发起的文件上传请求
+ipcMain.handle('hnc_fd', async (event, info) => {
+  try {
+    
+     // 3. 发送请求
+     const response = await axios({
+      method: 'post',
+      url: urlconfig.hnc_fd,
+      data:{
+          "inputs":info
+      },
+      headers:{
+        'Content-Type': 'application/json' // ✅ 必须明确指定
+      }
+   });
+
+    if (!response.ok) {
+      return {code:"999",data:{message:response.status}};
+    }
+    return response.data;
+  } catch (error) {
+    return {code:"999",data:{message:error.message}};
+  }
+});
+
+
+ipcMain.on('message-from-renderer', (event, { target, data }) => {
+  // 查找目标窗口
+  var targetWindow=null;
+  if(target=="tip")
+  {
+    targetWindow=pages.tipWin;
+  }
+  if(target=="todo")
+  {
+    targetWindow=pages.todoWin;
+  }
+  if(target=="floatball")
+  {
+    targetWindow=pages.suspensionWin;
+  }
+  if (targetWindow) {
+    targetWindow.webContents.send('message-to-renderer', data);
+  }
+});
 
 
 // This method will be called when Electron has finished

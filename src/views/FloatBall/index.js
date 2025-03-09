@@ -7,11 +7,8 @@ const { ref } = require('vue')
 const draggableElement = ref(null);
 
 const mqttClient = require("../../utils/mqtt")
-const apis = require("../../utils/api");
 const stateStore = require("../../utils/mqtt_persistence");
-const fs = require('fs');
-const FormData = require('form-data');
-const axios= require("axios");
+const path = require('path');
 
 
 applyConfig()
@@ -25,8 +22,6 @@ function calcS() {
 function handleMove(e) {
   ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY })
 }
-
-
 
 
 
@@ -53,7 +48,7 @@ const app = Vue.createApp({
     }
   },
 
-  mounted() {
+async mounted() {
     const storage = getConfig()
     this.mainColor = storage.mainColor
     this.subColor = storage.subColor
@@ -75,7 +70,12 @@ const app = Vue.createApp({
     //   console.log("hnc_tti:");
     //   console.log(res);
     // });
-     const filePath = 'D:\\\\2025\\\\robot-helper-main\\\\RecorderFolder\\\\recording_1741497581347.wav';
+    const filePath = 'D:\\\\2025\\\\robot-helper-main\\\\RecorderFolder\\\\recording_1741497581347.wav';
+      // 通过 IPC 调用主进程上传
+      const uploadres = await ipcRenderer.invoke('hnc_stt', filePath);
+      console.log("uploadres:",uploadres);
+
+    //console.log('上传成功:', result);
     //  // 1. 同步读取文件到内存（Buffer）
     //  //const fileStream = fs.createReadStream(filePath);
     //  const buffer = fs.readFileSync(filePath);
@@ -476,32 +476,46 @@ const app = Vue.createApp({
     floatballtip(type,message){
 
       //需要先触发显示页面，再推送
-      const event = new CustomEvent('floatball-tip',{detail:{
-        type : type,
-        message : message
-      }});
-      window.dispatchEvent(event);
+
+      // 发送消息到主进程
+      ipcRenderer.send('message-from-renderer', {
+        target: 'tip', // 指定目标窗口
+        data: { type : type,  message : message }
+      });
     },
 
     //通知故障诊断页面
     floatballtodo(type,message,commandlist){
-      //需要先出发显示页面，并且隐藏小的提示框 再推送
-      const event = new CustomEvent('floatball-todo',   {
-        detail: { type, commandlist,  message}
+      // 发送消息到主进程
+      ipcRenderer.send('message-from-renderer', {
+        target: 'todo', // 指定目标窗口
+        data: { type : type,  message : message,commandlist }
       });
-      window.dispatchEvent(event);
     },
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
     async handlestopRecordAfter(result){
        console.log("handlestopRecordAfter");
        console.log(result);
-       if(result.success && result.message){
-        this.floatballtip(1,result.message);
-        try
+       if(!result.success){
+        this.floatballtip(0, "录音故障:" + result.message);
+        return;
+       }
+       const normalizedPath = path.normalize(result.path);
+       const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
+       console.log("hnc_stt:",uploadres);
+       if(!uploadres || uploadres.code!="200"){
+        this.floatballtip(0, "上传录音文件故障 " + uploadres?.data?.message);
+        return 
+       }
+       result.message=uploadres.data.result;
+       console.log("文字输出:",result.message);
+       this.floatballtip(1,result.message);
+      try
         {
           //调用 指令交互接口    根据结果判断
-          var res = await apis.hnc_tti(result.message);
+          const res = await ipcRenderer.invoke('hnc_tti', result.message);
+          console.log("hnc_tti:",res);
           if (res && res.code == "200") {
             if (res.data.command_list && res.data.command_list.length > 0) {
               //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
@@ -534,18 +548,14 @@ const app = Vue.createApp({
         finally {
           this.cleanup();
         }
-      } else {
-        //小提示框  提示网络故障，请重试
-        this.floatballtip(0, "录音或者网络故障:" + result.message);
-      }
-      console.log(result);
       //等所有的接口处理完成之后，在进行录音资源释放
       this.cleanup();
     },
 
     //故障诊断接口
     async FaultDiagnosis(message) {
-      res = await apis.hnc_fd(result.message);
+      //res = await apis.hnc_fd(result.message);
+      const res = await ipcRenderer.invoke('hnc_fd', message);
       if(res&&res.code=="200"){
         if(res.data.msg&&res.data.command_list.length>0)
           {

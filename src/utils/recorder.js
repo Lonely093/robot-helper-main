@@ -239,71 +239,6 @@ class AudioRecorder {
         return;
       }
 
-      //  // 生成临时文件路径
-      //  const tempPath = this.filePath + '.tmp';
-      
-      //  // 关闭写入流并重命名
-      //  await new Promise((res, rej) => {
-      //    this.writer.end(() => {
-      //      fs.rename(this.filePath, tempPath, (err) => {
-      //        err ? rej(err) : res();
-      //      });
-      //    });
-      //  });
- 
-      //  // 读取临时文件数据
-      //  const rawData = await fs.promises.readFile(tempPath);
-       
-      //  // 生成正确长度的新头
-      //  const dataSize = rawData.length - 44; // 减去初始头大小
-      //  const header = this.generateWavHeader({
-      //    size: dataSize + 36 // 根据WAV规范计算
-      //  });
-
-      //  // 替换文件头
-      //  const finalBuffer = Buffer.concat([
-      //    header, 
-      //    rawData.subarray(44)
-      //  ]);
- 
-      //  // 写入最终文件
-      //  await fs.promises.writeFile(this.filePath, finalBuffer);
-       
-      //  // 清理临时文件
-      //  await fs.promises.unlink(tempPath);
- 
-      //  // 验证文件
-      //  await this.verifyFile();
-
-      //  resolve({ success: true, path: this.filePath });
-
-      // this.writer.on('finish', async () => {
-      //   try {
-      //     // 读取原始数据
-      //     const rawData = await fs.promises.readFile(this.filePath)
-          
-      //     // 生成正确头文件
-      //     const header = this.generateWAVHeader({
-      //       size: rawData.length - 8  // RIFF块大小 = 文件总大小 - 8字节
-      //     })
-          
-      //     // 写入最终文件
-      //     await fs.promises.writeFile(
-      //       this.filePath,
-      //       Buffer.concat([header, rawData.subarray(44)])
-      //     )
-          
-      //     resolve({ success: true, path: this.filePath })
-      //   } catch (err) {
-      //     console.error('最终处理失败:', err)
-      //     resolve({ success: false })
-      //   } finally {
-      //     this.cleanup()
-      //   }
-      // })
-
-      // this.writer.end()
-
       let cleanupCalled = false;
       const finalCleanup = () => {
         if (!cleanupCalled) {
@@ -333,45 +268,11 @@ class AudioRecorder {
             const newpath = await this.convertWebmToWav(this.filePath);
             fs.unlinkSync(this.filePath) // 删除原始webm文件
             var result={ 
-              success: false, 
+              success: true, 
               path: newpath,
               message:"",
-              res2:null
             }
-            const fileStream = fs.createReadStream(newpath);
-            const form = new FormData();
-            // 添加文件字段（核心参数）
-            form.append(
-              'audio_file',            // 字段名（必须与后端定义一致）
-              fileStream, // 使用 Stream 避免大文件内存溢出
-              {
-                filename: newpath.split('/').pop(),   // 自定义文件名（可选）
-                contentType: 'audio/wav',     // 明确 MIME 类型（强烈建议）
-                knownLength: stats        // 声明文件大小（优化性能）
-              }
-            );
-            var res=await apis.hnc_tti("请打开程序管理也买你");
-             result.res2=res;
-            // if(res && res.code=="200"){
-            //   result.success=true;
-            //   result.message=res.message;
-            // }else{
-            //   result.message=res?.message;
-            // }
-           
-            //   apis.hnc_stt(formData).then(res=>{
-            //     console.log(res);
-            //     result.res2=res;
-            //     if(res && res.code=="200"){
-            //       result.success=true;
-            //       result.message=res.message;
-            //     }else{
-            //       result.message=res?.message;
-            //     }
-            //     resolve(result);
-            // });
             resolve(result);
-            
           } catch (err) {
             clearTimeout(timeoutId);
             reject(new Error(`文件验证失败: ${err.message}`));
