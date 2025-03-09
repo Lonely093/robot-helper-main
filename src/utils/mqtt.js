@@ -319,6 +319,7 @@ class MqttClient {
   AppLaunch(topic,message){
     console.log("AppLaunch:",message);
     var app= stateStore.getCurrentState(message.app_id);
+    console.log("app:",app);
     var appid="";
     if(app){
       app.state="1";

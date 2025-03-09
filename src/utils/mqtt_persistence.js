@@ -16,10 +16,13 @@ class StateStore {
       data: state,
       updatedAt: Date.now()
     };
+    console.log('updateState:',state);
     db.transaction('rw', db.currentStates, db.stateHistory,  () => {
        db.currentStates.put(record);
        db.stateHistory.add({...record, id: undefined});
     });
+   var app= this.getCurrentState(appId);
+   console.log('updateState:',appId,app);
   }
 
   // 获取当前状态
