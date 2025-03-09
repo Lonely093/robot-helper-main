@@ -284,31 +284,30 @@ class MqttClient {
     if(this.subscriptions.length>0) return;
     this.subscriptions.set('AppCenter/Apps', ( topic,message) => {
      //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
-     console.log("AppCenter:"+ message);
-     const msg = this.parseMessage(message)
-     console.log(msg);
-     if(msg.apps&&msg.apps.length>0){
-      msg.apps.forEach(app=>{
+     console.log("AppCenter:",message);
+     console.log("AppCenter:aa",message.apps);
+     if(message.apps&&message.apps.length>0){
+      message.apps.forEach(app=>{
         app.state="0";//默认设置为未启动
         stateStore.updateState(app.app_id,app);
 
         //根据app是否支持启动，来订阅  启动/关闭/指令执行功能
         if(app.ai_interaction.action){
           this.subscribe("App/Launch/"+app.app_id,(topic,message) => {
-            AppLaunch(topic,message)
+            this.AppLaunch(topic,message)
           });
           this.subscribe("App/Exit/"+app.app_id,(message, topic) => {
-            AppExit(topic,message)
+            this.AppExit(topic,message)
           });
           this.subscribe("App/Message/"+app.app_id,(message, topic) => {
-            AppExit(topic,message)
+            this.AppExit(topic,message)
           });
         }
         //是否可执行指令
         if(app.ai_interaction.exec)
         {
           this.subscribe("App/Reply/"+app.app_id,(topic,message ) => {
-            AppReply(topic,message)
+            this.AppReply(topic,message)
           });
         }
       });
@@ -318,9 +317,8 @@ class MqttClient {
   }
 
   AppLaunch(topic,message){
-    console.log("AppLaunch:"+message);
-    const msg = this.parseMessage(message)
-    var app= stateStore.getCurrentState(msg.app_id);
+    console.log("AppLaunch:",message);
+    var app= stateStore.getCurrentState(message.app_id);
     var appid="";
     if(app){
       app.state="1";
@@ -333,9 +331,8 @@ class MqttClient {
   }
 
   AppExit(topic,message){
-    console.log("AppExit:"+message);
-    const msg = this.parseMessage(message)
-    var app= stateStore.getCurrentState(msg.app_id);
+    console.log("AppExit:",message);
+    var app= stateStore.getCurrentState(message.app_id);
     if(app){
       app.state="0";
      stateStore.updateState(app.app_id,app);
@@ -344,10 +341,9 @@ class MqttClient {
   
   //指令执行反馈
   AppReply(topic,message){
-    console.log("AppReply:"+message);
-    const msg = this.parseMessage(message)
+    console.log("AppReply:",message);
      //逻辑处理
-    if(msg.command=="ok")
+    if(message.command=="ok")
     {
 
     }else{
@@ -357,8 +353,7 @@ class MqttClient {
   }
 
   AppMessage(topic,message){
-    const msg = this.parseMessage(message)
-    this.triggerAppMessagetEvent(msg.app_id,msg.message);
+    this.triggerAppMessagetEvent(message.app_id,message.message);
   }
 
   triggerAppLaunchEvent(appId) {

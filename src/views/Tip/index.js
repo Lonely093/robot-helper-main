@@ -18,8 +18,18 @@ const app = Vue.createApp({
     window.addEventListener('floatball-tip', (event)=>{
       //type 0 错误消息    1 正常 语音转文字结果
       const { type,message } = event.detail;
+      console.log(event.detail);
+      this.tipText=message;
+    });
+
+    ipcRenderer.on('message-to-renderer', (event, data) => {
+      console.log('收到消息:', data); // 输出 "Hello from Renderer A"
+      this.tipText=data.message;
     });
     
+  },
+  beforeUnmount() {
+    window.removeEventListener('floatball-tip');
   },
   methods: {
 

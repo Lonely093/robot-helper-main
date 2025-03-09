@@ -116,7 +116,7 @@ const createTipWindow = () => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Tip/index.html'));
-  // win.webContents.openDevTools()
+  //win.webContents.openDevTools()
   return win
 }
 const createConfigWindow = () => {

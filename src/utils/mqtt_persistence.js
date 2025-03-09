@@ -24,7 +24,8 @@ class StateStore {
 
   // 获取当前状态
    getCurrentState(appId) {
-    return db.currentStates.get(appId);
+     var app = db.currentStates.get(appId);
+     return app.value;
   }
 
   // 获取全部应用状态

@@ -7,11 +7,8 @@ const { ref } = require('vue')
 const draggableElement = ref(null);
 
 const mqttClient = require("../../utils/mqtt")
-const apis = require("../../utils/api");
 const stateStore = require("../../utils/mqtt_persistence");
-const fs = require('fs');
-const FormData = require('form-data');
-const axios= require("axios");
+const path = require('path');
 
 
 applyConfig()
@@ -25,8 +22,6 @@ function calcS() {
 function handleMove(e) {
   ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY })
 }
-
-
 
 
 
@@ -53,7 +48,7 @@ const app = Vue.createApp({
     }
   },
 
-  mounted() {
+async mounted() {
     const storage = getConfig()
     this.mainColor = storage.mainColor
     this.subColor = storage.subColor
@@ -71,73 +66,15 @@ const app = Vue.createApp({
 
     this.connectmqtt();
 
-    // apis.hnc_tti("请打开程序管理页面").then(res=>{
-    //   console.log("hnc_tti:");
-    //   console.log(res);
-    // });
-     const filePath = 'D:\\\\2025\\\\robot-helper-main\\\\RecorderFolder\\\\recording_1741497581347.wav';
-    //  // 1. 同步读取文件到内存（Buffer）
-    //  //const fileStream = fs.createReadStream(filePath);
-    //  const buffer = fs.readFileSync(filePath);
-    //  console.log("buffer");
-    //  console.log(buffer);
-    //  const form = new FormData();
-    //   // 添加文件字段（核心参数）
-    //   form.append(
-    //     'audio_file',   // 字段名（必须与后端定义一致）
-    //     buffer, // 使用 Stream 避免大文件内存溢出
-    //     {
-    //       filename: filePath.split('/').pop(),   // 自定义文件名（可选）
-    //       contentType: 'audio/wav',     // 明确 MIME 类型（强烈建议）
-    //     }
-    //   );
-    //   console.log('FormData Headers:', form.getHeaders());
-    //   console.log('FormData :', form);
-       // 3. 发送请求（正确用法）
-      // axios({
-      //   method: 'post',
-      //   url: `http://172.20.11.80:9000/api/hnc_stt`,
-      //   data:form,
-      //   headers: {
-      //     'accept': 'application/json',
-      //     ...form.getHeaders(), // 自动生成 multipart/form-data 的 Content-Type 和 boundary
-      //   },
-      // }).then(res=>{
-      //   console.log("hnc_stt:");
-      //   console.log(res);
-      // }).catch(error => {
-      //   if (error.response) {
-      //     console.error('服务器响应错误:', error.response.data);
-      //     console.error('状态码:', error.response.status);
-      //     console.error('响应头:', error.response.headers);
-      //   } else if (error.request) {
-      //     console.error('无响应:', error.request);
-      //   } else {
-      //     console.error('请求错误:', error.message);
-      //   }
-      // });
-
-    // apis.hnc_tti("选择系统盘程序").then((res) => {
-    //   if(res&&res.code=="200"){
-    //     if(res.data.command_list)
-    //     {
-
-    //     }
-    //     console.log(res.data);
-    //   }else{
-    //     console.log("请求失败:"+res?.msg);
-    //   }
-    // });
-
-    // this.startRecording();
-
     //监听APP指令完成与APP消息
     window.addEventListener('app-command-result', this.handleCommandResult);
     window.addEventListener('app-launch', this.handleAppLaunchResult);
     window.addEventListener('app-message', this.handleAppMessage);
 
     //监听故障诊断页面传来的消息
-    window.addEventListener('app-todo-action', this.handleTodoAction);
+    ipcRenderer.on('message-to-renderer', (event, data) => {
+      console.log('收到消息:', data); 
+    });
 
     //  asr连接 前端监听
     // ipcRenderer.on('asr-transcript', (event, data) => {
@@ -150,7 +87,6 @@ const app = Vue.createApp({
     // ipcRenderer.on('asr-error', (event, error) => {
     //   console.log(error.message );
     // })
-
   },
   methods: {
 
@@ -242,6 +178,7 @@ const app = Vue.createApp({
 
     // ***********************麦克风录音 ***************//
     async toggleRecording() {
+      console.log(this.isRecording);
       if (this.isRecording) {
         await this.stopRecording();
       } else {
@@ -249,7 +186,7 @@ const app = Vue.createApp({
       }
     },
     async startRecording() {
-      if (this.isRecording || this.commandList.length > 0) {
+      if (this.isRecording ||  this.commandList.length > 0) {
         return;
       }
       try {
@@ -418,11 +355,11 @@ const app = Vue.createApp({
     //指令处理结果返回
     handleCommandResult(event) {
       const { appId, msg } = event.detail;
-      if(runingcmd!=null)
+      if(this.runingcmd!=null)
       {
         if(msg=="ok") //指令执行完成
         {
-          if(runingcmd.type==1)
+          if(this.runingcmd.type==1)
           {
             this.commandList = this.commandList.shift()
             if(this.commandList.length>0){
@@ -430,17 +367,17 @@ const app = Vue.createApp({
             }
           }
         }else{  //指令执行失败
-          if(runingcmd.type==1)
+          if(this.runingcmd.type==1)
           {
             this.floatballtip(0,"指令执行失败:"+msg);
-            this.commandList =null;
+            this.commandList =[];
           }
-          if(runingcmd.type==2)
+          if(this.runingcmd.type==2)
           {
             this.floatballtodo(0,"指令执行失败:"+msg);
           }
         }
-        runingcmd=null;
+        this.runingcmd=null;
         if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
       }
     },
@@ -454,15 +391,15 @@ const app = Vue.createApp({
     async handleAppLaunchResult(event) {
       const { appId } = event.detail;
       //说明有正在执行的指令，继续执行
-      if(runingcmd != null){
-        if(runingcmd.type==1)
+      if(this.runingcmd != null){
+        if(this.runingcmd.type==1)
         {
           this.docommand();
           if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         }
-        if(runingcmd.type==2)
+        if(this.runingcmd.type==2)
         { 
-          this.fddocommand(runingcmd.cmd);
+          this.fddocommand(this.runingcmd.cmd);
           if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         }
       }
@@ -476,76 +413,81 @@ const app = Vue.createApp({
     floatballtip(type,message){
 
       //需要先触发显示页面，再推送
-      const event = new CustomEvent('floatball-tip',{detail:{
-        type : type,
-        message : message
-      }});
-      window.dispatchEvent(event);
+
+      // 发送消息到主进程
+      ipcRenderer.send('message-from-renderer', {
+        target: 'tip', // 指定目标窗口
+        data: { type : type,  message : message }
+      });
     },
 
     //通知故障诊断页面
     floatballtodo(type,message,commandlist){
-      //需要先出发显示页面，并且隐藏小的提示框 再推送
-      const event = new CustomEvent('floatball-todo',   {
-        detail: { type, commandlist,  message}
+      // 发送消息到主进程
+      ipcRenderer.send('message-from-renderer', {
+        target: 'todo', // 指定目标窗口
+        data: { type : type,  message : message,commandlist }
       });
-      window.dispatchEvent(event);
     },
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
     async handlestopRecordAfter(result){
-       console.log("handlestopRecordAfter");
-       console.log(result);
-       if(result.success && result.message){
-        this.floatballtip(1,result.message);
-        try
-        {
-          //调用 指令交互接口    根据结果判断
-          var res = await apis.hnc_tti(result.message);
-          if (res && res.code == "200") {
-            if (res.data.command_list && res.data.command_list.length > 0) {
-              //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
-              if(res.data.command_list[0].app_id=="fault_diagnosis"){
-                await this.FaultDiagnosis(result.message);
-              }
-              //需要处理的指令集合
-              else {
-                this.commandList = res.data.command_list;
-                this.docommand();
-              }
-            } else {
-              //小提示框 显示 空的指令列表
-              this.floatballtip(0, "未能识别到指令，请重试");
-            }
-          } else if (res?.code == "1001" || res?.code == "1002") {
-            //故障码 1001   APP不存在
-            //故障码 1002   指令不存在
-            //提示未能识别指令，请重试
-            this.floatballtip(0,"APP或者指令不存在,请重试");
+       if(!result.success){
+        this.floatballtip(0, "录音故障:" + result.message);
+       }else{
+          const normalizedPath = path.normalize(result.path);
+          const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
+          if(!uploadres || uploadres.code!= 200){
+            this.floatballtip(0, "上传录音文件故障 " + uploadres?.data?.message);
           }else{
-            //小提示框  提示网络故障，请重试
-            this.floatballtip(0, "服务故障:" + err.message);
+            result.message=uploadres.data.result;
+            this.floatballtip(1,result.message);
+           try
+             {
+               //调用 指令交互接口    根据结果判断
+               const res = await ipcRenderer.invoke('hnc_tti', result.message);
+               if (res && res.code == 200) {
+                 if (res.data.command_list && res.data.command_list.length > 0) {
+                   //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
+                   if(res.data.command_list[0].app_id=="fault_diagnosis"){
+                     await this.FaultDiagnosis(result.message);
+                   }
+                   //需要处理的指令集合
+                   else {
+                     this.commandList = res.data.command_list;
+                     this.docommand();
+                   }
+                 } else {
+                   //小提示框 显示 空的指令列表
+                   this.floatballtip(0, "未能识别到指令，请重试");
+                 }
+               } else if (res?.code == 1001 || res?.code == 1002) {
+                 //故障码 1001   APP不存在
+                 //故障码 1002   指令不存在
+                 //提示未能识别指令，请重试
+                 this.floatballtip(0,"APP或者指令不存在,请重试");
+               }else{
+                 //小提示框  提示网络故障，请重试
+                 this.floatballtip(0, "服务故障:" + err.message);
+               }
+             }
+             catch (err) {
+               //小提示框  提示网络故障，请重试
+               this.floatballtip(0, "录音或者网络故障:" + err.message);
+             }
+             finally {
+               
+             }
           }
-        }
-        catch (err) {
-          //小提示框  提示网络故障，请重试
-          this.floatballtip(0, "录音或者网络故障:" + err.message);
-        }
-        finally {
-          this.cleanup();
-        }
-      } else {
-        //小提示框  提示网络故障，请重试
-        this.floatballtip(0, "录音或者网络故障:" + result.message);
-      }
-      console.log(result);
+       }
       //等所有的接口处理完成之后，在进行录音资源释放
       this.cleanup();
     },
 
     //故障诊断接口
     async FaultDiagnosis(message) {
-      res = await apis.hnc_fd(result.message);
+      //res = await apis.hnc_fd(result.message);
+      const res = await ipcRenderer.invoke('hnc_fd', message);
       if(res&&res.code=="200"){
         if(res.data.msg&&res.data.command_list.length>0)
           {
@@ -583,15 +525,17 @@ const app = Vue.createApp({
       const cmd=this.commandList[0];
       var app = stateStore.getCurrentState(cmd.app_id);
       if(app){
-        runingcmd={type : 1, cmd };
+        this.runingcmd={type : 1, cmd };
         if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         this.checkTimeoutId = this.checkTimeout();
         if(app.state=="0"){ //先启动
+          console.log("Command/Open",app);
           mqttClient.publish('Command/Open', {
             app_id: cmd.app_id,
             timestamp: Date.now()
           })
         }else{ //直接发送指令
+          console.log("Command/Action",app);
           mqttClient.publish('Command/Action/'+cmd.app_id, {
             app_id: cmd.app_id,
             command:cmd.command,
@@ -601,7 +545,7 @@ const app = Vue.createApp({
       }else{
         //提示当前APP未注册
         this.floatballtip(0,"当前APP未注册");
-        this.commandList=null;
+        this.commandList=[];
       }
     },
 
@@ -609,7 +553,7 @@ const app = Vue.createApp({
     fddocommand(cmd){
       var app = stateStore.getCurrentState(cmd.app_id);
       if(app){
-        runingcmd={ type : 2 , cmd };
+        this.runingcmd={ type : 2 , cmd };
         if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         this.checkTimeoutId = this.checkTimeout();
         if(app.state=="0"){ //先启动
@@ -634,17 +578,17 @@ const app = Vue.createApp({
     checkTimeout(){
       return setTimeout(() => {
         //超过3秒还没执行完成一个指令
-        if(this.runingcmd!=null){
-          if(runingcmd.type==1)
+        if(this.this.runingcmd!=null){
+          if(this.runingcmd.type==1)
           {
             this.floatballtip(0,"指令执行超时");
           }
-          if(runingcmd.type==2)
+          if(this.runingcmd.type==2)
           {
             this.floatballtodo(0,"指令执行超时");
           }
-          runingcmd=null;
-          this.commandList=null;
+          this.runingcmd=null;
+          this.commandList=[];
         }
       }, 3000);
     },
@@ -704,10 +648,10 @@ const app = Vue.createApp({
         ipcRenderer.send("showTodo", "open")
       }
       // 如果不是拖动而是点击，就开始录音
+      console.log("calcS()",calcS());
       if (calcS()) {
         await this.toggleRecording();
       }
-
 
     },
 
