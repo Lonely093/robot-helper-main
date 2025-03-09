@@ -9,6 +9,9 @@ const draggableElement = ref(null);
 const mqttClient = require("../../utils/mqtt")
 const apis = require("../../utils/api");
 const stateStore = require("../../utils/mqtt_persistence");
+const fs = require('fs');
+const FormData = require('form-data');
+const axios= require("axios");
 
 
 applyConfig()
@@ -43,12 +46,10 @@ const app = Vue.createApp({
       analyser: null,
       silenceCount: 0,
       animationFrameId: null,
-      isAllRuning: false,
-      finalTranscript: "",
-      commandList: [],
-      fdcommandList: [],
-      runingcmd: null,
-      runingopen: null,
+      finalTranscript:"",
+      commandList:[],
+      runingcmd:null,
+      checkTimeoutId:null
     }
   },
 
@@ -68,7 +69,54 @@ const app = Vue.createApp({
     })
     ipcRenderer.send("updateBall")
 
-    //this.connectmqtt();
+    this.connectmqtt();
+
+    // apis.hnc_tti("请打开程序管理页面").then(res=>{
+    //   console.log("hnc_tti:");
+    //   console.log(res);
+    // });
+     const filePath = 'D:\\\\2025\\\\robot-helper-main\\\\RecorderFolder\\\\recording_1741497581347.wav';
+    //  // 1. 同步读取文件到内存（Buffer）
+    //  //const fileStream = fs.createReadStream(filePath);
+    //  const buffer = fs.readFileSync(filePath);
+    //  console.log("buffer");
+    //  console.log(buffer);
+    //  const form = new FormData();
+    //   // 添加文件字段（核心参数）
+    //   form.append(
+    //     'audio_file',   // 字段名（必须与后端定义一致）
+    //     buffer, // 使用 Stream 避免大文件内存溢出
+    //     {
+    //       filename: filePath.split('/').pop(),   // 自定义文件名（可选）
+    //       contentType: 'audio/wav',     // 明确 MIME 类型（强烈建议）
+    //     }
+    //   );
+    //   console.log('FormData Headers:', form.getHeaders());
+    //   console.log('FormData :', form);
+       // 3. 发送请求（正确用法）
+      // axios({
+      //   method: 'post',
+      //   url: `http://172.20.11.80:9000/api/hnc_stt`,
+      //   data:form,
+      //   headers: {
+      //     'accept': 'application/json',
+      //     ...form.getHeaders(), // 自动生成 multipart/form-data 的 Content-Type 和 boundary
+      //   },
+      // }).then(res=>{
+      //   console.log("hnc_stt:");
+      //   console.log(res);
+      // }).catch(error => {
+      //   if (error.response) {
+      //     console.error('服务器响应错误:', error.response.data);
+      //     console.error('状态码:', error.response.status);
+      //     console.error('响应头:', error.response.headers);
+      //   } else if (error.request) {
+      //     console.error('无响应:', error.request);
+      //   } else {
+      //     console.error('请求错误:', error.message);
+      //   }
+      // });
+
     // apis.hnc_tti("选择系统盘程序").then((res) => {
     //   if(res&&res.code=="200"){
     //     if(res.data.command_list)
@@ -88,12 +136,8 @@ const app = Vue.createApp({
     window.addEventListener('app-launch', this.handleAppLaunchResult);
     window.addEventListener('app-message', this.handleAppMessage);
 
-    window.addEventListener('floatball-test', (event) => {
-      console.log('floatball-test');
-      console.log(event.detail);
-    });
-
-    mqttClient._test();
+    //监听故障诊断页面传来的消息
+    window.addEventListener('app-todo-action', this.handleTodoAction);
 
     //  asr连接 前端监听
     // ipcRenderer.on('asr-transcript', (event, data) => {
@@ -334,16 +378,18 @@ const app = Vue.createApp({
     },
 
     // ***********************麦克风录音结束 ***************//
+
+    //*************************** MQTT **********************//
     async connectmqtt() {
       try {
         // 等待连接成功
         await mqttClient.connect()
 
         //测试主题
-        mqttClient.subscribe('test/topic', (message, topic) => {
-          console.log(`Received message from ${topic}:`, message)
-        })
-
+        // mqttClient.subscribe('test/topic', (message, topic) => {
+        //   console.log(`Received message from ${topic}:`, message)
+        // })
+        
         //启动消息   App/Open/+  对应 App/Launch/+
 
         //AppCenter/Apps  //参见报文3
@@ -352,18 +398,17 @@ const app = Vue.createApp({
         //App/Reply/+      //参见报文14
         //App/Message/+   //App主动向语音助手发送消息时使用  //参见报文31
 
-
         //APP注册发布主题
-        mqttClient.subscribe('AppCenter/Apps', (message, topic) => {
-          console.log(`Received message from ${topic}:`, message)
-        })
+        // mqttClient.subscribe('AppCenter/Apps', (message, topic) => {
+        //   console.log(`Received message from ${topic}:`, message)
+        // })
 
-        //发送主题
-        mqttClient.publish('test/topic', {
-          text: 'Hello from Vue',
-          timestamp: Date.now()
-        })
-        console.log("发送主题");
+        // //发送主题
+        // mqttClient.publish('test/topic', {
+        //   text: 'Hello from Vue',
+        //   timestamp: Date.now()
+        // })
+        // console.log("发送主题");
 
       } catch (error) {
         console.error('MQTT连接失败:', error);
@@ -373,7 +418,31 @@ const app = Vue.createApp({
     //指令处理结果返回
     handleCommandResult(event) {
       const { appId, msg } = event.detail;
-
+      if(runingcmd!=null)
+      {
+        if(msg=="ok") //指令执行完成
+        {
+          if(runingcmd.type==1)
+          {
+            this.commandList = this.commandList.shift()
+            if(this.commandList.length>0){
+              this.docommand();
+            }
+          }
+        }else{  //指令执行失败
+          if(runingcmd.type==1)
+          {
+            this.floatballtip(0,"指令执行失败:"+msg);
+            this.commandList =null;
+          }
+          if(runingcmd.type==2)
+          {
+            this.floatballtodo(0,"指令执行失败:"+msg);
+          }
+        }
+        runingcmd=null;
+        if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+      }
     },
 
     //APP推送消息
@@ -384,6 +453,19 @@ const app = Vue.createApp({
     //APP启动反馈
     async handleAppLaunchResult(event) {
       const { appId } = event.detail;
+      //说明有正在执行的指令，继续执行
+      if(runingcmd != null){
+        if(runingcmd.type==1)
+        {
+          this.docommand();
+          if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+        }
+        if(runingcmd.type==2)
+        { 
+          this.fddocommand(runingcmd.cmd);
+          if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+        }
+      }
     },
 
     //********************** MQTT 连接结束 ***************//
@@ -391,26 +473,39 @@ const app = Vue.createApp({
     //****************** HTTP接口处理 ****************/
 
     //将结果回传给Tip 进行提示   1 正常消息    0 错误提示
-    floatballtip(type, message) {
-      const event = new CustomEvent('floatball-tip', {
-        type: type,
-        message: result.message
+    floatballtip(type,message){
+
+      //需要先触发显示页面，再推送
+      const event = new CustomEvent('floatball-tip',{detail:{
+        type : type,
+        message : message
+      }});
+      window.dispatchEvent(event);
+    },
+
+    //通知故障诊断页面
+    floatballtodo(type,message,commandlist){
+      //需要先出发显示页面，并且隐藏小的提示框 再推送
+      const event = new CustomEvent('floatball-todo',   {
+        detail: { type, commandlist,  message}
       });
       window.dispatchEvent(event);
     },
 
-    async handlestopRecordAfter(result) {
-      //根据结果进行处理  成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
-      if (result.success && result.message) {
-        this.floatballtip(1, result.message);
-        try {
+    //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
+    async handlestopRecordAfter(result){
+       console.log("handlestopRecordAfter");
+       console.log(result);
+       if(result.success && result.message){
+        this.floatballtip(1,result.message);
+        try
+        {
           //调用 指令交互接口    根据结果判断
           var res = await apis.hnc_tti(result.message);
           if (res && res.code == "200") {
             if (res.data.command_list && res.data.command_list.length > 0) {
               //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
-              if (res.data.command_list[0].app_id == "fault_diagnosis") {
-
+              if(res.data.command_list[0].app_id=="fault_diagnosis"){
                 await this.FaultDiagnosis(result.message);
               }
               //需要处理的指令集合
@@ -426,8 +521,8 @@ const app = Vue.createApp({
             //故障码 1001   APP不存在
             //故障码 1002   指令不存在
             //提示未能识别指令，请重试
-            this.floatballtip(0, "未能识别，请重试");
-          } else {
+            this.floatballtip(0,"APP或者指令不存在,请重试");
+          }else{
             //小提示框  提示网络故障，请重试
             this.floatballtip(0, "服务故障:" + err.message);
           }
@@ -451,44 +546,109 @@ const app = Vue.createApp({
     //故障诊断接口
     async FaultDiagnosis(message) {
       res = await apis.hnc_fd(result.message);
-      if (res && res.code == "200") {
-        if (res.data.msg && res.data.command_list.length > 0) {
-          //将故障诊断描述 + 可执行的指令列表传递给 大提示框。
-          const event = new CustomEvent('floatball-todo', {
-            msg: result.message,
-            command_list: res.data.command_list
-          });
-
-          window.dispatchEvent(event);
-          res.data.command_list.forEach(one => {
-            this.fdcommandList.push(one);
-          });
-
-        } else {
-          //空的指令列表/空的故障描述
-        }
-      } else {
+      if(res&&res.code=="200"){
+        if(res.data.msg&&res.data.command_list.length>0)
+          {
+            //将故障诊断描述 + 可执行的指令列表传递给 大提示框。
+            this.floatballtodo(1,message,res.data.command_list);
+          }else{
+            //空的指令列表/空的故障描述
+            this.floatballtodo(0,"空的指令列表:"+res.data.msg);
+          }
+      }else{
         // 需要在大提示框中显示：  故障诊断错误  res.data.msg
+        this.floatballtodo(0,"故障诊断错误:"+res.data.msg);
       }
     },
 
-    //处理指令
-    docommand() {
-      if (!this.commandList || this.commandList.length <= 0) {
+    //处理故障诊断页面传来的动作
+    handleTodoAction(event){
+      const { message, command } = event.detail;
+      //两种情况，  再次请求故障诊断 ， 或者直接执行指令
+      if(message){
+        this.FaultDiagnosis(message);
+        return;
+      }
+      if(command){
+        this.fddocommand(command);
+      }
+    },
+    
+    //直接处理指令
+    docommand(){
+      if(!this.commandList || this.commandList.length<=0){
         return;
       }
       //每次执行一个指令，等待指令完成之后继续执行下一个指令
-      var app = stateStore.getCurrentState(this.commandList[0].app_id);
-      if (app) {
-        if (app.state == "0") { //先启动
+      const cmd=this.commandList[0];
+      var app = stateStore.getCurrentState(cmd.app_id);
+      if(app){
+        runingcmd={type : 1, cmd };
+        if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+        this.checkTimeoutId = this.checkTimeout();
+        if(app.state=="0"){ //先启动
+          mqttClient.publish('Command/Open', {
+            app_id: cmd.app_id,
+            timestamp: Date.now()
+          })
+        }else{ //直接发送指令
+          mqttClient.publish('Command/Action/'+cmd.app_id, {
+            app_id: cmd.app_id,
+            command:cmd.command,
+            timestamp: Date.now()
+          })
+        }
+      }else{
+        //提示当前APP未注册
+        this.floatballtip(0,"当前APP未注册");
+        this.commandList=null;
+      }
+    },
 
-        } else { //直接发送指令
-
+    //故障诊断的指令处理
+    fddocommand(cmd){
+      var app = stateStore.getCurrentState(cmd.app_id);
+      if(app){
+        runingcmd={ type : 2 , cmd };
+        if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+        this.checkTimeoutId = this.checkTimeout();
+        if(app.state=="0"){ //先启动
+          mqttClient.publish('Command/Open', {
+            app_id: cmd.app_id,
+            timestamp: Date.now()
+          })
+        }else{ //直接发送指令
+          mqttClient.publish('Command/Action/'+cmd.app_id, {
+            app_id: cmd.app_id,
+            command:cmd.command,
+            timestamp: Date.now()
+          })
         }
       } else {
         //提示当前APP未注册
+        this.floatballtodo(0,"当前APP未注册");
       }
     },
+
+    //处理超时情况
+    checkTimeout(){
+      return setTimeout(() => {
+        //超过3秒还没执行完成一个指令
+        if(this.runingcmd!=null){
+          if(runingcmd.type==1)
+          {
+            this.floatballtip(0,"指令执行超时");
+          }
+          if(runingcmd.type==2)
+          {
+            this.floatballtodo(0,"指令执行超时");
+          }
+          runingcmd=null;
+          this.commandList=null;
+        }
+      }, 3000);
+    },
+
     /****************** HTTP接口处理结束 ****************/
 
     // showMore() {

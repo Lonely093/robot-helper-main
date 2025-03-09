@@ -19,7 +19,10 @@ const app = Vue.createApp({
   },
 
   mounted() {
-
+    window.addEventListener('floatball-todo', (event)=>{
+      //type 0 错误消息    1 正常 故障诊断消息
+      const { type,commandlist,message } = event.detail;
+    });
   },
   methods: {
     handleWindowClose() {
