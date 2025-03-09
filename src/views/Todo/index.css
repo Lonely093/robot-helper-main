@@ -19,16 +19,10 @@ body {
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  scroll-behavior: smooth;
-  /* 平滑滚动 */
-  scrollbar-width: thin;
-  /* 窄滚动条 */
-  scrollbar-color: rgba(255, 7, 7, 0.3) transparent;
-  /* 滚动条颜色 */
+
 }
 
 .input-container {
-
   position: absolute;
   /* 改为相对父容器定位 */
   bottom: 10px;
@@ -175,4 +169,14 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.command-link {
+  color: #409eff; /* Element UI蓝色标准值 */
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.3s;
+}
+.command-link:hover {
+  color: #79bbff; /* 悬停高亮色 */
 }
