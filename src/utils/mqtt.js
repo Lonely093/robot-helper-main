@@ -7,7 +7,7 @@ class MqttClient {
     // 合并配置参数
     this.options = Object.assign({
       brokerUrl: 'ws://127.0.0.1:8083/mqtt',
-      clientId: `robot-ai${Math.random().toString(16).substr(2, 8)}`,
+      clientId: 'robot-ai', //`robot-ai${Math.random().toString(16).substr(2, 8)}`,
       username: '',
       password: '',
       clean: false,  //启用持久会话
@@ -37,6 +37,14 @@ class MqttClient {
     this.reconnectTimer = null      // 重连定时器
     this.setoptions={qos:2,retain:true}  //设置发布订阅的消息等级  以及是否存储
    
+  }
+
+  _test(){
+    console.log("_test");
+    const event = new CustomEvent('floatball-test', {
+      detail: { type:1,message:"teste121212" }
+    });
+    window.dispatchEvent(event);
   }
 
     // 格式化遗嘱消息
@@ -131,6 +139,9 @@ class MqttClient {
             }
         })
         this.pendingPublishes = []
+
+        //新增初始化订阅
+
     }
 
     // 处理连接错误
@@ -270,9 +281,11 @@ class MqttClient {
   //初始化MQTT 订阅基础的APP注册，并根据获取到的注册结果，进行各个APP消息注册
   initialize(){
     //APP注册发布
+    if(this.subscriptions.length>0) return;
     this.subscriptions.set('AppCenter/Apps', ( topic,message) => {
      //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
      const msg = this.parseMessage(message)
+     console.log(msg);
      if(msg.apps&&msg.apps.length>0){
       msg.apps.forEach(app=>{
         app.state="0";//默认设置为未启动
@@ -297,7 +310,6 @@ class MqttClient {
             AppReply(topic,message)
           });
         }
-
       });
      }
     })
@@ -326,7 +338,8 @@ class MqttClient {
      stateStore.updateState(app.app_id,app);
     }
   }
-
+  
+  //指令执行反馈
   AppReply(topic,message){
     const msg = this.parseMessage(message)
      //逻辑处理
@@ -341,7 +354,7 @@ class MqttClient {
 
   AppMessage(topic,message){
     const msg = this.parseMessage(message)
-    this.triggerAppMessagetEvent(app.app_id,app.message);
+    this.triggerAppMessagetEvent(msg.app_id,msg.message);
   }
 
   triggerAppLaunchEvent(appId) {
