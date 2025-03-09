@@ -7,23 +7,28 @@ const service = axios.create({
 });
 
 // 2.请求拦截器
-service.interceptors.request.use(config => {
-    //发请求前做的一些处理，数据转化，配置请求头，设置token,设置loading等，根据需求去添加
-    config.data = JSON.stringify(config.data); //数据转化,也可以使用qs转换
-    // config.headers = {
-    //   'Content-Type':'application/json',
-    //   'Access-Control-Allow-Origin':"*"
-    // }
-    //如有需要：注意使用token的时候需要引入cookie方法或者用本地localStorage等方法，推荐js-cookie
-    //const token = getCookie('名称');//这里取token之前，你肯定需要先拿到token,存一下
-    //if(token){
-    //config.params = {'token':token} //如果要求携带在参数中
-    //config.headers.token= token; //如果要求携带在请求头中
-    //}
-    return config
-  }, error => {
-    Promise.reject(error)
-})
+// service.interceptors.request.use(config => {
+
+//     console.log('请求地址:', config.url);
+//     console.log('请求方法:', config.method);
+//     console.log('请求头:', config.headers);
+//     console.log('请求数据:', config.data);
+//     //发请求前做的一些处理，数据转化，配置请求头，设置token,设置loading等，根据需求去添加
+//     //config.data = JSON.stringify(config.data); //数据转化,也可以使用qs转换
+//     // config.headers = {
+//     //   'Content-Type':'application/json',
+//     //   'Access-Control-Allow-Origin':"*"
+//     // }
+//     //如有需要：注意使用token的时候需要引入cookie方法或者用本地localStorage等方法，推荐js-cookie
+//     //const token = getCookie('名称');//这里取token之前，你肯定需要先拿到token,存一下
+//     //if(token){
+//     //config.params = {'token':token} //如果要求携带在参数中
+//     //config.headers.token= token; //如果要求携带在请求头中
+//     //}
+//     return config
+//   }, error => {
+//     Promise.reject(error)
+// })
 
   // 3.响应拦截器
 service.interceptors.response.use(response => {
@@ -37,6 +42,7 @@ service.interceptors.response.use(response => {
       switch (error.response.status) {
         case 400:
           error.message = '错误请求'
+          console.log(error);
           break;
         case 401:
           error.message = '未授权，请重新登录'

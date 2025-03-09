@@ -6,6 +6,7 @@ const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
 ffmpeg.setFfmpegPath(ffmpegPath)
 const apis=require('./api');
+const FormData = require('form-data');
 
 class AudioRecorder {
   constructor() {
@@ -328,31 +329,49 @@ class AudioRecorder {
             await this.verifyFile();
             const stats = fs.statSync(this.filePath);
             clearTimeout(timeoutId); // 清除超时
-
             //文件转换
             const newpath = await this.convertWebmToWav(this.filePath);
             fs.unlinkSync(this.filePath) // 删除原始webm文件
-
-            //转换为 ArrayBuffer
+            var result={ 
+              success: false, 
+              path: newpath,
+              message:"",
+              res2:null
+            }
             const fileStream = fs.createReadStream(newpath);
-            const arrayBuffer = fileStream.buffer;
-            console.log(fileStream);
-            // 创建有效 Blob
-            const blob = new Blob([arrayBuffer], {
-              type:'audio/wav'
-            });
-            // 创建 FormData
-            const formData = new FormData();
-            formData.append('audio', blob, path.basename(newpath));
-
-            // var res= await apis.hnc_stt(formData);
+            const form = new FormData();
+            // 添加文件字段（核心参数）
+            form.append(
+              'audio_file',            // 字段名（必须与后端定义一致）
+              fileStream, // 使用 Stream 避免大文件内存溢出
+              {
+                filename: newpath.split('/').pop(),   // 自定义文件名（可选）
+                contentType: 'audio/wav',     // 明确 MIME 类型（强烈建议）
+                knownLength: stats        // 声明文件大小（优化性能）
+              }
+            );
+            var res=await apis.hnc_tti("请打开程序管理也买你");
+             result.res2=res;
             // if(res && res.code=="200"){
             //   result.success=true;
             //   result.message=res.message;
             // }else{
             //   result.message=res?.message;
             // }
-            resolve({ success: true, path: newpath, size: stats.size });
+           
+            //   apis.hnc_stt(formData).then(res=>{
+            //     console.log(res);
+            //     result.res2=res;
+            //     if(res && res.code=="200"){
+            //       result.success=true;
+            //       result.message=res.message;
+            //     }else{
+            //       result.message=res?.message;
+            //     }
+            //     resolve(result);
+            // });
+            resolve(result);
+            
           } catch (err) {
             clearTimeout(timeoutId);
             reject(new Error(`文件验证失败: ${err.message}`));

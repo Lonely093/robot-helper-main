@@ -141,7 +141,7 @@ class MqttClient {
         this.pendingPublishes = []
 
         //新增初始化订阅
-
+        this.initialize();
     }
 
     // 处理连接错误
@@ -284,6 +284,7 @@ class MqttClient {
     if(this.subscriptions.length>0) return;
     this.subscriptions.set('AppCenter/Apps', ( topic,message) => {
      //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
+     console.log("AppCenter:"+ message);
      const msg = this.parseMessage(message)
      console.log(msg);
      if(msg.apps&&msg.apps.length>0){
@@ -317,6 +318,7 @@ class MqttClient {
   }
 
   AppLaunch(topic,message){
+    console.log("AppLaunch:"+message);
     const msg = this.parseMessage(message)
     var app= stateStore.getCurrentState(msg.app_id);
     var appid="";
@@ -331,6 +333,7 @@ class MqttClient {
   }
 
   AppExit(topic,message){
+    console.log("AppExit:"+message);
     const msg = this.parseMessage(message)
     var app= stateStore.getCurrentState(msg.app_id);
     if(app){
@@ -341,6 +344,7 @@ class MqttClient {
   
   //指令执行反馈
   AppReply(topic,message){
+    console.log("AppReply:"+message);
     const msg = this.parseMessage(message)
      //逻辑处理
     if(msg.command=="ok")
