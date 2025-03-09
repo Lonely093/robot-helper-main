@@ -19,7 +19,11 @@ const app = Vue.createApp({
   },
 
   mounted() {
+    window.addEventListener('floatball-todo', (event)=>{
+      
+      const { commandlist,message } = event.detail;
 
+    });
   },
   methods: {
     sendMessage() {

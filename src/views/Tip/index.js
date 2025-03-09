@@ -15,6 +15,11 @@ const app = Vue.createApp({
 
   mounted() {
 
+    window.addEventListener('floatball-tip', (event)=>{
+      //type 0 错误消息    1 正常 语音转文字结果
+      const { type,message } = event.detail;
+    });
+    
   },
   methods: {
 

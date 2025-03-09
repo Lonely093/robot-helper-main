@@ -88,13 +88,6 @@ const app = Vue.createApp({
     window.addEventListener('app-launch', this.handleAppLaunchResult);
     window.addEventListener('app-message', this.handleAppMessage);
 
-    window.addEventListener('floatball-test', (event)=>{
-      console.log('floatball-test');
-      console.log(event.detail);
-    });
-
-    mqttClient._test();
-
     //  asr连接 前端监听
     // ipcRenderer.on('asr-transcript', (event, data) => {
     //   if (data.isFinal) {
@@ -392,10 +385,10 @@ const app = Vue.createApp({
 
     //将结果回传给Tip 进行提示   1 正常消息    0 错误提示
     floatballtip(type,message){
-      const event = new CustomEvent('floatball-tip', {
-        type:type,
-        message:result.message
-      });
+      const event = new CustomEvent('floatball-tip',{detail:{
+        type : type,
+        message : message
+      }});
       window.dispatchEvent(event);
     },
 
@@ -450,6 +443,14 @@ const app = Vue.createApp({
       this.cleanup();
     },
 
+
+    floatballtodo(message,commandlist){
+       const event = new CustomEvent('floatball-todo',   {
+        detail: {  commandlist,  message}
+      });
+      window.dispatchEvent(event);
+    },
+
     //故障诊断接口
     async FaultDiagnosis(message)
     {
@@ -458,12 +459,7 @@ const app = Vue.createApp({
         if(res.data.msg&&res.data.command_list.length>0)
           {
             //将故障诊断描述 + 可执行的指令列表传递给 大提示框。
-            const event = new CustomEvent('floatball-todo', {
-              msg:result.message,
-              command_list:res.data.command_list
-            });
-
-            window.dispatchEvent(event);
+            this.floatballtodo(message,res.data.command_list);
             res.data.command_list.forEach(one=>{
               this.fdcommandList.push(one);
             });
@@ -486,7 +482,7 @@ const app = Vue.createApp({
       if(app){
         if(app.state=="0"){ //先启动
 
-        }else{ 直接发送指令
+        }else{ //直接发送指令
 
         }
       }else{
