@@ -57,21 +57,23 @@ const createEssayWindow = () => {
 }
 
 const createTodoWindow = () => {
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width * 0.8, top: screen.getPrimaryDisplay().workAreaSize.height * 0.2 }
+  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 580, top: screen.getPrimaryDisplay().workAreaSize.height * 0.2 }
   const win = new BrowserWindow({
     skipTaskbar: true, // 新增这行关闭任务栏显示
-    width: 300,
-    minWidth: 300,
-    height: 500,
+    frame: false,
+    width: 500,
+    height: 400,
+    // resizable: false,
     x: left,
     y: top,
     show: false,
     alwaysOnTop: true,
-    menuBarVisible: false,
-    minimizable: false,   // 禁用最小化按钮
-    maximizable: false,   // 禁用最大化按钮
-    closable: true,        // 保留关闭按钮（默认已启用）
-
+    // menuBarVisible: false,
+    // minimizable: false,   // 禁用最小化按钮
+    // maximizable: false,   // 禁用最大化按钮
+    // closable: true,        // 保留关闭按钮（默认已启用）
+    transparent: true,  
+    backgroundColor: '#00000000', 
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -85,7 +87,7 @@ const createTodoWindow = () => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
-  win.webContents.openDevTools()
+  // win.webContents.openDevTools()
   return win
 }
 

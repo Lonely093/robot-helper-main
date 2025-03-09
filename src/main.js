@@ -3,13 +3,13 @@ const path = require('path');
 const { createSuspensionWindow, createEssayWindow, createTodoWindow, createTipWindow, createConfigWindow } = require("./window.js")
 Menu.setApplicationMenu(null);
 
-const recorder   = require('./utils/recorder');
+const recorder = require('./utils/recorder');
 
 
 // 悬浮球的一些设置
 const suspensionConfig = {
-  width: 85,
-  height: 50,
+  width: 80,
+  height: 80,
 }
 
 // const suspensionConfig = {
@@ -92,6 +92,20 @@ ipcMain.on('showTodo', (e, data) => {
     pages.todoWin = null
   })
 })
+
+ipcMain.on('close-todo', (event) => {
+  if (pages.todoWin) pages.todoWin.close();
+});
+
+ipcMain.on('openTip', (e, data) => {
+  if (!pages.tipWin) {
+    pages.tipWin = createTipWindow()
+  }
+  pages.tipWin.on('close', (e, data) => {
+    pages.tipWin = null
+  })
+})
+
 
 ipcMain.on('showTip', (e, data) => {
   if (pages.tipWin) {
@@ -212,3 +226,6 @@ ipcMain.on('set-win-position', (event, position) => {
     true // 启用动画
   )
 })
+ipcMain.on('todo-window-close', () => {
+  pages.todoWin.close();
+});

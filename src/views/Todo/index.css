@@ -1,55 +1,178 @@
 /* @import url("../../style/common.css"); */
 
-html {
+/* html {
   background-color: #F2F3F5;
   overflow: -moz-hidden-unscrollable;
-}
+} */
 body {
   padding: 0;
   margin: 0;
 }
-/* body::-webkit-scrollbar {
-  display: none;
-} */
+
 
 .chatbot-container {
   position: relative;
-  height: 100vh; /* 确保容器高度占满整个视口 */
+  height: 100vh;
+  /* 确保容器高度占满整个视口 */
+  background-color: rgba(0, 0, 0, 0.9);
+  /* 黑色，透明度80% */
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  scroll-behavior: smooth;
+  /* 平滑滚动 */
+  scrollbar-width: thin;
+  /* 窄滚动条 */
+  scrollbar-color: rgba(255, 7, 7, 0.3) transparent;
+  /* 滚动条颜色 */
 }
 
 .input-container {
-  /* 固定在底部 */
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+
+  position: absolute;
+  /* 改为相对父容器定位 */
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
 
   /* 横向排列 */
   display: flex;
-  gap: 10px; /* 输入框和按钮之间的间距 */
-  padding: 15px; /* 底部内边距，避免贴边 */
-  background: #fff; /* 防止底部内容透出 */
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1); /* 可选：顶部阴影分隔线 */
+  gap: 10px;
+  /* 输入框和按钮之间的间距 */
+  padding: 3px;
+  /* 底部内边距，避免贴边 */
+  background: rgba(0, 0, 0, 0.9);
+  ;
+  /* 防止底部内容透出 */
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.9);
+  /* 可选：顶部阴影分隔线 */
 }
 
 .input-field {
-  flex: 1; /* 输入框占据剩余空间 */
-  padding: 12px;
-  border: 1px solid #ddd;
+  flex: 1;
+  /* 输入框占据剩余空间 */
+  padding: 5px 10px;
+  border: 1px solid rgba(50, 53, 54, 0.9);
+
   border-radius: 4px;
   outline: none;
+  font-size: 12px;
 }
 
 .send-button {
-  padding: 12px 24px;
-  background: #007bff;
-  color: white;
+  padding: 5px 10px;
+  background: rgba(15, 72, 177, 0.9);
+  color: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  line-height: 1.5;
   transition: background 0.3s;
+  font-size: 12px;
 }
 
 .send-button:hover {
   background: #0056b3;
+}
+
+.custom-toolbar {
+  -webkit-app-region: drag;
+  height: 25px;
+  background: rgba(0, 0, 0, 0.9);
+  position: relative;
+}
+
+.close-btn {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  right: 6px;
+  top: 1px;
+  color: rgba(194, 194, 194, 0.9);
+  font-size: 16px;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  color: rgba(255, 68, 68, 0.9);
+  transform: scale(1.2);
+}
+
+.messages {
+  position: absolute;
+  /* 改为相对父容器定位 */
+  bottom: 50px;
+  top: 25px;
+  flex: 1;
+  padding: 5px 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* background: rgba(255, 255, 255, 0.05); */
+
+}
+/* Webkit浏览器滚动条样式 */
+.messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: rgba(129, 137, 146, 0.9);
+  border-radius: 2px;
+}
+
+/* 消息气泡 */
+.message {
+  display: flex;
+  max-width: 80%;
+  animation: fadeIn 0.3s ease;
+}
+
+.message.user {
+  align-self: flex-end;
+}
+
+.message.bot {
+  align-self: flex-start;
+}
+
+.message-content {
+  padding: 4px 6px;
+  border-radius: 2px;
+  line-height: 1.5;
+  font-size: 10px;
+  word-break: break-word;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+}
+
+
+
+/* 用户消息样式 */
+.message.user .message-content {
+  background: #d3f261;
+  border-radius: 8px 8px 0 8px;
+}
+
+/* 机器人消息样式 */
+.message.bot .message-content {
+  background: #f5f7fa;
+  border-radius: 8px 8px 8px 0;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

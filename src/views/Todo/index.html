@@ -10,18 +10,17 @@
 <body>
   <div id="app">
     <div class="chatbot-container">
-   
+      <div class="custom-toolbar">
+        <div class="close-btn" @click="handleWindowClose">x</div>
+      </div>
 
-      <!-- 对话框界面 -->
-      <!-- <div class="messages">
-        <div v-for="(message, index) in messages" :key="index" :class="message.type">
-          <div class="message" :class="message.type">
-            <div class="message-content">
-              {{ message.text }}
-            </div>
+      <div class="messages">
+        <div v-for="(message, index) in messages" :key="index" class="message" :class="message.type">
+          <div class="message-content">
+            {{ message.text }}
           </div>
         </div>
-      </div> -->
+      </div>
 
       <!-- 输入框 -->
       <div class="input-container">
@@ -36,3 +35,4 @@
 </body>
 
 </html>
+

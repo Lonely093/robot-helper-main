@@ -31,24 +31,24 @@ const app = Vue.createApp({
 
   data: () => {
     return {
-      isNotMore: true,
+      // isNotMore: true,
       count: [0, 0],
       opacity: 0.8,
       mainColor: '',
       subColor: '',
-      isStopRecording:false,
+      isStopRecording: false,
       isRecording: false,
       mediaStream: null,
       audioContext: null,
       analyser: null,
       silenceCount: 0,
       animationFrameId: null,
-      isAllRuning:false,
-      finalTranscript:"",
-      commandList:[],
-      fdcommandList:[],
-      runingcmd:null,
-      runingopen:null,
+      isAllRuning: false,
+      finalTranscript: "",
+      commandList: [],
+      fdcommandList: [],
+      runingcmd: null,
+      runingopen: null,
     }
   },
 
@@ -88,7 +88,7 @@ const app = Vue.createApp({
     window.addEventListener('app-launch', this.handleAppLaunchResult);
     window.addEventListener('app-message', this.handleAppMessage);
 
-    window.addEventListener('floatball-test', (event)=>{
+    window.addEventListener('floatball-test', (event) => {
       console.log('floatball-test');
       console.log(event.detail);
     });
@@ -186,7 +186,7 @@ const app = Vue.createApp({
           //   newY = workArea.y + workArea.height - rect.top - rect.height;
           //   break;
         }
-        this.isNotMore = true;
+        // this.isNotMore = true;
         console.log("set-win-position", newX, newY)
         // 更新窗口位置
         ipcRenderer.send('set-win-position', {
@@ -205,7 +205,7 @@ const app = Vue.createApp({
       }
     },
     async startRecording() {
-      if(this.isRecording || this.commandList.length>0){
+      if (this.isRecording || this.commandList.length > 0) {
         return;
       }
       try {
@@ -272,7 +272,7 @@ const app = Vue.createApp({
       checkStatus();
     },
     checkSilence(volume) {
-      if(this.isStopRecording) return;
+      if (this.isStopRecording) return;
       const SILENCE_THRESHOLD = 0.5; //可调整的静音阈值 最大值为1  
       //console.log(volume);
       //此处为超过1s检测到的麦克风电流小于0.2则停止录音
@@ -289,13 +289,13 @@ const app = Vue.createApp({
     },
     async stopRecording() {
       if (!this.isRecording) return;
-      if(this.isStopRecording) return;
-      var result= { 
-        success: false, 
-        message:""
+      if (this.isStopRecording) return;
+      var result = {
+        success: false,
+        message: ""
       }
       try {
-        this.isRecording=false;
+        this.isRecording = false;
         this.isStopRecording = true;
         // 停止媒体录音器
         if (this.mediaRecorder?.state === 'recording') {
@@ -309,7 +309,7 @@ const app = Vue.createApp({
       } catch (err) {
         console.error('[Renderer] 停止失败:', err);
         this.$emit('error', err.message);
-        result.message=err.message;
+        result.message = err.message;
       } finally {
         this.handlestopRecordAfter(result);
         this.isStopRecording = false;
@@ -325,7 +325,7 @@ const app = Vue.createApp({
       }
       if (this.audioContext) {
         this.audioContext.close();
-        this.audioContext=null;
+        this.audioContext = null;
       }
 
       this.isRecording = false;
@@ -343,7 +343,7 @@ const app = Vue.createApp({
         mqttClient.subscribe('test/topic', (message, topic) => {
           console.log(`Received message from ${topic}:`, message)
         })
-        
+
         //启动消息   App/Open/+  对应 App/Launch/+
 
         //AppCenter/Apps  //参见报文3
@@ -371,7 +371,7 @@ const app = Vue.createApp({
     },
 
     //指令处理结果返回
-     handleCommandResult(event) {
+    handleCommandResult(event) {
       const { appId, msg } = event.detail;
 
     },
@@ -382,7 +382,7 @@ const app = Vue.createApp({
     },
 
     //APP启动反馈
-    async handleAppLaunchResult(event){
+    async handleAppLaunchResult(event) {
       const { appId } = event.detail;
     },
 
@@ -391,59 +391,57 @@ const app = Vue.createApp({
     //****************** HTTP接口处理 ****************/
 
     //将结果回传给Tip 进行提示   1 正常消息    0 错误提示
-    floatballtip(type,message){
+    floatballtip(type, message) {
       const event = new CustomEvent('floatball-tip', {
-        type:type,
-        message:result.message
+        type: type,
+        message: result.message
       });
       window.dispatchEvent(event);
     },
 
-    async handlestopRecordAfter(result){
-       //根据结果进行处理  成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
-       if(result.success && result.message){
-        this.floatballtip(1,result.message);
-        try
-        {
+    async handlestopRecordAfter(result) {
+      //根据结果进行处理  成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
+      if (result.success && result.message) {
+        this.floatballtip(1, result.message);
+        try {
           //调用 指令交互接口    根据结果判断
           var res = await apis.hnc_tti(result.message);
-          if(res&&res.code=="200"){
-            if(res.data.command_list&&res.data.command_list.length>0)
-            {
+          if (res && res.code == "200") {
+            if (res.data.command_list && res.data.command_list.length > 0) {
               //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
-              if(res.data.command_list[0].app_id=="fault_diagnosis"){
-               
+              if (res.data.command_list[0].app_id == "fault_diagnosis") {
+
                 await this.FaultDiagnosis(result.message);
               }
               //需要处理的指令集合
-              else{
-                this.commandList=res.data.command_list;
+              else {
+                this.commandList = res.data.command_list;
                 this.docommand();
               }
-            }else{
+            } else {
               //小提示框 显示 空的指令列表
-              this.floatballtip(0,"未能识别到指令，请重试");
+              this.floatballtip(0, "未能识别到指令，请重试");
             }
-          }else if(res?.code=="1001"||res?.code=="1002"){
+          } else if (res?.code == "1001" || res?.code == "1002") {
             //故障码 1001   APP不存在
             //故障码 1002   指令不存在
             //提示未能识别指令，请重试
-            this.floatballtip(0,"未能识别，请重试");
-          }else{
+            this.floatballtip(0, "未能识别，请重试");
+          } else {
             //小提示框  提示网络故障，请重试
-            this.floatballtip(0,"服务故障:"+err.message);
+            this.floatballtip(0, "服务故障:" + err.message);
           }
         }
         catch (err) {
           //小提示框  提示网络故障，请重试
-          this.floatballtip(0,"录音或者网络故障:"+err.message);
+          this.floatballtip(0, "录音或者网络故障:" + err.message);
         }
         finally {
           this.cleanup();
         }
-      }else{
+      } else {
         //小提示框  提示网络故障，请重试
-        this.floatballtip(0,"录音或者网络故障:"+result.message);
+        this.floatballtip(0, "录音或者网络故障:" + result.message);
       }
       console.log(result);
       //等所有的接口处理完成之后，在进行录音资源释放
@@ -451,54 +449,52 @@ const app = Vue.createApp({
     },
 
     //故障诊断接口
-    async FaultDiagnosis(message)
-    {
+    async FaultDiagnosis(message) {
       res = await apis.hnc_fd(result.message);
-      if(res&&res.code=="200"){
-        if(res.data.msg&&res.data.command_list.length>0)
-          {
-            //将故障诊断描述 + 可执行的指令列表传递给 大提示框。
-            const event = new CustomEvent('floatball-todo', {
-              msg:result.message,
-              command_list:res.data.command_list
-            });
+      if (res && res.code == "200") {
+        if (res.data.msg && res.data.command_list.length > 0) {
+          //将故障诊断描述 + 可执行的指令列表传递给 大提示框。
+          const event = new CustomEvent('floatball-todo', {
+            msg: result.message,
+            command_list: res.data.command_list
+          });
 
-            window.dispatchEvent(event);
-            res.data.command_list.forEach(one=>{
-              this.fdcommandList.push(one);
-            });
+          window.dispatchEvent(event);
+          res.data.command_list.forEach(one => {
+            this.fdcommandList.push(one);
+          });
 
-          }else{
-            //空的指令列表/空的故障描述
-          }
-      }else{
+        } else {
+          //空的指令列表/空的故障描述
+        }
+      } else {
         // 需要在大提示框中显示：  故障诊断错误  res.data.msg
       }
     },
-    
+
     //处理指令
-    docommand(){
-      if(!this.commandList || this.commandList.length<=0){
+    docommand() {
+      if (!this.commandList || this.commandList.length <= 0) {
         return;
       }
       //每次执行一个指令，等待指令完成之后继续执行下一个指令
       var app = stateStore.getCurrentState(this.commandList[0].app_id);
-      if(app){
-        if(app.state=="0"){ //先启动
+      if (app) {
+        if (app.state == "0") { //先启动
 
-        }else{ 直接发送指令
+        } else { //直接发送指令
 
         }
-      }else{
+      } else {
         //提示当前APP未注册
       }
     },
     /****************** HTTP接口处理结束 ****************/
 
-    showMore() {
-      this.isNotMore = false
-      // ipcRenderer.send('setFloatIgnoreMouse', false)
-    },
+    // showMore() {
+    //   this.isNotMore = false
+    //   // ipcRenderer.send('setFloatIgnoreMouse', false)
+    // },
     showEssay(e) {
       if (calcS())
         ipcRenderer.send("showEssay", "show")
@@ -515,14 +511,16 @@ const app = Vue.createApp({
       if (calcS())
         ipcRenderer.send("showSimTodo", "show")
     },
-    hideMore() {
-      this.isNotMore = true
-      // ipcRenderer.send('setFloatIgnoreMouse', true)
-    },
+    // hideMore() {
+    //   this.isNotMore = true
+    //   // ipcRenderer.send('setFloatIgnoreMouse', true)
+    // },
     handleMouseDown(e) {
       if (e.button == 2) {
-        this.isNotMore = true
-        ipcRenderer.send('openMenu')
+        ipcRenderer.send('close-tip');
+        ipcRenderer.send("close-todo")
+        // this.isNotMore = true
+        // ipcRenderer.send('openMenu')
         return
       }
       biasX = e.x;
@@ -534,33 +532,41 @@ const app = Vue.createApp({
     async handleMouseUp(e) {
       moveS[2] = e.screenX - e.x
       moveS[3] = e.screenY - e.y
-      // console.log(e.screenX, e.screenX);
-      // console.log(e.x, e.x);
-      // console.log(biasX, biasY);
+
       biasX = 0
       biasY = 0
       document.removeEventListener('mousemove', handleMove)
       await this.snapToEdge();
-      await this.toggleRecording();
-      // console.log("this.isNotMore", this.isNotMore)
+      if (calcS() && e.button == 0) {
+        ipcRenderer.send("openTip", "open")
+      }
+      if (calcS() && e.button == 1) {
+        ipcRenderer.send("showTodo", "open")
+      }
+      // 如果不是拖动而是点击，就开始录音
+      if (calcS()) {
+        await this.toggleRecording();
+      }
+
+
     },
 
 
   },
   watch: {
-    isNotMore(newValue) {
-      if (newValue == false) {
-        ipcRenderer.send("showTip", "show")
-        ipcRenderer.send("showTodo", "show")
-      }
-      // console.log(calcS(),"close-tip")
-      if (newValue == true) {
-        // console.log("close-tip")
-        ipcRenderer.send('close-tip');
-      }
+    // isNotMore(newValue) {
+    //   if (newValue == false) {
+    //     ipcRenderer.send("showTip", "show")
+    //     ipcRenderer.send("showTodo", "show")
+    //   }
+    //   // console.log(calcS(),"close-tip")
+    //   if (newValue == true) {
+    //     // console.log("close-tip")
+    //     ipcRenderer.send('close-tip');
+    //   }
 
-      console.log("isNotMore changed to:", newValue);
-    }
+    //   console.log("isNotMore changed to:", newValue);
+    // }
 
 
   },
