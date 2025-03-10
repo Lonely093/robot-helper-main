@@ -25,6 +25,36 @@ function handleMove(e) {
 }
 
 
+/**
+ * Vue应用主组件 - 悬浮球界面
+ * 
+ * 功能包括:
+ * - 语音录制和识别
+ * - MQTT消息通信
+ * - 指令执行和故障诊断
+ * - 界面拖拽和边缘吸附
+ * - 配置管理
+ * 
+ * @component FloatBall
+ * @data {Object} 组件数据
+ * - count: 计数器数组
+ * - opacity: 透明度
+ * - mainColor/subColor: 主副颜色
+ * - isRecording: 是否正在录音
+ * - commandList: 待执行指令列表
+ * - runingcmd: 当前执行的指令
+ * 
+ * @methods
+ * - toggleRecording(): 开始/停止录音
+ * - connectmqtt(): 连接MQTT服务
+ * - docommand(): 执行指令
+ * - FaultDiagnosis(): 故障诊断
+ * - snapToEdge(): 边缘吸附
+ * 
+ * @emits
+ * - error: 错误信息
+ * - record-complete: 录音完成
+ */
 const app = Vue.createApp({
 
   data: () => {
@@ -45,6 +75,7 @@ const app = Vue.createApp({
       commandList:[],
       runingcmd:null,
       checkTimeoutId:null,
+      reverse: false
     }
   },
 
@@ -97,6 +128,7 @@ async mounted() {
     // })
   },
   methods: {
+  
 
     //发送日志记录
     log(msg,ctx){
@@ -106,26 +138,27 @@ async mounted() {
     async snapToEdge() {
       //console.log("draggableElement.value", this.$refs)
       const rect = this.$refs.draggableElement.getBoundingClientRect();
-      //console.log("rect", rect)
+      //this.log("rect", rect)
       // 获取窗口内容区域边界信息
       const winBounds = await ipcRenderer.invoke('get-win-content-bounds');
 
       // 计算屏幕绝对坐标
       const screenX = winBounds.x + rect.left;
       const screenY = winBounds.y + rect.top;
-
+      console.log("screenX,screenY", screenX, screenY)
       // 获取最近的显示器
       const display = await ipcRenderer.invoke('get-display-nearest-point', {
         x: screenX,
         y: screenY
       });
 
-      //console.log("winBounds", winBounds)
-      //console.log("display", display)
+      //this.log("winBounds", winBounds)
+      console.log("display.workArea", display.workArea)
       // 吸附阈值（20px）
-      const SNAP_THRESHOLD = 400;
       const workArea = display.workArea;
-
+      const SNAP_THRESHOLD = (display.workArea.width- workArea.x)/2;
+      console.log("screenX - workArea.x", screenX - workArea.x)
+      console.log("workArea.x + workArea.width - (screenX + rect.width)", workArea.x + workArea.width - (screenX + rect.width))
       // 计算与各边的距离
       const edges = {
         left: screenX - workArea.x,
@@ -139,37 +172,41 @@ async mounted() {
       let closestEdge = null;
 
       Object.entries(edges).forEach(([edge, dist]) => {
-        if (dist >= 0 && dist < minDist) {
+        if ( dist < minDist) {
           minDist = dist;
           closestEdge = edge;
         }
       });
 
       // 如果没有正距离（可能组件完全超出屏幕），则找绝对值最小的
-      if (closestEdge === null) {
-        minDist = Infinity;
-        Object.entries(edges).forEach(([edge, dist]) => {
-          const absDist = Math.abs(dist);
-          if (absDist < minDist) {
-            minDist = absDist;
-            closestEdge = edge;
-          }
-        });
-      }
+      // if (closestEdge === null) {
+      //   minDist = Infinity;
+      //   Object.entries(edges).forEach(([edge, dist]) => {
+      //     const absDist = Math.abs(dist);
+      //     if (absDist < minDist) {
+      //       minDist = absDist;
+      //       closestEdge = edge;
+      //     }
+      //   });
+      // }
 
       // console.log("minDist ", minDist)
       // console.log("closestEdge ", closestEdge)
       // console.log("SNAP_THRESHOLD", SNAP_THRESHOLD)
       // 执行吸附
+      console.log("minDist", minDist)
       if (minDist <= SNAP_THRESHOLD) {
         let newX = winBounds.x;
         let newY = winBounds.y;
 
         switch (closestEdge) {
           case 'left':
+            this.reverse =true;
+            console.log(" workArea.x - rect.left",  workArea.x, rect.left)
             newX = workArea.x - rect.left;
             break;
           case 'right':
+            this.reverse =false;
             newX = workArea.x + workArea.width - rect.left - rect.width;
             break;
           // case 'top':
@@ -179,6 +216,23 @@ async mounted() {
           //   newY = workArea.y + workArea.height - rect.top - rect.height;
           //   break;
         }
+        console.log("11111111111");
+        console.log("111111111screenX - workArea.x ",screenX, workArea.x );
+        if(screenX - workArea.x < 0){
+          console.log("222222");
+          newX = workArea.x - rect.left;
+          console.log(newX);
+        }else if(workArea.x + workArea.width - (screenX + rect.width) < 0){
+          newX = workArea.x + workArea.width - rect.left - rect.width;
+        }
+
+
+        if(screenY - workArea.y < 0){
+          newY = workArea.y - rect.top;
+        }else if(workArea.y + workArea.height - (screenY + rect.height) < 0){
+          newY = workArea.y + workArea.height - rect.top - rect.height;
+        }
+
         // this.isNotMore = true;
         console.log("set-win-position", {newX, newY})
         // 更新窗口位置
@@ -693,7 +747,13 @@ async mounted() {
         const percent = parseInt(this.count[1] * 100 / totalCount)
         return percent + "%"
       }
-    }
+    },
+    imageStyle() {
+      return {
+        transform: this.reverse ? 'scaleX(-1)' : 'none',
+        display: 'inline-block' // 确保 transform 生效
+      }
+    },
   }
 })
 app.mount("#app")

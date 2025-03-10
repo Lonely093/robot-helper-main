@@ -26,13 +26,13 @@ const app = Vue.createApp({
   data() {
     return {
       showtext:false,
-      tipText: '开始录音',
+      tipText: '请问你需要什么帮助？',
       timeoutId: null,
     }
   },
 
   mounted() {
-    this.startTimer();
+    this.startTipCloseTimer();
     window.addEventListener('floatball-tip', (event) => {
       //type 0 错误消息    1 正常 语音转文字结果
       const { type, message } = event.detail;
@@ -49,7 +49,7 @@ const app = Vue.createApp({
   },
   beforeUnmount() {
     window.removeEventListener('floatball-tip');
-    clearTimeout(this.timeoutId)
+    clearTimeout(this.tipCloseTimeoutId)
   },
   methods: {
     startTimer() {
@@ -57,15 +57,15 @@ const app = Vue.createApp({
       //   ipcRenderer.send('close-tip');
       // }, 6000)
     },
-    resetTimer() {
-      clearTimeout(this.timeoutId) // 清除旧定时器
-      this.startTimer() // 重新开始倒计时
+    resetTipCloseTimer() {
+      clearTimeout(this.tipCloseTimeoutId) // 清除旧定时器
+      this.startTipCloseTimer() // 重新开始倒计时
     },
   },
   watch: {
     tipText(newVal) {
       console.log(newVal);
-      this.resetTimer() // 值变化时重置倒计时
+      this.resetTipCloseTimer() // 值变化时重置倒计时
     }
   }
 })
