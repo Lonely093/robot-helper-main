@@ -153,12 +153,12 @@ async mounted() {
       });
 
       //this.log("winBounds", winBounds)
-      console.log("display.workArea", display.workArea)
+      // console.log("display.workArea", display.workArea)
       // 吸附阈值（20px）
       const workArea = display.workArea;
       const SNAP_THRESHOLD = (display.workArea.width- workArea.x)/2;
-      console.log("screenX - workArea.x", screenX - workArea.x)
-      console.log("workArea.x + workArea.width - (screenX + rect.width)", workArea.x + workArea.width - (screenX + rect.width))
+      // console.log("screenX - workArea.x", screenX - workArea.x)
+      // console.log("workArea.x + workArea.width - (screenX + rect.width)", workArea.x + workArea.width - (screenX + rect.width))
       // 计算与各边的距离
       const edges = {
         left: screenX - workArea.x,
@@ -194,7 +194,7 @@ async mounted() {
       // console.log("closestEdge ", closestEdge)
       // console.log("SNAP_THRESHOLD", SNAP_THRESHOLD)
       // 执行吸附
-      console.log("minDist", minDist)
+      // console.log("minDist", minDist)
       if (minDist <= SNAP_THRESHOLD) {
         let newX = winBounds.x;
         let newY = winBounds.y;
@@ -202,7 +202,7 @@ async mounted() {
         switch (closestEdge) {
           case 'left':
             this.reverse =true;
-            console.log(" workArea.x - rect.left",  workArea.x, rect.left)
+            // console.log(" workArea.x - rect.left",  workArea.x, rect.left)
             newX = workArea.x - rect.left;
             break;
           case 'right':
@@ -216,12 +216,12 @@ async mounted() {
           //   newY = workArea.y + workArea.height - rect.top - rect.height;
           //   break;
         }
-        console.log("11111111111");
-        console.log("111111111screenX - workArea.x ",screenX, workArea.x );
+        // console.log("11111111111");
+        // console.log("111111111screenX - workArea.x ",screenX, workArea.x );
         if(screenX - workArea.x < 0){
-          console.log("222222");
+          // console.log("222222");
           newX = workArea.x - rect.left;
-          console.log(newX);
+          // console.log(newX);
         }else if(workArea.x + workArea.width - (screenX + rect.width) < 0){
           newX = workArea.x + workArea.width - rect.left - rect.width;
         }
@@ -543,6 +543,7 @@ async mounted() {
            this.floatballtip(0, "服务故障:" + res?.message);
          }
       } catch (error) {
+        console.log("11111",error);
         this.floatballtip(0, "录音或者网络故障:" + error.message);
       }finally{
         //等所有的接口处理完成之后，在进行录音资源释放
