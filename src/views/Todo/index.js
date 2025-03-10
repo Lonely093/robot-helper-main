@@ -261,14 +261,14 @@ const app = Vue.createApp({
             this.userInput="上传录音文件故障 " + uploadres?.data?.message;
           }else{
             this.userInput=uploadres.data.result;
-            this.sendMessage();
-
-          //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
-          ipcRenderer.send('message-from-renderer', {
-            target: 'floatball', // 指定目标窗口
-            data: { type : 1,  message : uploadres.data.result}
-          });
-
+            if (this.userInput.trim() !== '') {
+              this.sendMessage();
+              //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
+              ipcRenderer.send('message-from-renderer', {
+                target: 'floatball', // 指定目标窗口
+                data: { type : 1,  message : uploadres.data.result}
+              });
+            }
           }
         }
       //等所有的接口处理完成之后，在进行录音资源释放

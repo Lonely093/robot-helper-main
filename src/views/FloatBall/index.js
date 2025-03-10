@@ -441,56 +441,57 @@ async mounted() {
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
     async handlestopRecordAfter(result){
-       if(!result.success){
-        this.floatballtip(0, "录音故障:" + result.message);
-       }else{
-          const normalizedPath = path.normalize(result.path);
-          const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
-          if(!uploadres || uploadres.code!= 200){
-            this.floatballtip(0, "上传录音文件故障 " + uploadres?.data?.message);
-          }else{
-            result.message=uploadres.data.result;
-            this.floatballtip(1,result.message);
-           try
-             {
-               //调用 指令交互接口    根据结果判断
-               const res = await ipcRenderer.invoke('hnc_tti', result.message);
-               if (res && res.code == 200) {
-                 if (res.data.command_list && res.data.command_list.length > 0) {
-                   //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
-                   if(res.data.command_list[0].app_id=="fault_diagnosis"){
-                     await this.FaultDiagnosis(result.message);
-                   }
-                   //需要处理的指令集合
-                   else {
-                     this.commandList = res.data.command_list;
-                     this.docommand();
-                   }
-                 } else {
-                   //小提示框 显示 空的指令列表
-                   this.floatballtip(0, "未能识别到指令，请重试");
-                 }
-               } else if (res?.code == 1001 || res?.code == 1002) {
-                 //故障码 1001   APP不存在
-                 //故障码 1002   指令不存在
-                 //提示未能识别指令，请重试
-                 this.floatballtip(0,"APP或者指令不存在,请重试");
-               }else{
-                 //小提示框  提示网络故障，请重试
-                 this.floatballtip(0, "服务故障:" + err.message);
-               }
+
+      try {
+        if(!result.success){
+          this.floatballtip(0, "录音故障:" + result.message);
+          return;
+        }
+        const normalizedPath = path.normalize(result.path);
+        const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
+        if(!uploadres || uploadres.code!= 200){
+          this.floatballtip(0, "上传录音文件故障 " + uploadres?.data?.message);
+          return;
+        }
+        result.message=uploadres.data.result;
+        //如果出现为空，说明没有说话，进行提示
+        if(result.message.trim() == ''||result.message.trim() == "")
+        {
+          this.floatballtip(0,"未检测到声音");
+          return;
+        }
+         //调用 指令交互接口    根据结果判断
+         const res = await ipcRenderer.invoke('hnc_tti', result.message);
+         if (res && res.code == 200) {
+           if (res.data.command_list && res.data.command_list.length > 0) {
+             //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
+             if(res.data.command_list[0].app_id=="fault_diagnosis"){
+               await this.FaultDiagnosis(result.message);
              }
-             catch (err) {
-               //小提示框  提示网络故障，请重试
-               this.floatballtip(0, "录音或者网络故障:" + err.message);
+             //需要处理的指令集合
+             else {
+               this.commandList = res.data.command_list;
+               this.docommand();
              }
-             finally {
-               
-             }
-          }
-       }
-      //等所有的接口处理完成之后，在进行录音资源释放
-      this.cleanup();
+           } else {
+             //小提示框 显示 空的指令列表
+             this.floatballtip(0, "未能识别到指令，请重试");
+           }
+         } else if (res?.code == 1001 || res?.code == 1002) {
+           //故障码 1001   APP不存在
+           //故障码 1002   指令不存在
+           //提示未能识别指令，请重试
+           this.floatballtip(0,"APP或者指令不存在,请重试");
+         }else{
+           //小提示框  提示网络故障，请重试
+           this.floatballtip(0, "服务故障:" + err.message);
+         }
+      } catch (error) {
+        this.floatballtip(0, "录音或者网络故障:" + err.message);
+      }finally{
+        //等所有的接口处理完成之后，在进行录音资源释放
+        this.cleanup();
+      }
     },
 
     //故障诊断接口
