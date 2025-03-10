@@ -87,6 +87,18 @@ const app = Vue.createApp({
       //type 0 错误消息    1 正常 故障诊断消息
       const { type, commandlist, message } = event.detail;
     });
+
+    //悬浮窗穿滴过来的消息
+    ipcRenderer.on('message-to-renderer', (event, data) => {
+      console.log('收到消息:', data); 
+      //  data.type 0 错误消息  1 正常消息   
+      //  data.message  
+      //  data.commandlist    注意可能存在  undefined  null 数据，需要判断一下
+      this.messages.push({ text: data.message , type: 'bot' })
+      this.scrollToBottom()
+    
+    });
+
   },
   created() {
     // 创建全局事件桥接
@@ -249,12 +261,12 @@ const app = Vue.createApp({
             this.userInput="上传录音文件故障 " + uploadres?.data?.message;
           }else{
             this.userInput=uploadres.data.result;
-            sendMessage();
+            this.sendMessage();
 
           //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
           ipcRenderer.send('message-from-renderer', {
             target: 'floatball', // 指定目标窗口
-            data: { type : type,  message : message}
+            data: { type : 1,  message : uploadres.data.result}
           });
 
           }
@@ -295,6 +307,16 @@ const app = Vue.createApp({
       let resp = 'Selected app_id:' + appCommand + appId;
       this.messages.push({ text: resp, type: 'bot' });
       this.scrollToBottom();
+
+      //同时将消息发送至悬浮窗，      2 表示执行指令
+      ipcRenderer.send('message-from-renderer', {
+        target: 'floatball', // 指定目标窗口
+        data: { type : 2,  command : {
+          command:appCommand,
+          app_id:appId
+        }}
+      });
+
     },
 
     sendVoiceMessage() {

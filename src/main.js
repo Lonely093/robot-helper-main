@@ -71,13 +71,10 @@ ipcMain.handle('hnc_stt', async (event, filePath) => {
           //'Content-Type': 'multipart/form-data'
           ...form.getHeaders(), // 自动生成 multipart/form-data 的 Content-Type 和 boundary
         },
+        timeout: 5000 
        }
     );
     return response.data;
-    if (!response.ok) {
-      return {code:"999",data:{message:response.status}};
-    }
-    return await response.json();
   } catch (error) {
     return {code:"999",data:{message:error.message}};
   }
@@ -96,13 +93,10 @@ ipcMain.handle('hnc_tti', async (event, info) => {
       },
       headers:{
         'Content-Type': 'application/json' // ✅ 必须明确指定
-      }
+      },
+      timeout: 5000 
    });
    return response.data;
-    if (!response.ok) {
-      return {code:"999",data:{message:response.status}};
-    }
-    return await response.json();
   } catch (error) {
     return {code:"999",data:{message:error.message}};
   }
@@ -112,7 +106,7 @@ ipcMain.handle('hnc_tti', async (event, info) => {
 ipcMain.handle('hnc_fd', async (event, info) => {
   try {
     
-     // 3. 发送请求
+     // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
      const response = await axios({
       method: 'post',
       url: urlconfig.hnc_fd,
@@ -121,15 +115,12 @@ ipcMain.handle('hnc_fd', async (event, info) => {
       },
       headers:{
         'Content-Type': 'application/json' // ✅ 必须明确指定
-      }
+      },
+      timeout: 5000 
    });
-
-    if (!response.ok) {
-      return {code:"999",data:{message:response.status}};
-    }
     return response.data;
   } catch (error) {
-    return {code:"999",data:{message:error.message}};
+    return {code:"999",data:{msg:error.message}};
   }
 });
 

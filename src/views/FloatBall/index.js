@@ -74,6 +74,14 @@ async mounted() {
     //监听故障诊断页面传来的消息    1 根据文本请求故障诊断     2 执行 commd指令
     ipcRenderer.on('message-to-renderer', (event, data) => {
       console.log('收到消息:', data); 
+      if(data.type==1)  //根据文字请求故障诊断
+      {
+        this.FaultDiagnosis(data.message);
+      }
+      if(data.type==2)  //根据指令直接执行
+      {
+        this.fddocommand(data.command);
+      }
     });
 
     //  asr连接 前端监听
@@ -388,6 +396,7 @@ async mounted() {
     handleAppMessage(event) {
       const { appId, msg } = event.detail;
     },
+    
 
     //APP启动反馈
     async handleAppLaunchResult(event) {
@@ -486,36 +495,24 @@ async mounted() {
 
     //故障诊断接口
     async FaultDiagnosis(message) {
-      //res = await apis.hnc_fd(result.message);
-      const res = await ipcRenderer.invoke('hnc_fd', message);
-      if(res&&res.code=="200"){
-        if(res.data.msg&&res.data.command_list.length>0)
-          {
-            //将故障诊断描述 + 可执行的指令列表传递给 大提示框。
-            this.floatballtodo(1,message,res.data.command_list);
-          }else{
-            //空的指令列表/空的故障描述
-            this.floatballtodo(0,"空的指令列表:"+res.data.msg);
-          }
-      }else{
-        // 需要在大提示框中显示：  故障诊断错误  res.data.msg
-        this.floatballtodo(0,"故障诊断错误:"+res.data.msg);
+      try {
+        console.log("FaultDiagnosis",message);
+        //res = await apis.hnc_fd(result.message);
+        const res = await ipcRenderer.invoke('hnc_fd', message);
+        console.log("hnc_fd:",res);
+        if(res && res.code=="200"){
+          this.floatballtodo(1,res.data.msg,res.data.command_list);
+        }else{
+          // 需要在大提示框中显示：  故障诊断错误  res.data.msg
+          this.floatballtodo(0,"故障诊断错误:"+res.data.msg);
+        }
+      } catch (error) {
+        console.log("hnc_fd error:",error);
+        this.floatballtodo(0,"故障诊断异常:"+error.message);
       }
     },
 
-    //处理故障诊断页面传来的动作
-    handleTodoAction(event){
-      const { message, command } = event.detail;
-      //两种情况，  再次请求故障诊断 ， 或者直接执行指令
-      if(message){
-        this.FaultDiagnosis(message);
-        return;
-      }
-      if(command){
-        this.fddocommand(command);
-      }
-    },
-    
+
     //直接处理指令
     docommand(){
       if(!this.commandList || this.commandList.length<=0){
@@ -552,6 +549,7 @@ async mounted() {
 
     //故障诊断的指令处理
     fddocommand(cmd){
+      console.log("fddocommand",cmd);
       var app = stateStore.getApp(cmd.app_id);
       if(app){
         this.runingcmd={ type : 2 , cmd };
