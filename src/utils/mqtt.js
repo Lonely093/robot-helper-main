@@ -1,13 +1,12 @@
 const mqtt= require("mqtt");
 const stateStore = require("./localStorage");
 
-
 class MqttClient {
   constructor(options = {}) {
     // 合并配置参数
     this.options = Object.assign({
       brokerUrl: 'ws://127.0.0.1:8083/mqtt',
-      clientId: 'robot-ai', //`robot-ai${Math.random().toString(16).substr(2, 8)}`,
+      clientId: 'AIRobot', //`robot-ai${Math.random().toString(16).substr(2, 8)}`,
       username: '',
       password: '',
       clean: false,  //启用持久会话
@@ -16,15 +15,15 @@ class MqttClient {
       autoReconnect: true,         // 启用自动重连
       reconnectInterval: 5000,     // 重连间隔
       maxReconnectAttempts: 10,    // 最大重连次数
-      will: {
-        topic:"App/Exit/",
-        payload:{
-          "app_id": "robot-ai",
-          "timestamp": Date.now(),
-        },
-        qos:2,
-        retain:false,
-      }, // 遗嘱消息配置
+      // will: {
+      //   topic:"App/Exit/",
+      //   payload:{
+      //     "app_id": "robot-ai",
+      //     "timestamp": Date.now(),
+      //   },
+      //   qos:2,
+      //   retain:false,
+      // }, // 遗嘱消息配置
     }, options)
 
     this.client = null
@@ -36,7 +35,6 @@ class MqttClient {
     this.reconnectAttempts = 0     // 当前重连尝试次数
     this.reconnectTimer = null      // 重连定时器
     this.setoptions={qos:1,retain:true}  //设置发布订阅的消息等级  以及是否存储
-   
   }
 
   _test(){
@@ -346,7 +344,7 @@ class MqttClient {
     {
 
     }else{
-      
+
     }
     this.triggerCommandResultEvent(app.app_id,app.command);
   }

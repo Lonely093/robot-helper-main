@@ -2,9 +2,7 @@ const { app, Menu, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const { createSuspensionWindow, createEssayWindow, createTodoWindow, createTipWindow, createConfigWindow } = require("./window.js")
 Menu.setApplicationMenu(null);
-
 const recorder = require('./utils/recorder');
-
 const axios= require("axios");
 const FormData = require('form-data');
 const fs = require('fs');
@@ -14,7 +12,6 @@ const  urlconfig={
   hnc_tti:'http://172.20.11.80:9001/api/hnc_tti',
   hnc_fd:'http://172.20.11.80:9002/api/hnc_fd'
 };
-
 
 // 悬浮球的一些设置
 const suspensionConfig = {

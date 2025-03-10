@@ -1,7 +1,7 @@
 module.exports = {
   packagerConfig: {
     "win32metadata": {
-      "ProductName": "HiLoop",
+      "ProductName": "AIRobot",
     }
   },
   rebuildConfig: {},

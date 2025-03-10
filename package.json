@@ -1,6 +1,6 @@
 {
-  "name": "hiloop",
-  "productName": "HiLoop",
+  "name": "AIRobot",
+  "productName": "AIRobot",
   "version": "0.0.1",
   "description": "Hi, have a good day!",
   "main": "src/main.js",

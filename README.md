@@ -1,24 +1,10 @@
-# HiLoop
+# AIRobot
 
-HiLoop是一个简约的桌面悬浮球工具，支持拖动及配置，提供了待办事项、快速笔记等功能。忙里偷闲体验一下用前端的方式开发桌面端应用，学习的同时做一些有意思的小东西。
+AIRobot是一个简约的桌面悬浮球工具，支持拖动及配置，提供语音录入，文字录入 发送故障诊断，执行指令等功能
 
-> 叫HiLoop的原因是希望自己不要再内耗了，活在良性循环里:cry:
 >
-> 项目地址：https://github.com/baday19/HiLoop
+> 参考项目地址：https://github.com/baday19/HiLoop
 
-## 整体效果
-
-![show-2](https://raw.githubusercontent.com/baday19/HiLoop/main/doc/show-2.jpg)
-
-:blush: 临时换了个小草神玩玩，静态的效果不是很好。如果想用人物的话可以自己上canvas或者用live2d，我还是喜欢简洁一点的小胶囊。
-
-> [草神图源](https://www.pixiv.net/artworks/107338044) @Shao
-
-![show-1](https://raw.githubusercontent.com/baday19/HiLoop/main/doc/show-1.gif)
-
-![show-0](https://raw.githubusercontent.com/baday19/HiLoop/main/doc/show-0.jpg)
-
-![config](https://raw.githubusercontent.com/baday19/HiLoop/main/doc/config.jpg)
 
 ## 目录组织
 
@@ -38,9 +24,9 @@ HiLoop是一个简约的桌面悬浮球工具，支持拖动及配置，提供�
 >
 > vue.js
 >
-> sqlite3
+> axios
 >
-> ...
+> mqtt
 
 ## 开发环境
 
@@ -147,26 +133,5 @@ ipcMain.on('ballWindowMove', (e, data) => {
 
 ## 打包报错/打包后运行出错
 
-**问题描述**
 
-可能因为网络和配置问题，打包会出错
 
-因为一些依赖未进行打包的问题，导致运行出错（引入sqlite后导致）
-
-**解决方案**
-
-打包出错的问题具体是啥忘了，反正已经配好了。
-
-引入sqlite后，出现了很多问题。因为依赖不够而运行失败最简单的解决方式是把对应的直接复制到打包后的里。
-
-也许有时间的使用用electron-builder打包会好一些
-
-将sqlite3从devDependencies移入dependencies中，重新打包好像好了
-
-# 重大更新
-
-## 2023.04.28
-
-增加配置页面：可设置悬浮球的透明度及软件主题颜色
-
-![config](https://raw.githubusercontent.com/baday19/HiLoop/main/doc/config.jpg)
