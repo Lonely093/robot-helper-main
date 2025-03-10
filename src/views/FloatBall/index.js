@@ -627,10 +627,10 @@ async mounted() {
     // },
     handleMouseDown(e) {
       if (e.button == 2) {
-        ipcRenderer.send('close-tip');
-        ipcRenderer.send("close-todo")
+        // ipcRenderer.send('close-tip');
+        // ipcRenderer.send("close-todo")
         // this.isNotMore = true
-        // ipcRenderer.send('openMenu')
+        ipcRenderer.send('openMenu')
         return
       }
       biasX = e.x;
