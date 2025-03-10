@@ -15,13 +15,25 @@ const fs = require('fs');
 applyConfig()
 let biasX = 0
 let biasY = 0
+let startX =0
+let startY = 0
 const moveS = [0, 0, 0, 0]
 function calcS() {
   const res = Math.pow(moveS[0] - moveS[2], 2) + Math.pow(moveS[1] - moveS[3], 2)
   return res < 5
 }
 function handleMove(e) {
+
   ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY })
+  
+  // const deltaX = e.screenX - startX
+  // const deltaY = e.screenY - startY
+  // const win = require('electron').remote.getCurrentWindow()
+  // const [x, y] = win.getPosition()
+  // win.setPosition(x + deltaX, y + deltaY)
+  // startX = e.screenX
+  // startY = e.screenY
+
 }
 
 
@@ -503,15 +515,15 @@ async mounted() {
          if (res && res.code == 200) {
            if (res.data.command_list && res.data.command_list.length > 0) {
              //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
-             //await this.FaultDiagnosis(result.message);
-             if(res.data.command_list[0].app_id=="fault_diagnosis"){
-               await this.FaultDiagnosis(result.message);
-             }
-             //需要处理的指令集合
-             else {
-               this.commandList = res.data.command_list;
-               this.docommand();
-             }
+             await this.FaultDiagnosis(result.message);
+            //  if(res.data.command_list[0].app_id=="fault_diagnosis"){
+            //    await this.FaultDiagnosis(result.message);
+            //  }
+            //  //需要处理的指令集合
+            //  else {
+            //    this.commandList = res.data.command_list;
+            //    this.docommand();
+            //  }
            } else {
              //小提示框 显示 空的指令列表
              this.floatballtip(0, "未能识别到指令，请重试");
@@ -690,12 +702,15 @@ async mounted() {
         ipcRenderer.send('openMenu')
         return
       }
+      startX = e.screenX
+      startY = e.screenY
       biasX = e.x;
       biasY = e.y;
       moveS[0] = e.screenX - biasX
       moveS[1] = e.screenY - biasY
       document.addEventListener('mousemove', handleMove)
     },
+
     async handleMouseUp(e) {
       moveS[2] = e.screenX - e.x
       moveS[3] = e.screenY - e.y

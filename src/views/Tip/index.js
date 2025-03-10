@@ -50,6 +50,11 @@ const app = Vue.createApp({
         this.tipText = data.message;
       }
     });
+
+      // 监听主进程位置更新
+      this.$electron.ipcRenderer.on('window-moved', (_, pos) => {
+        this.position = pos
+      })
  
   },
   beforeUnmount() {
