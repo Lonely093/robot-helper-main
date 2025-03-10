@@ -11,10 +11,10 @@
   <div id="app">
     <!-- <div class="warp" @mouseup="handleMouseUp" @mousedown="handleMouseDown" @mouseenter="showMore"
       @mouseleave="hideMore" ref="draggableElement"> -->
-    <div class="warp" @mouseup="handleMouseUp" @mousedown="handleMouseDown" ref="draggableElement">
+    <div class="warp" @mouseup="handleMouseUp" @mousedown="handleMouseDown" ref="draggableElement" :style="{opacity: opacity}">
 
-      <div class="main-container" :style="{opacity: opacity}">
-        <img draggable="false" src="../../assets/robot.png" :style="imageStyle">
+      <div class="main-container" >
+        <img draggable="false" src="../../assets/robot.png" :style="imageStyle" @mouseenter.native="hanleMouseEnter" @mouseleave="hanleMouseLeave">
       </div>
 
     </div>

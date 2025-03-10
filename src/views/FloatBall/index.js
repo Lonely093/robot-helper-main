@@ -232,7 +232,7 @@ async mounted() {
         }else if(workArea.y + workArea.height - (screenY + rect.height) < 0){
           newY = workArea.y + workArea.height - rect.top - rect.height;
         }
-
+        this.opacity = 0.3;
         // this.isNotMore = true;
         console.log("set-win-position", {newX, newY})
         // 更新窗口位置
@@ -665,6 +665,13 @@ async mounted() {
     //   this.isNotMore = false
     //   // ipcRenderer.send('setFloatIgnoreMouse', false)
     // },
+    hanleMouseEnter(){
+      this.opacity=0.8;
+    },
+
+    hanleMouseLeave(){
+      this.opacity=0.3;
+    },
     showEssay(e) {
       if (calcS())
         ipcRenderer.send("showEssay", "show")
@@ -686,6 +693,7 @@ async mounted() {
     //   // ipcRenderer.send('setFloatIgnoreMouse', true)
     // },
     handleMouseDown(e) {
+      this.opacity=0.8;
       if (e.button == 2) {
         // ipcRenderer.send('close-tip');
         // ipcRenderer.send("close-todo")

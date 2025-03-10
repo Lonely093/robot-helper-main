@@ -9,7 +9,7 @@ body {
   padding: 0;
   margin: 0;
   color: white;
-  user-select: none;
+  /* user-select: none; */
 }
 
 div {
@@ -27,8 +27,8 @@ div {
 .warp {
   /* width: 200px;
   height: 347px; */
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
   overflow: hidden;
 
 }
