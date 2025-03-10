@@ -15,25 +15,13 @@ const fs = require('fs');
 applyConfig()
 let biasX = 0
 let biasY = 0
-let startX =0
-let startY = 0
 const moveS = [0, 0, 0, 0]
 function calcS() {
   const res = Math.pow(moveS[0] - moveS[2], 2) + Math.pow(moveS[1] - moveS[3], 2)
   return res < 5
 }
 function handleMove(e) {
-
   ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY })
-  
-  const deltaX = e.screenX - startX
-  const deltaY = e.screenY - startY
-  console.log('winsetPosition',{  deltaX, deltaY });
-  ipcRenderer.send('winsetPosition', {  deltaX, deltaY })
-  
-  startX = e.screenX
-  startY = e.screenY
-
 }
 
 
@@ -702,8 +690,7 @@ async mounted() {
         ipcRenderer.send('openMenu')
         return
       }
-      startX = e.screenX
-      startY = e.screenY
+
       biasX = e.x;
       biasY = e.y;
       moveS[0] = e.screenX - biasX

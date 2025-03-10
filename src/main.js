@@ -21,42 +21,6 @@ const suspensionConfig = {
   height: 80,
 }
 
-let offset = { x: 300, y: 0 } // B窗口相对A的偏移量
-let lastSyncTime = 0
-const SYNC_INTERVAL = 16 // ~60FPS
-
-// 窗口位置同步逻辑
-function syncWindowPosition() {
-  const now = Date.now()
-  if (now - lastSyncTime < SYNC_INTERVAL) return
-  lastSyncTime = now
-  if (!pages.suspensionWin || !pages.tipWin) return
-  
-  // 获取A窗口位置
-  const aPos = pages.suspensionWin.getBounds()
-  
-  // 计算B窗口新位置
-  const newX = aPos.x + offset.x
-  const newY = aPos.y + offset.y
-  
-  // 设置B窗口位置（防抖处理）
-  clearTimeout(winB.moveTimer)
-  winB.moveTimer = setTimeout(() => {
-    const bounds = winB.getBounds()
-    if (bounds.x !== newX || bounds.y !== newY) {
-      winB.setPosition(newX, newY, true)
-    }
-  }, 50)
-}
-
-// IPC通信设置
-ipcMain.handle('get-offset', () => offset)
-ipcMain.handle('set-offset', (_, newOffset) => {
-  offset = { ...offset, ...newOffset }
-  syncWindowPosition()
-})
-
-
 // 启动日志
 logger.info('应用程序启动', { version: app.getVersion() });
 
@@ -208,11 +172,10 @@ ipcMain.on('message-from-renderer', (event, { target, data }) => {
 // 确保初始化顺序
 app.whenReady().then(() => {
   logger.info('[主进程] Electron准备就绪');
+
   //注册麦克风录音
   recorder.initialize();
   pages.suspensionWin = createSuspensionWindow(suspensionConfig)
-  // 监听窗口A移动
-  pages.suspensionWin .on('move', syncWindowPosition)
 }).catch(err => {
   logger.error('应用启动失败:', err);
 });
@@ -397,21 +360,7 @@ ipcMain.on('set-win-position', (event, position) => {
     Math.round(position.y),
     true // 启用动画
   )
-  
-  pages.tipWin.setPosition(
-    Math.round(position.x),
-    Math.round(position.y),
-    true // 启用动画
-  )
 })
-
-ipcMain.on('winsetPosition', (event, { deltaX, deltaY }) => {
-  const win = BrowserWindow.fromWebContents(event.sender)
-  logger.info("winsetPosition", { deltaX, deltaY })
-  const [x, y] = win.getPosition()
-  win.setPosition(x + deltaX, y + deltaY)
-})
-
 ipcMain.on('todo-window-close', () => {
   pages.todoWin.close();
 });
