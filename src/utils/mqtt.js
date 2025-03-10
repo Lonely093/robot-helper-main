@@ -1,6 +1,6 @@
 const mqtt= require("mqtt");
-const stateStore = require("./mqtt_persistence");
-const appname="";
+const stateStore = require("./localStorage");
+
 
 class MqttClient {
   constructor(options = {}) {
@@ -23,7 +23,7 @@ class MqttClient {
           "timestamp": Date.now(),
         },
         qos:2,
-        retain:true,
+        retain:false,
       }, // 遗嘱消息配置
     }, options)
 
@@ -35,7 +35,7 @@ class MqttClient {
     this.pendingPublishes = [] // 待处理的发布队列
     this.reconnectAttempts = 0     // 当前重连尝试次数
     this.reconnectTimer = null      // 重连定时器
-    this.setoptions={qos:2,retain:true}  //设置发布订阅的消息等级  以及是否存储
+    this.setoptions={qos:1,retain:true}  //设置发布订阅的消息等级  以及是否存储
    
   }
 
@@ -285,22 +285,21 @@ class MqttClient {
     this.subscriptions.set('AppCenter/Apps', ( topic,message) => {
      //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
      console.log("AppCenter:",message);
-     console.log("AppCenter:aa",message.apps);
+    
      if(message.apps&&message.apps.length>0){
       message.apps.forEach(app=>{
         app.state="0";//默认设置为未启动
-        stateStore.updateState(app.app_id,app);
-
+        stateStore.saveApp(app.app_id,app);
         //根据app是否支持启动，来订阅  启动/关闭/指令执行功能
         if(app.ai_interaction.action){
           this.subscribe("App/Launch/"+app.app_id,(topic,message) => {
             this.AppLaunch(topic,message)
           });
-          this.subscribe("App/Exit/"+app.app_id,(message, topic) => {
+          this.subscribe("App/Exit/"+app.app_id,( topic,message) => {
             this.AppExit(topic,message)
           });
-          this.subscribe("App/Message/"+app.app_id,(message, topic) => {
-            this.AppExit(topic,message)
+          this.subscribe("App/Message/"+app.app_id,(topic,message) => {
+            this.AppMessage(topic,message)
           });
         }
         //是否可执行指令
@@ -313,17 +312,16 @@ class MqttClient {
       });
      }
     })
-    this.client.subscribe('AppCenter/Apps', this.setoptions);
+    this.client.subscribe('AppCenter/Apps', {qos:2,retain:true} );
   }
 
   AppLaunch(topic,message){
     console.log("AppLaunch:",message);
-    var app= stateStore.getCurrentState(message.app_id);
-    console.log("app:",app);
+    var app= stateStore.getApp(message.app_id);
     var appid="";
     if(app){
       app.state="1";
-     stateStore.updateState(app.app_id,app);
+     stateStore.saveApp(app.app_id,app);
      appid=app.app_id;
     }else{
       
@@ -333,10 +331,10 @@ class MqttClient {
 
   AppExit(topic,message){
     console.log("AppExit:",message);
-    var app= stateStore.getCurrentState(message.app_id);
+    var app= stateStore.getApp(message.app_id);
     if(app){
       app.state="0";
-     stateStore.updateState(app.app_id,app);
+     stateStore.saveApp(app.app_id,app);
     }
   }
   
@@ -348,7 +346,7 @@ class MqttClient {
     {
 
     }else{
-
+      
     }
     this.triggerCommandResultEvent(app.app_id,app.command);
   }
