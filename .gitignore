@@ -92,4 +92,5 @@ typings/
 out/
 
 RecorderFolder/
+logs/
 src/utils/testapi.http
