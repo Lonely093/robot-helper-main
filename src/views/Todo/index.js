@@ -4,6 +4,7 @@ const Vue = require('vue')
 const { formatterTime } = require("../../utils/date.js")
 const { applyConfig } = require("../../utils/store.js")
 const path = require('path');
+const fs = require('fs');
 
 applyConfig()
 /**
@@ -270,6 +271,7 @@ const app = Vue.createApp({
           const normalizedPath = path.normalize(result.path);
           console.log(normalizedPath);
           const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
+          fs.unlinkSync(normalizedPath) // 删除文件
           console.log("uploadres:",uploadres);
           if(!uploadres || uploadres.code!= 200){
             this.userInput="上传录音文件故障 " + uploadres?.data?.message;

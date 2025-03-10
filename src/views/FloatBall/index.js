@@ -9,6 +9,7 @@ const draggableElement = ref(null);
 const mqttClient = require("../../utils/mqtt")
 const stateStore = require("../../utils/localStorage");
 const path = require('path');
+const fs = require('fs');
 
 
 applyConfig()
@@ -22,7 +23,6 @@ function calcS() {
 function handleMove(e) {
   ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY })
 }
-
 
 
 const app = Vue.createApp({
@@ -449,6 +449,7 @@ async mounted() {
         }
         const normalizedPath = path.normalize(result.path);
         const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
+        fs.unlinkSync(normalizedPath) // 删除文件
         if(!uploadres || uploadres.code!= 200){
           this.floatballtip(0, "上传录音文件故障 " + uploadres?.data?.message);
           return;
