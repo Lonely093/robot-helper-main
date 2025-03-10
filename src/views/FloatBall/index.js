@@ -277,7 +277,9 @@ async mounted() {
         this.setupDataHandler();
         this.isRecording = true;
         this.startMonitoring();
+        this.floatballtip(3, '');
       } catch (err) {
+        this.floatballtip(0, '录音启动失败:', err.message);
         console.log('录音启动失败:', err.message);
       }
     },
@@ -384,32 +386,6 @@ async mounted() {
       try {
         // 等待连接成功
         await mqttClient.connect()
-
-        //测试主题
-        // mqttClient.subscribe('test/topic', (message, topic) => {
-        //   console.log(`Received message from ${topic}:`, message)
-        // })
-        
-        //启动消息   App/Open/+  对应 App/Launch/+
-
-        //AppCenter/Apps  //参见报文3
-        //App/Launch/+    //参见报文10
-        //App/Exit/+       //参见报文30
-        //App/Reply/+      //参见报文14
-        //App/Message/+   //App主动向语音助手发送消息时使用  //参见报文31
-
-        //APP注册发布主题
-        // mqttClient.subscribe('AppCenter/Apps', (message, topic) => {
-        //   console.log(`Received message from ${topic}:`, message)
-        // })
-
-        // //发送主题
-        // mqttClient.publish('test/topic', {
-        //   text: 'Hello from Vue',
-        //   timestamp: Date.now()
-        // })
-        // console.log("发送主题");
-
       } catch (error) {
         console.log('MQTT连接失败:', error.message);
       }
@@ -429,12 +405,19 @@ async mounted() {
             this.commandList = this.commandList.shift()
             if(this.commandList.length>0){
               this.docommand();
+            }else{
+              //指令全部处理完成  关闭tip
+              this.closeTip();
             }
+          }else{
+            //故障诊断指令执行成功，关闭故障诊断
+            this.closeTodo();
           }
-        }else{  //指令执行失败
+        }else{  
+          //指令执行失败
           if(this.runingcmd.type==1)
           {
-            this.floatballtip(0,"指令执行失败:"+msg);
+            this.floatballtip(0,"指令执行失败:"+ msg);
             this.commandList =[];
           }
           if(this.runingcmd.type==2)
@@ -452,7 +435,6 @@ async mounted() {
       const { appId, msg } = event.detail;
     },
     
-
     //APP启动反馈
     async handleAppLaunchResult(event) {
       const { appId } = event.detail;
@@ -555,7 +537,7 @@ async mounted() {
     //故障诊断接口
     async FaultDiagnosis(message) {
       console.log("FaultDiagnosis",message);
-      ipcRenderer.send("close-tip"); //关闭tip
+      this.closeTip();
       this.showTodo();//展示故障诊断
       try {
         //res = await apis.hnc_fd(result.message);
@@ -574,7 +556,6 @@ async mounted() {
         this.floatballtodo(0,"故障诊断异常:"+error.message);
       }
     },
-
 
     //直接处理指令
     docommand(){
@@ -667,6 +648,12 @@ async mounted() {
     //   this.isNotMore = false
     //   // ipcRenderer.send('setFloatIgnoreMouse', false)
     // },
+    closeTip(){
+      ipcRenderer.send("close-tip"); 
+    },
+    closeTodo(){
+      ipcRenderer.send("close-todo"); 
+    },
     showEssay(e) {
       if (calcS())
         ipcRenderer.send("showEssay", "show")
