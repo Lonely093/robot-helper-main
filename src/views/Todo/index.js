@@ -88,15 +88,29 @@ const app = Vue.createApp({
       const { type, commandlist, message } = event.detail;
     });
 
-    //悬浮窗穿滴过来的消息
+    //悬浮窗传递过来的消息
     ipcRenderer.on('message-to-renderer', (event, data) => {
-      console.log('收到消息:', data); 
+      console.log('收到消息:', data);
       //  data.type 0 错误消息  1 正常消息   
       //  data.message  
       //  data.commandlist    注意可能存在  undefined  null 数据，需要判断一下
-      this.messages.push({ text: data.message , type: 'bot' })
-      this.scrollToBottom()
-    
+      let botMessage = "接口异常";
+      this.command_list = [];
+      if (data.type == 0) {
+        botMessage = data.message;
+      } else if (data.type == 1) {
+        const separator = "</think>\n\n";
+        const separatorIndex = data.message.indexOf(separator);
+        if (separatorIndex !== -1) {
+          // 从分隔符结束的位置开始截取，直到字符串末尾
+          const startIndex = separatorIndex + separator.length;
+          botMessage = data.message.substring(startIndex);
+          this.command_list = data.commandlist;
+        }
+      }
+      this.messages.push({ text: botMessage, type: 'bot' })
+      this.scrollToBottom();
+
     });
 
   },
@@ -311,10 +325,12 @@ const app = Vue.createApp({
       //同时将消息发送至悬浮窗，      2 表示执行指令
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball', // 指定目标窗口
-        data: { type : 2,  command : {
-          command:appCommand,
-          app_id:appId
-        }}
+        data: {
+          type: 2, command: {
+            command: appCommand,
+            app_id: appId
+          }
+        }
       });
 
     },
