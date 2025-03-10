@@ -89,7 +89,7 @@ const createTodoWindow = () => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
-  // win.webContents.openDevTools()
+  win.webContents.openDevTools()
   return win
 }
 

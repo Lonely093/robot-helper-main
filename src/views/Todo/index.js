@@ -3,7 +3,7 @@ const Vue = require('vue')
 
 const { formatterTime } = require("../../utils/date.js")
 const { applyConfig } = require("../../utils/store.js")
-
+const path = require('path');
 
 applyConfig()
 const app = Vue.createApp({
@@ -50,7 +50,15 @@ const app = Vue.createApp({
           "app_id": "(hmi_id)503015",
           "command": "503015"
         }
-      ]
+      ],
+
+      isStopRecording: false,
+      isRecording: false,
+      mediaStream: null,
+      audioContext: null,
+      analyser: null,
+      silenceCount: 0,
+      animationFrameId: null,
 
     }
   },
@@ -70,6 +78,175 @@ const app = Vue.createApp({
     delete window.commandClickHandler;
   },
   methods: {
+
+
+    // ***********************麦克风录音 ***************//
+    async toggleRecording() {
+      if (this.isRecording) {
+        await this.stopRecording();
+      } else {
+        await this.startRecording();
+      }
+    },
+    async startRecording() {
+      if (this.isRecording) {
+        return;
+      }
+      try {
+        // 初始化音频流
+        try {
+          this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          console.log('[Renderer] 已获得麦克风权限');
+        } catch (err) {
+          console.error('[Renderer] 麦克风访问被拒绝:', err);
+          this.$emit('error', '请允许麦克风访问权限');
+          return;
+        }
+        // 初始化音频分析
+        this.setupAudioAnalysis();
+        // 通知主进程开始录音
+        const { pathurl } = await ipcRenderer.invoke('audio-start');
+        console.log(`[Renderer] 录音文件路径: ${pathurl}`);
+        // 创建媒体录音器
+        this.mediaRecorder = new MediaRecorder(this.mediaStream);
+        this.setupDataHandler();
+        this.isRecording = true;
+        this.startMonitoring();
+      } catch (err) {
+        console.error('录音启动失败:', err);
+      }
+    },
+    setupAudioAnalysis() {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+
+      this.analyser = this.audioContext.createAnalyser();
+      this.analyser.fftSize = 2048;
+      source.connect(this.analyser);
+      console.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
+    },
+    setupDataHandler() {
+      this.mediaRecorder.ondataavailable = async (e) => {
+        try {
+          const buffer = await e.data.arrayBuffer();
+          ipcRenderer.send('audio-chunk', buffer);
+        } catch (err) {
+          console.error('[Renderer] 数据处理失败:', err);
+          this.$emit('error', '音频数据发送失败');
+        }
+      };
+
+      this.mediaRecorder.start(500); // 每1秒收集数据
+      console.log('[Renderer] 媒体录音器已启动');
+    },
+    startMonitoring() {
+      const checkStatus = () => {
+        if (!this.isRecording) return;
+
+        // 分析音量
+        const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        this.analyser.getByteFrequencyData(dataArray);
+        const volume = Math.max(...dataArray) / 255;
+
+        // 静音检测
+        this.checkSilence(volume);
+
+        this.animationFrameId = requestAnimationFrame(checkStatus);
+      };
+      checkStatus();
+    },
+    checkSilence(volume) {
+      if (this.isStopRecording) return;
+      const SILENCE_THRESHOLD = 0.5; //可调整的静音阈值 最大值为1  
+      //console.log(volume);
+      //此处为超过1s检测到的麦克风电流小于0.2则停止录音
+      if (volume < SILENCE_THRESHOLD) {
+        this.silenceCount += 1 / 60;
+        if (this.silenceCount >= 1) {
+          console.log('[Renderer] 检测到持续静音，自动停止');
+          console.log(Date.now());
+          this.stopRecording();
+        }
+      } else {
+        this.silenceCount = 0;
+      }
+    },
+    async stopRecording() {
+      if (!this.isRecording) return;
+      if (this.isStopRecording) return;
+      var result = {
+        success: false,
+        message: ""
+      }
+      try {
+        this.isRecording = false;
+        this.isStopRecording = true;
+        // 停止媒体录音器
+        if (this.mediaRecorder?.state === 'recording') {
+          this.mediaRecorder.stop();
+        }
+        // 通知主进程停止 保存录音文件并上传接口，返回结果
+        result = await ipcRenderer.invoke('audio-stop');
+        console.log('[Renderer] 录音保存结果:', result);
+        console.log(Date.now());
+        this.$emit('record-complete', result);
+      } catch (err) {
+        console.error('[Renderer] 停止失败:', err);
+        this.$emit('error', err.message);
+        result.message = err.message;
+      } finally {
+        this.handlestopRecordAfter(result);
+        this.isStopRecording = false;
+      }
+    },
+    cleanup() {
+      // 清理资源
+      if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+      }
+      if (this.mediaStream) {
+        this.mediaStream.getTracks().forEach(track => track.stop());
+      }
+      if (this.audioContext) {
+        this.audioContext.close();
+        this.audioContext = null;
+      }
+
+      this.isRecording = false;
+      this.silenceCount = 0;
+      console.log('[Renderer] 资源已清理');
+    },
+
+    //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
+    async handlestopRecordAfter(result){
+        if(!result.success){
+          this.userInput="录音故障:" + result.message;
+        }else{
+          const normalizedPath = path.normalize(result.path);
+          console.log(normalizedPath);
+          const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
+          console.log("uploadres:",uploadres);
+          if(!uploadres || uploadres.code!= 200){
+            this.userInput="上传录音文件故障 " + uploadres?.data?.message;
+          }else{
+            this.userInput=uploadres.data.result;
+            sendMessage();
+
+          //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
+          ipcRenderer.send('message-from-renderer', {
+            target: 'floatball', // 指定目标窗口
+            data: { type : type,  message : message}
+          });
+
+          }
+        }
+      //等所有的接口处理完成之后，在进行录音资源释放
+      this.cleanup();
+    },
+
+    // ***********************麦克风录音结束 ***************//
+
+
     handleWindowClose() {
       ipcRenderer.send("close-todo")
     },
@@ -96,7 +273,12 @@ const app = Vue.createApp({
     },
     handleCommandClick(appId) {
       console.log('Selected app_id:', appId);
-      // 这里可扩展自定义事件处理逻辑
+      
+      //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
+      ipcRenderer.send('message-from-renderer', {
+        target: 'floatball', // 指定目标窗口
+        data: { type : type,  message : message}
+      });
     },
     sendMessage() {
       if (this.userInput.trim() !== '') {
