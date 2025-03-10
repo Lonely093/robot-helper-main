@@ -29,11 +29,6 @@ class AudioRecorder {
   }
 
 
-  //发送日志记录
-  log(msg,ctx){
-    ipcMain.webContents.send('app-log', { msg: 'recorder.js--'+msg,  ctx });
-  }
-
   // 新增初始化方法
   initASR(config) {
     this.asrClient = new ASRWebSocket(
@@ -68,7 +63,7 @@ class AudioRecorder {
       this.initialized = true;
       console.log('[Recorder] 初始化完成');
     } catch (err) {
-      console.log('[Recorder] 初始化失败:', err);
+      console.log('[Recorder] 初始化失败:', err.message);
       throw new Error('录音模块初始化失败');
     }
   }
@@ -82,7 +77,7 @@ class AudioRecorder {
     ipcMain.on('audio-chunk', this.handleChunk.bind(this));
     ipcMain.handle('audio-stop', this.handleStop.bind(this));
 
-    console.log('[Recorder] IPC事件注册成功:', ipcMain.eventNames());
+    console.log('[Recorder] IPC事件注册成功');
   }
 
   cleanupIPC() {
@@ -91,7 +86,7 @@ class AudioRecorder {
       ipcMain.removeHandler('audio-stop');
       ipcMain.removeAllListeners('audio-chunk');
     } catch (err) {
-      console.error('[Recorder] 清理IPC失败:', err);
+      console.error('[Recorder] 清理IPC失败:', err.message);
     }
   }
 
@@ -184,7 +179,7 @@ class AudioRecorder {
       //const pcmData = this.convertAudioData(chunk)
       this.writer.write(Buffer.from(chunk));
     } catch (err) {
-      console.log('[Recorder] 写入失败:', err);
+      console.log('[Recorder] 写入失败:', err.message);
       this.cleanup();
       throw new Error('音频数据写入失败');
     }
@@ -359,7 +354,7 @@ class AudioRecorder {
           fs.unlinkSync(tempPath);
         }
       } catch (err) {
-        console.log('清理失败:', err);
+        console.log('清理失败:', err.message);
       }
     }
     

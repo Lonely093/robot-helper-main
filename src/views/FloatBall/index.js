@@ -55,7 +55,7 @@ async mounted() {
     this.subColor = storage.subColor
     this.opacity = storage.opacity
     ipcRenderer.on("update", (e, data) => {
-      //console.log(data)
+      //this.log(data)
       this.count = data
     })
     ipcRenderer.on("config", (e, data) => {
@@ -74,7 +74,6 @@ async mounted() {
 
     //监听故障诊断页面传来的消息    1 根据文本请求故障诊断     2 执行 commd指令
     ipcRenderer.on('message-to-renderer', (event, data) => {
-      console.log('收到消息:', data); 
       if(data.type==1)  //根据文字请求故障诊断
       {
         this.FaultDiagnosis(data.message);
@@ -91,23 +90,23 @@ async mounted() {
     //     this.finalTranscript += data.text + ' '
     //   }
     //   this.interimTranscript = data.text
-    //   console.log(this.interimTranscript);
+    //   this.log(this.interimTranscript);
     // })
     // ipcRenderer.on('asr-error', (event, error) => {
-    //   console.log(error.message );
+    //   this.log(error.message );
     // })
   },
   methods: {
 
     //发送日志记录
     log(msg,ctx){
-      ipcRenderer.send('app-log', { msg: 'floatball--'+msg,  ctx });
+      ipcRenderer.invoke('app-log', { msg: 'floatball--'+msg,  ctx });
     },
 
     async snapToEdge() {
-      //console.log("draggableElement.value", this.$refs)
+      //this.log("draggableElement.value", this.$refs)
       const rect = this.$refs.draggableElement.getBoundingClientRect();
-      //console.log("rect", rect)
+      //this.log("rect", rect)
       // 获取窗口内容区域边界信息
       const winBounds = await ipcRenderer.invoke('get-win-content-bounds');
 
@@ -121,8 +120,8 @@ async mounted() {
         y: screenY
       });
 
-      //console.log("winBounds", winBounds)
-      //console.log("display", display)
+      //this.log("winBounds", winBounds)
+      //this.log("display", display)
       // 吸附阈值（20px）
       const SNAP_THRESHOLD = 400;
       const workArea = display.workArea;
@@ -134,7 +133,7 @@ async mounted() {
         // top: screenY - workArea.y,
         // bottom: workArea.y + workArea.height - (screenY + rect.height)
       };
-      //console.log("edges", edges)
+      //this.log("edges", edges)
       // 找到最近边缘
       let minDist = Infinity;
       let closestEdge = null;
@@ -158,9 +157,9 @@ async mounted() {
         });
       }
 
-      // console.log("minDist ", minDist)
-      // console.log("closestEdge ", closestEdge)
-      // console.log("SNAP_THRESHOLD", SNAP_THRESHOLD)
+      // this.log("minDist ", minDist)
+      // this.log("closestEdge ", closestEdge)
+      // this.log("SNAP_THRESHOLD", SNAP_THRESHOLD)
       // 执行吸附
       if (minDist <= SNAP_THRESHOLD) {
         let newX = winBounds.x;
@@ -181,7 +180,7 @@ async mounted() {
           //   break;
         }
         // this.isNotMore = true;
-        console.log("set-win-position", newX, newY)
+        this.log("set-win-position", {newX, newY})
         // 更新窗口位置
         ipcRenderer.send('set-win-position', {
           x: Math.round(newX),
@@ -206,9 +205,9 @@ async mounted() {
         // 初始化音频流
         try {
           this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          console.log('[Renderer] 已获得麦克风权限');
+          this.log('[Renderer] 已获得麦克风权限');
         } catch (err) {
-          this.error('[Renderer] 麦克风访问被拒绝:', err);
+          this.log('[Renderer] 麦克风访问被拒绝:', err.message);
           this.$emit('error', '请允许麦克风访问权限');
           return;
         }
@@ -216,14 +215,14 @@ async mounted() {
         this.setupAudioAnalysis();
         // 通知主进程开始录音
         const { path } = await ipcRenderer.invoke('audio-start');
-        console.log(`[Renderer] 录音文件路径: ${path}`);
+        this.log(`[Renderer] 录音文件路径: ${path}`);
         // 创建媒体录音器
         this.mediaRecorder = new MediaRecorder(this.mediaStream);
         this.setupDataHandler();
         this.isRecording = true;
         this.startMonitoring();
       } catch (err) {
-        this.error('录音启动失败:', err);
+        this.log('录音启动失败:', err);
       }
     },
     setupAudioAnalysis() {
@@ -233,7 +232,7 @@ async mounted() {
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 2048;
       source.connect(this.analyser);
-      console.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
+      this.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
     },
     setupDataHandler() {
       this.mediaRecorder.ondataavailable = async (e) => {
@@ -241,13 +240,13 @@ async mounted() {
           const buffer = await e.data.arrayBuffer();
           ipcRenderer.send('audio-chunk', buffer);
         } catch (err) {
-          this.error('[Renderer] 数据处理失败:', err);
+          this.log('[Renderer] 数据处理失败:', err);
           this.$emit('error', '音频数据发送失败');
         }
       };
 
       this.mediaRecorder.start(500); // 每1秒收集数据
-      console.log('[Renderer] 媒体录音器已启动');
+      this.log('[Renderer] 媒体录音器已启动');
     },
     startMonitoring() {
       const checkStatus = () => {
@@ -268,12 +267,12 @@ async mounted() {
     checkSilence(volume) {
       if (this.isStopRecording) return;
       const SILENCE_THRESHOLD = 0.5; //可调整的静音阈值 最大值为1  
-      //console.log(volume);
+      //this.log(volume);
       //此处为超过1s检测到的麦克风电流小于0.2则停止录音
       if (volume < SILENCE_THRESHOLD) {
         this.silenceCount += 1 / 60;
         if (this.silenceCount >= 1) {
-          console.log('[Renderer] 检测到持续静音，自动停止');
+          this.log('[Renderer] 检测到持续静音，自动停止');
           this.stopRecording();
         }
       } else {
@@ -296,10 +295,10 @@ async mounted() {
         }
         // 通知主进程停止 保存录音文件并上传接口，返回结果
         result = await ipcRenderer.invoke('audio-stop');
-        console.log('[Renderer] 录音保存结果:', result);
+        this.log('[Renderer] 录音保存结果:', result);
         this.$emit('record-complete', result);
       } catch (err) {
-        console.log('[Renderer] 停止失败:', err);
+        this.log('[Renderer] 停止失败:', err.message);
         this.$emit('error', err.message);
         result.message = err.message;
       } finally {
@@ -322,7 +321,7 @@ async mounted() {
 
       this.isRecording = false;
       this.silenceCount = 0;
-      console.log('[Renderer] 资源已清理');
+      this.log('[Renderer] 资源已清理');
     },
 
     // ***********************麦克风录音结束 ***************//
@@ -335,7 +334,7 @@ async mounted() {
 
         //测试主题
         // mqttClient.subscribe('test/topic', (message, topic) => {
-        //   console.log(`Received message from ${topic}:`, message)
+        //   this.log(`Received message from ${topic}:`, message)
         // })
         
         //启动消息   App/Open/+  对应 App/Launch/+
@@ -348,7 +347,7 @@ async mounted() {
 
         //APP注册发布主题
         // mqttClient.subscribe('AppCenter/Apps', (message, topic) => {
-        //   console.log(`Received message from ${topic}:`, message)
+        //   this.log(`Received message from ${topic}:`, message)
         // })
 
         // //发送主题
@@ -356,18 +355,18 @@ async mounted() {
         //   text: 'Hello from Vue',
         //   timestamp: Date.now()
         // })
-        // console.log("发送主题");
+        // this.log("发送主题");
 
       } catch (error) {
-        console.log('MQTT连接失败:', error);
+        this.log('MQTT连接失败:', error.message);
       }
     },
 
     //指令处理结果返回
     handleCommandResult(event) {
       const { appId, msg } = event.detail;
-      console.log("handleCommandResult:",msg);
-      console.log("handleCommandResult:",this.runingcmd);
+      this.log("handleCommandResult:",msg);
+      this.log("handleCommandResult:",this.runingcmd);
       if(this.runingcmd!=null)
       {
         if(msg=="ok") //指令执行完成
@@ -444,7 +443,6 @@ async mounted() {
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
     async handlestopRecordAfter(result){
-
       try {
         if(!result.success){
           this.floatballtip(0, "录音故障:" + result.message);
@@ -464,6 +462,7 @@ async mounted() {
           this.floatballtip(0,"未检测到声音");
           return;
         }
+        this.floatballtip(1,result.message);
          //调用 指令交互接口    根据结果判断
          const res = await ipcRenderer.invoke('hnc_tti', result.message);
          if (res && res.code == 200) {
@@ -491,6 +490,7 @@ async mounted() {
            this.floatballtip(0, "服务故障:" + res?.message);
          }
       } catch (error) {
+        console.log("11111",error);
         this.floatballtip(0, "录音或者网络故障:" + error.message);
       }finally{
         //等所有的接口处理完成之后，在进行录音资源释放
@@ -501,10 +501,10 @@ async mounted() {
     //故障诊断接口
     async FaultDiagnosis(message) {
       try {
-        console.log("FaultDiagnosis",message);
+        this.log("FaultDiagnosis",message);
         //res = await apis.hnc_fd(result.message);
         const res = await ipcRenderer.invoke('hnc_fd', message);
-        console.log("hnc_fd:",res);
+        this.log("hnc_fd:",res);
         if(res && res.code=="200"){
           this.floatballtodo(1,res.data.msg,res.data.command_list);
         }else{
@@ -512,7 +512,7 @@ async mounted() {
           this.floatballtodo(0,"故障诊断错误:"+res.data.msg);
         }
       } catch (error) {
-        console.log("hnc_fd error:",error);
+        this.log("hnc_fd 异常:",error.message);
         this.floatballtodo(0,"故障诊断异常:"+error.message);
       }
     },
@@ -526,24 +526,25 @@ async mounted() {
       //每次执行一个指令，等待指令完成之后继续执行下一个指令
       const cmd=this.commandList[0];
       var app = stateStore.getApp(cmd.app_id);
-      console.log("docommand-app:",app);
       if(app){
         this.runingcmd={type : 1, cmd };
         this.checkTimeout();
-        console.log("checkTimeoutId:",this.checkTimeoutId);
+        this.log("checkTimeoutId:",this.checkTimeoutId);
         if(app.state=="0"){ //先启动
-          console.log("Command/Open",cmd);
-          mqttClient.publish('Command/Open', {
+          var runingcmd={
             app_id: cmd.app_id,
             timestamp: Date.now()
-          })
+          }
+          this.log("推送MQTT指令：",runingcmd);
+          mqttClient.publish('Command/Open', runingcmd)
         }else{ //直接发送指令
-          console.log("Command/Action",cmd);
-          mqttClient.publish('Command/Action/'+cmd.app_id, {
+          var runingcmd={
             app_id: cmd.app_id,
             command:cmd.command,
             timestamp: Date.now()
-          })
+          }
+          this.log("推送MQTT指令：",runingcmd);
+          mqttClient.publish('Command/Action/'+cmd.app_id, runingcmd)
         }
       }else{
         //提示当前APP未注册
@@ -554,7 +555,7 @@ async mounted() {
 
     //故障诊断的指令处理
     fddocommand(cmd){
-      console.log("fddocommand",cmd);
+      this.log("fddocommand",cmd);
       var app = stateStore.getApp(cmd.app_id);
       if(app){
         this.runingcmd={ type : 2 , cmd };
@@ -580,12 +581,12 @@ async mounted() {
     //处理超时情况
     checkTimeout(){
       if (this.checkTimeoutId) {
-        console.log('清除定时器 ID:', this.checkTimeoutId);
+        this.log('清除定时器 ID:', this.checkTimeoutId);
         clearTimeout(this.checkTimeoutId);
       }
       this.checkTimeoutId = setTimeout(() => {
         //超过3秒还没执行完成一个指令
-        console.log('定时器触发，ID:', this.checkTimeoutId);
+        this.log('定时器触发，ID:', this.checkTimeoutId);
         if(this.runingcmd!=null){
           if(this.runingcmd.type==1)
           {
@@ -599,7 +600,7 @@ async mounted() {
           this.commandList=[];
         }
       }, 3000);
-      console.log('设置新定时器 ID:', this.checkTimeoutId);
+      this.log('设置新定时器 ID:', this.checkTimeoutId);
     },
 
     /****************** HTTP接口处理结束 ****************/
@@ -657,7 +658,7 @@ async mounted() {
         ipcRenderer.send("showTodo", "open")
       }
       // 如果不是拖动而是点击，就开始录音
-      console.log("calcS()",calcS());
+      //this.log("calcS()",calcS());
       if (calcS()) {
         await this.toggleRecording();
       }
@@ -671,13 +672,13 @@ async mounted() {
     //     ipcRenderer.send("showTip", "show")
     //     ipcRenderer.send("showTodo", "show")
     //   }
-    //   // console.log(calcS(),"close-tip")
+    //   // this.log(calcS(),"close-tip")
     //   if (newValue == true) {
-    //     // console.log("close-tip")
+    //     // this.log("close-tip")
     //     ipcRenderer.send('close-tip');
     //   }
 
-    //   console.log("isNotMore changed to:", newValue);
+    //   this.log("isNotMore changed to:", newValue);
     // }
 
 
