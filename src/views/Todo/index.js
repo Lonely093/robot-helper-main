@@ -111,7 +111,7 @@ const app = Vue.createApp({
       //  data.type 0 错误消息  1 正常消息   
       //  data.message  
       //  data.commandlist    注意可能存在  undefined  null 数据，需要判断一下
-      let botMessage = "接口异常";
+      let botMessage = data.message;
       let commandlist = [];
       if (data.type == 0) {
         botMessage = data.message;
