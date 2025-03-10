@@ -521,6 +521,7 @@ async mounted() {
          if (res && res.code == 200) {
            if (res.data.command_list && res.data.command_list.length > 0) {
              //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
+             //await this.FaultDiagnosis(result.message);
              if(res.data.command_list[0].app_id=="fault_diagnosis"){
                await this.FaultDiagnosis(result.message);
              }
@@ -554,7 +555,8 @@ async mounted() {
     //故障诊断接口
     async FaultDiagnosis(message) {
       console.log("FaultDiagnosis",message);
-      this.showTodo();
+      ipcRenderer.send("close-tip"); //关闭tip
+      this.showTodo();//展示故障诊断
       try {
         //res = await apis.hnc_fd(result.message);
         const res = await ipcRenderer.invoke('hnc_fd', message);
