@@ -42,8 +42,13 @@ const app = Vue.createApp({
 
     ipcRenderer.on('message-to-renderer', (event, data) => {
       console.log('收到消息:', data); // 输出 "Hello from Renderer A"
-      this.showtext=true;
-      this.tipText = data.message;
+      if(data.type==3)
+      {
+        this.showtext=false;
+      }else{
+        this.showtext=true;
+        this.tipText = data.message;
+      }
     });
  
   },
