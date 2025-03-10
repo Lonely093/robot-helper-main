@@ -267,7 +267,6 @@ ipcMain.on('showTodo', (e, data) => {
 
 ipcMain.on('close-todo', (event) => {
   if (pages.todoWin) pages.todoWin.close();
-  pages.todoWin=null;
 });
 
 ipcMain.on('openTip', (e, data) => {
@@ -293,7 +292,6 @@ ipcMain.on('showTip', (e, data) => {
 
 ipcMain.on('close-tip', (event) => {
   if (pages.tipWin) pages.tipWin.close();
-  pages.tipWin=null;
 });
 
 ipcMain.on('ballWindowMove', (e, data) => {
@@ -399,7 +397,21 @@ ipcMain.on('set-win-position', (event, position) => {
     Math.round(position.y),
     true // 启用动画
   )
+  
+  pages.tipWin.setPosition(
+    Math.round(position.x),
+    Math.round(position.y),
+    true // 启用动画
+  )
 })
+
+ipcMain.on('winsetPosition', (event, { deltaX, deltaY }) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  logger.info("winsetPosition", { deltaX, deltaY })
+  const [x, y] = win.getPosition()
+  win.setPosition(x + deltaX, y + deltaY)
+})
+
 ipcMain.on('todo-window-close', () => {
   pages.todoWin.close();
 });

@@ -26,13 +26,13 @@ function handleMove(e) {
 
   ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY })
   
-  // const deltaX = e.screenX - startX
-  // const deltaY = e.screenY - startY
-  // const win = require('electron').remote.getCurrentWindow()
-  // const [x, y] = win.getPosition()
-  // win.setPosition(x + deltaX, y + deltaY)
-  // startX = e.screenX
-  // startY = e.screenY
+  const deltaX = e.screenX - startX
+  const deltaY = e.screenY - startY
+  console.log('winsetPosition',{  deltaX, deltaY });
+  ipcRenderer.send('winsetPosition', {  deltaX, deltaY })
+  
+  startX = e.screenX
+  startY = e.screenY
 
 }
 
@@ -515,15 +515,15 @@ async mounted() {
          if (res && res.code == 200) {
            if (res.data.command_list && res.data.command_list.length > 0) {
              //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
-             await this.FaultDiagnosis(result.message);
-            //  if(res.data.command_list[0].app_id=="fault_diagnosis"){
-            //    await this.FaultDiagnosis(result.message);
-            //  }
-            //  //需要处理的指令集合
-            //  else {
-            //    this.commandList = res.data.command_list;
-            //    this.docommand();
-            //  }
+             //await this.FaultDiagnosis(result.message);
+             if(res.data.command_list[0].app_id=="fault_diagnosis"){
+               await this.FaultDiagnosis(result.message);
+             }
+             //需要处理的指令集合
+             else {
+               this.commandList = res.data.command_list;
+               this.docommand();
+             }
            } else {
              //小提示框 显示 空的指令列表
              this.floatballtip(0, "未能识别到指令，请重试");
@@ -555,14 +555,14 @@ async mounted() {
         //res = await apis.hnc_fd(result.message);
         const res = await ipcRenderer.invoke('hnc_fd', message);
         console.log("hnc_fd:",res);
+        //同时发送用户说的话
+        this.floatballtodo(3,message);
         if(res && res.code=="200"){
           this.floatballtodo(1,res.data.msg,res.data.command_list);
         }else{
           // 需要在大提示框中显示：  故障诊断错误  res.data.msg
           this.floatballtodo(0,"故障诊断错误:"+res.data.msg);
         }
-        //同时发送用户说的话
-        this.floatballtodo(3,message);
       } catch (error) {
         console.log("hnc_fd 异常:",error.message);
         this.floatballtodo(0,"故障诊断异常:"+error.message);
@@ -730,9 +730,7 @@ async mounted() {
       if (calcS()) {
         await this.toggleRecording();
       }
-
     },
-
   },
   watch: {
     // isNotMore(newValue) {
