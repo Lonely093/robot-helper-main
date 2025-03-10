@@ -30,7 +30,7 @@ process.on('uncaughtException', (error) => {
 });
 
 //开启日志监听
-ipcMain.handle('app-log', async (event, msg,ctx) => {
+ipcMain.handle('app-log',  (event, {msg,ctx}) => {
   logger.info(msg, ctx);
 });
 
@@ -86,7 +86,7 @@ ipcMain.handle('hnc_stt', async (event, filePath) => {
         timeout: 5000 
        }
     );
-    logger.info('请求接口hnc_stt', response);
+    logger.info('请求接口hnc_stt', response.data);
     return response.data;
   } catch (error) {
     logger.error('请求接口hnc_stt异常', error);
@@ -110,7 +110,7 @@ ipcMain.handle('hnc_tti', async (event, info) => {
       },
       timeout: 5000 
    });
-   logger.info('请求接口hnc_tti', response);
+   logger.info('请求接口hnc_tti', response.data);
    return response.data;
  } catch (error) {
    logger.error('请求接口hnc_tti异常', error);
@@ -134,14 +134,13 @@ ipcMain.handle('hnc_fd', async (event, info) => {
       },
       timeout: 5000 
    });
-      logger.info('请求接口hnc_fd', response);
+      logger.info('请求接口hnc_fd', response.data);
       return response.data;
   } catch (error) {
       logger.error('请求接口hnc_fd异常', error);
     return {code:"999",data:{msg:error.message}};
   }
 });
-
 
 ipcMain.on('message-from-renderer', (event, { target, data }) => {
 

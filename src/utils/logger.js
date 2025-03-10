@@ -22,6 +22,10 @@ const LogLevel = {
 
 // 核心日志函数
 function log(level, message, context = {}) {
+if(context==null||context==undefined)
+{
+    context={};
+}
   const timestamp = new Date().toISOString();
   const logEntry = JSON.stringify({
     timestamp,
