@@ -160,7 +160,7 @@ ipcMain.on('message-from-renderer', (event, { target, data }) => {
     targetWindow=pages.suspensionWin;
   }
   if (targetWindow) {
-    targetWindow.webContents.send('message-to-renderer', data);
+      targetWindow.webContents.send('message-to-renderer', data);
   }
 });
 

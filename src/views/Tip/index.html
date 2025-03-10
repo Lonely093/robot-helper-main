@@ -10,8 +10,8 @@
 <body>
   <div id="app">
     <div class="tip-root">
-
-      <p class="content">{{tipText}}</p>
+      <img v-show="!showtext" src="../../assets/vedio.gif"  width="200" height="80">
+       <p v-show="showtext" class="content">{{tipText}}</p> 
     </div>
   </div>
   <script src="./index.js"></script>

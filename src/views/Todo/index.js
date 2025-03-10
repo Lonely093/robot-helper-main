@@ -111,7 +111,7 @@ const app = Vue.createApp({
       //  data.type 0 错误消息  1 正常消息   
       //  data.message  
       //  data.commandlist    注意可能存在  undefined  null 数据，需要判断一下
-      let botMessage = "接口异常";
+      let botMessage = data.message;
       let commandlist = [];
       if (data.type == 0) {
         botMessage = data.message;
@@ -219,12 +219,12 @@ const app = Vue.createApp({
     },
     checkSilence(volume) {
       if (this.isStopRecording) return;
-      const SILENCE_THRESHOLD = 0.5; //可调整的静音阈值 最大值为1  
+      const SILENCE_THRESHOLD = 0.6; //可调整的静音阈值 最大值为1  
       //console.log(volume);
       //此处为超过1s检测到的麦克风电流小于0.2则停止录音
       if (volume < SILENCE_THRESHOLD) {
         this.silenceCount += 1 / 60;
-        if (this.silenceCount >= 1) {
+        if (this.silenceCount >= 2) {
           console.log('[Renderer] 检测到持续静音，自动停止');
           console.log(Date.now());
           this.stopRecording();

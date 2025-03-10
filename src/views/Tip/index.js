@@ -25,7 +25,8 @@ const app = Vue.createApp({
 
   data() {
     return {
-      tipText: '请问你需要什么帮助？',
+      showtext:false,
+      tipText: '开始录音',
       timeoutId: null,
     }
   },
@@ -41,9 +42,10 @@ const app = Vue.createApp({
 
     ipcRenderer.on('message-to-renderer', (event, data) => {
       console.log('收到消息:', data); // 输出 "Hello from Renderer A"
+      this.showtext=true;
       this.tipText = data.message;
     });
-
+ 
   },
   beforeUnmount() {
     window.removeEventListener('floatball-tip');
@@ -51,9 +53,9 @@ const app = Vue.createApp({
   },
   methods: {
     startTimer() {
-      this.timeoutId = setTimeout(() => {
-        ipcRenderer.send('close-tip');
-      }, 6000)
+      // this.timeoutId = setTimeout(() => {
+      //   ipcRenderer.send('close-tip');
+      // }, 6000)
     },
     resetTimer() {
       clearTimeout(this.timeoutId) // 清除旧定时器
