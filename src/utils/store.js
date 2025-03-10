@@ -1,6 +1,6 @@
 
 const defaultConfig = {
-  opacity: 0.6,
+  opacity: 0.8,
   mainColor: '#49CE95',
   subColor: '#FA0A55'
 }
