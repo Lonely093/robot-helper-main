@@ -27,7 +27,7 @@ const app = Vue.createApp({
     return {
       showtext:false,
       tipText: '请问你需要什么帮助？',
-      timeoutId: null,
+      tipCloseTimeoutId: null,
     }
   },
 
@@ -52,7 +52,7 @@ const app = Vue.createApp({
     clearTimeout(this.tipCloseTimeoutId)
   },
   methods: {
-    startTimer() {
+    startTipCloseTimer() {
       // this.timeoutId = setTimeout(() => {
       //   ipcRenderer.send('close-tip');
       // }, 6000)
