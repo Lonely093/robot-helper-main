@@ -254,30 +254,30 @@ ipcMain.on('ballWindowMove', (e, data) => {
 let suspensionMenu
 let topFlag = true
 ipcMain.on('openMenu', (e) => {
-  // if (!suspensionMenu) {
-  //   suspensionMenu = Menu.buildFromTemplate([
-  //     {
-  //       label: '开发者工具',
-  //       click: () => {
-  //         pages.suspensionWin.webContents.openDevTools({ mode: 'detach' })
-  //       }
-  //     },
-  //     {
-  //       label: '重启',
-  //       click: () => {
-  //         app.quit()
-  //         app.relaunch()
-  //       }
-  //     },
-  //     {
-  //       label: '退出',
-  //       click: () => {
-  //         app.quit();
-  //       }
-  //     },
-  //   ]);
-  // }
-  // suspensionMenu.popup({});
+  if (!suspensionMenu) {
+    suspensionMenu = Menu.buildFromTemplate([
+      // {
+      //   label: '开发者工具',
+      //   click: () => {
+      //     pages.suspensionWin.webContents.openDevTools({ mode: 'detach' })
+      //   }
+      // },
+      {
+        label: '重启',
+        click: () => {
+          app.quit()
+          app.relaunch()
+        }
+      },
+      {
+        label: '退出',
+        click: () => {
+          app.quit();
+        }
+      },
+    ]);
+  }
+  suspensionMenu.popup({});
 });
 
 ipcMain.on('setFloatIgnoreMouse', (e, data) => {

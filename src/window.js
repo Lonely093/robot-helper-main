@@ -52,7 +52,7 @@ const createEssayWindow = () => {
     },
   });
   win.loadFile(path.join(__dirname, 'views/Essay/index.html'));
-  win.webContents.openDevTools()
+  // win.webContents.openDevTools()
   return win
 }
 
@@ -61,6 +61,8 @@ const createTodoWindow = () => {
   const win = new BrowserWindow({
     skipTaskbar: true, // 新增这行关闭任务栏显示
     frame: false,
+    minWidth: 500,
+    minHeight: 400,
     width: 500,
     height: 400,
     // resizable: false,
@@ -96,6 +98,7 @@ const createTipWindow = () => {
   const win = new BrowserWindow({
     width: 200,
     minWidth: 200,
+    resizable: false,
     height: 80,
     x: left,
     y: top,
@@ -116,7 +119,7 @@ const createTipWindow = () => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Tip/index.html'));
-  //win.webContents.openDevTools()
+  // win.webContents.openDevTools()
   return win
 }
 const createConfigWindow = () => {
