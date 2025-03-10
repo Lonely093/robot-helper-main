@@ -52,9 +52,9 @@ const app = Vue.createApp({
     });
 
       // 监听主进程位置更新
-      this.$electron.ipcRenderer.on('window-moved', (_, pos) => {
-        this.position = pos
-      })
+      // this.$electron.ipcRenderer.on('window-moved', (_, pos) => {
+      //   this.position = pos
+      // })
  
   },
   beforeUnmount() {
