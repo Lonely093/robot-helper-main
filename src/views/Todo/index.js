@@ -7,25 +7,7 @@ const path = require('path');
 const fs = require('fs');
 
 applyConfig()
-/**
- * Vue应用实例 - Todo组件
- * 实现一个带有消息交互和命令处理功能的聊天界面
- * 
- * @component
- * 
- * @property {String} userInput - 用户输入的消息内容
- * @property {Array} messages - 消息历史记录列表,包含用户和机器人的对话
- * @property {Array} command_list - 可点击命令列表,包含command和app_id
- * 
- * @listens floatball-todo - 监听悬浮球事件
- * @listens close-todo - 监听关闭窗口事件
- * 
- * @method handleWindowClose - 处理窗口关闭
- * @method formatText - 格式化文本,将命令转换为可点击链接
- * @method handleCommandClick - 处理命令点击事件
- * @method sendMessage - 发送用户消息并模拟AI回复
- * @method scrollToBottom - 滚动消息容器到底部
- */
+
 const app = Vue.createApp({
 
   data: () => {
@@ -35,7 +17,7 @@ const app = Vue.createApp({
         {
           text: '1. **参数配置不合理的原因及解决方案**  \n   - 参数配置不合理的原因包括：坐标轴参数103517“最高速度限制” 是否设置正确；坐标轴参数103587“电机额定转速” 是否设置正确；轴参数中的103005“电子齿轮比分母”、103067 “轴每转脉冲数”、设备接口参数中的503015“反馈位置循环脉冲数”数值设置不一致；系统超速的限值(每个周期的最大长度增量)是否正确计算；以及超速系数是否设置正确。  \n   - 对应的解决方案：检查上述参数是否设置正确，计算超速限值，确保参数配置正确，必要时进行调整。  \n\n2. **编码器反馈信号异常的原因及解决方案**  \n   - 编码器反馈信号异常的原因包括：驱动单元或电机参数（如103005“电子齿轮比分母”、103067 “轴每转脉冲数”）设置不正确；编码器线缆或反馈信号异常。  \n   - 对应的解决方案：更换驱动单元或电机，通过交换法逐一排查；检查编码器线缆，更换并测试。',
           type: 'bot',
-          command_list: [
+          commandlist: [
             {
               "app_id": "(hmi_id)103005",
               "command": "103005"
@@ -71,7 +53,7 @@ const app = Vue.createApp({
           ],
         }
       ],
-      // command_list: [
+      // commandlist: [
       //   {
       //     "app_id": "(hmi_id)103005",
       //     "command": "103005"
@@ -143,7 +125,7 @@ const app = Vue.createApp({
           commandlist = data.commandlist;
         }
       }
-      this.messages.push({ text: botMessage, type: 'bot', command_list: commandlist })
+      this.messages.push({ text: botMessage, type: 'bot', commandlist: commandlist })
       this.scrollToBottom();
 
     });
@@ -298,29 +280,29 @@ const app = Vue.createApp({
     },
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
-    async handlestopRecordAfter(result){
-        if(!result.success){
-          this.userInput="录音故障:" + result.message;
-        }else{
-          const normalizedPath = path.normalize(result.path);
-          console.log(normalizedPath);
-          const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
-          fs.unlinkSync(normalizedPath) // 删除文件
-          console.log("uploadres:",uploadres);
-          if(!uploadres || uploadres.code!= 200){
-            this.userInput="上传录音文件故障 " + uploadres?.data?.message;
-          }else{
-            this.userInput=uploadres.data.result;
-            if (this.userInput.trim() !== '') {
-              this.sendMessage();
-              //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
-              ipcRenderer.send('message-from-renderer', {
-                target: 'floatball', // 指定目标窗口
-                data: { type : 1,  message : uploadres.data.result}
-              });
-            }
+    async handlestopRecordAfter(result) {
+      if (!result.success) {
+        this.userInput = "录音故障:" + result.message;
+      } else {
+        const normalizedPath = path.normalize(result.path);
+        console.log(normalizedPath);
+        const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
+        fs.unlinkSync(normalizedPath) // 删除文件
+        console.log("uploadres:", uploadres);
+        if (!uploadres || uploadres.code != 200) {
+          this.userInput = "上传录音文件故障 " + uploadres?.data?.message;
+        } else {
+          this.userInput = uploadres.data.result;
+          if (this.userInput.trim() !== '') {
+            this.sendMessage();
+            //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
+            ipcRenderer.send('message-from-renderer', {
+              target: 'floatball', // 指定目标窗口
+              data: { type: 1, message: uploadres.data.result }
+            });
           }
         }
+      }
       //等所有的接口处理完成之后，在进行录音资源释放
       this.cleanup();
     },
@@ -336,7 +318,7 @@ const app = Vue.createApp({
       // 生成正则表达式匹配所有指令参数
       let commands = [];
       if (message.type == 'bot') {
-        commands = message.command_list.map(c => c.command).join('|');
+        commands = message.commandlist.map(c => c.command).join('|');
       }
 
       const regex = new RegExp(`\\b(${commands})\\b`, 'g');
@@ -345,7 +327,7 @@ const app = Vue.createApp({
       return message.text
         .replace(/\n/g, '<br>')  // 处理换行
         .replace(regex, (match) => {
-          const target = message.command_list.find(c => c.command === match);
+          const target = message.commandlist.find(c => c.command === match);
           return target ?
             `<a class="command-link" 
           data-command="${target.command}"
@@ -360,7 +342,7 @@ const app = Vue.createApp({
     handleCommandClick(appCommand, appId) {
       console.log('Selected app_id:', appCommand, appId);
       let resp = 'Selected app_id:' + appCommand + appId;
-      this.messages.push({ text: resp, type: 'bot', command_list: [] });
+      this.messages.push({ text: resp, type: 'bot', commandlist: [] });
       this.scrollToBottom();
 
       //同时将消息发送至悬浮窗，      2 表示执行指令
@@ -378,20 +360,20 @@ const app = Vue.createApp({
 
     sendVoiceMessage() {
       setTimeout(() => {
-        this.messages.push({ text: '这是AI机器人的回复。', type: 'bot' })
+        this.messages.push({ text: '这是AI机器人的回复。', type: 'bot', commandlist: [] })
         this.scrollToBottom()
       }, 1000)
     },
     sendMessage() {
       if (this.userInput.trim() !== '') {
-        this.messages.push({ text: this.userInput, type: 'user' })
+        this.messages.push({ text: this.userInput, type: 'user', commandlist: [] })
 
 
 
         this.userInput = ''
         // 模拟AI回复
         setTimeout(() => {
-          this.messages.push({ text: '这是AI机器人的回复。', type: 'bot' })
+          this.messages.push({ text: '这是AI机器人的回复。', type: 'bot', commandlist: [] })
           this.scrollToBottom()
         }, 1000)
 
