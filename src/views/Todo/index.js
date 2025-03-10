@@ -112,8 +112,11 @@ const app = Vue.createApp({
       //  data.message  
       //  data.commandlist    注意可能存在  undefined  null 数据，需要判断一下
       let botMessage = data.message;
+      let messageType = "bot";
       let commandlist = [];
-      if (data.type == 0) {
+      if (data.type == 3) {
+        messageType="user";
+      }else if (data.type == 0) {
         botMessage = data.message;
       } else if (data.type == 1) {
         const separator = "</think>\n\n";
@@ -125,7 +128,7 @@ const app = Vue.createApp({
           commandlist = data.commandlist;
         }
       }
-      this.messages.push({ text: botMessage, type: 'bot', commandlist: commandlist })
+      this.messages.push({ text: botMessage, type: messageType, commandlist: commandlist })
       this.scrollToBottom();
 
     });

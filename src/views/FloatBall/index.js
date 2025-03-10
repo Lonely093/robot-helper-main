@@ -61,7 +61,7 @@ const app = Vue.createApp({
     return {
       // isNotMore: true,
       count: [0, 0],
-      opacity: 0.8,
+      opacity: 0.5,
       mainColor: '',
       subColor: '',
       isStopRecording: false,
