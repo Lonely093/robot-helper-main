@@ -6,6 +6,25 @@ const { applyConfig } = require("../../utils/store.js")
 const path = require('path');
 
 applyConfig()
+/**
+ * Vue应用实例 - Todo组件
+ * 实现一个带有消息交互和命令处理功能的聊天界面
+ * 
+ * @component
+ * 
+ * @property {String} userInput - 用户输入的消息内容
+ * @property {Array} messages - 消息历史记录列表,包含用户和机器人的对话
+ * @property {Array} command_list - 可点击命令列表,包含command和app_id
+ * 
+ * @listens floatball-todo - 监听悬浮球事件
+ * @listens close-todo - 监听关闭窗口事件
+ * 
+ * @method handleWindowClose - 处理窗口关闭
+ * @method formatText - 格式化文本,将命令转换为可点击链接
+ * @method handleCommandClick - 处理命令点击事件
+ * @method sendMessage - 发送用户消息并模拟AI回复
+ * @method scrollToBottom - 滚动消息容器到底部
+ */
 const app = Vue.createApp({
 
   data: () => {
@@ -263,7 +282,7 @@ const app = Vue.createApp({
           return target ?
             `<a class="command-link" 
           data-command="${target.command}"
-          onclick="commandClickHandler('${target.app_id}')"
+          onclick="commandClickHandler('${target.command}','${target.app_id}')"
           onmouseover="this.style.color='#79bbff'"
           onmouseout="this.style.color='#409eff'">
           ${match}
@@ -271,20 +290,26 @@ const app = Vue.createApp({
             match;
         });
     },
-    handleCommandClick(appId) {
-      console.log('Selected app_id:', appId);
-      
-      //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
-      ipcRenderer.send('message-from-renderer', {
-        target: 'floatball', // 指定目标窗口
-        data: { type : type,  message : message}
-      });
+    handleCommandClick(appCommand, appId) {
+      console.log('Selected app_id:', appCommand, appId);
+      let resp = 'Selected app_id:' + appCommand + appId;
+      this.messages.push({ text: resp, type: 'bot' });
+      this.scrollToBottom();
+    },
+
+    sendVoiceMessage() {
+      setTimeout(() => {
+        this.messages.push({ text: '这是AI机器人的回复。', type: 'bot' })
+        this.scrollToBottom()
+      }, 1000)
     },
     sendMessage() {
       if (this.userInput.trim() !== '') {
         this.messages.push({ text: this.userInput, type: 'user' })
-        this.userInput = ''
 
+
+
+        this.userInput = ''
         // 模拟AI回复
         setTimeout(() => {
           this.messages.push({ text: '这是AI机器人的回复。', type: 'bot' })
