@@ -5,7 +5,6 @@ const wav = require('waveheader');
 const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
 ffmpeg.setFfmpegPath(ffmpegPath)
-const apis=require('./api');
 const FormData = require('form-data');
 
 class AudioRecorder {
@@ -30,6 +29,11 @@ class AudioRecorder {
   }
 
 
+  //发送日志记录
+  log(msg,ctx){
+    ipcRenderer.send('app-log', { msg: 'recorder.js--'+msg,  ctx });
+  }
+
   // 新增初始化方法
   initASR(config) {
     this.asrClient = new ASRWebSocket(
@@ -43,28 +47,28 @@ class AudioRecorder {
     try {
       if (!fs.existsSync(this.recordDir)) {
         fs.mkdirSync(this.recordDir, { recursive: true });
-        console.log(`[存储] 已创建录音目录: ${this.recordDir}`);
+        this.log(`[存储] 已创建录音目录: ${this.recordDir}`);
       }
       // 验证目录可写性
       fs.accessSync(this.recordDir, fs.constants.W_OK);
     } catch (err) {
-      console.error(`[存储] 目录初始化失败: ${err.message}`);
+      this.log(`[存储] 目录初始化失败: ${err.message}`);
       throw new Error('无法创建录音存储目录');
     }
   }
 
   initialize() {
     if (this.initialized) {
-      console.warn('[Recorder] 模块已初始化');
+      this.log('[Recorder] 模块已初始化');
       return;
     }
     try {
       console.log('[Recorder] 开始初始化');
       this.registerIPC();
       this.initialized = true;
-      console.log('[Recorder] 初始化完成');
+      this.log('[Recorder] 初始化完成');
     } catch (err) {
-      console.error('[Recorder] 初始化失败:', err);
+      this.log('[Recorder] 初始化失败:', err);
       throw new Error('录音模块初始化失败');
     }
   }
@@ -171,7 +175,7 @@ class AudioRecorder {
 
   handleChunk(event, chunk) {
     if (!this.isRecording || !this.writer) {
-      console.error('[Recorder] 无效的音频块写入请求');
+      this.log('[Recorder] 无效的音频块写入请求');
       return;
     }
 
@@ -180,7 +184,7 @@ class AudioRecorder {
       //const pcmData = this.convertAudioData(chunk)
       this.writer.write(Buffer.from(chunk));
     } catch (err) {
-      console.error('[Recorder] 写入失败:', err);
+      this.log('[Recorder] 写入失败:', err);
       this.cleanup();
       throw new Error('音频数据写入失败');
     }
@@ -355,7 +359,7 @@ class AudioRecorder {
           fs.unlinkSync(tempPath);
         }
       } catch (err) {
-        console.error('清理失败:', err);
+        this.log('清理失败:', err);
       }
     }
     

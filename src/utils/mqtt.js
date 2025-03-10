@@ -1,14 +1,15 @@
 const mqtt= require("mqtt");
 const stateStore = require("./localStorage");
+const readConfig   = require('./configManager');
 
 class MqttClient {
   constructor(options = {}) {
     // 合并配置参数
     this.options = Object.assign({
-      brokerUrl: 'ws://127.0.0.1:8083/mqtt',
-      clientId: 'AIRobot', //`robot-ai${Math.random().toString(16).substr(2, 8)}`,
-      username: '',
-      password: '',
+      brokerUrl: readConfig.mqtt.brokerUrl,
+      clientId: readConfig.mqtt.clientId,
+      username: readConfig.mqtt.username,
+      password: readConfig.mqtt.password,
       clean: false,  //启用持久会话
       reconnectPeriod: 5000, // 重连间隔
       connectTimeout: 30 * 1000, // 连接超时

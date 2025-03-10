@@ -3,14 +3,16 @@ const path = require('path');
 const { createSuspensionWindow, createEssayWindow, createTodoWindow, createTipWindow, createConfigWindow } = require("./window.js")
 Menu.setApplicationMenu(null);
 const recorder = require('./utils/recorder');
+const readConfig  = require('./utils/configManager');
+const logger = require('./utils/logger');
 const axios= require("axios");
 const FormData = require('form-data');
 const fs = require('fs');
 
 const  urlconfig={
-  hnc_stt:'http://172.20.11.80:9000/api/hnc_stt',
-  hnc_tti:'http://172.20.11.80:9001/api/hnc_tti',
-  hnc_fd:'http://172.20.11.80:9002/api/hnc_fd'
+  hnc_stt: readConfig.http.hnc_stt,
+  hnc_tti: readConfig.http.hnc_tti,
+  hnc_fd: readConfig.http.hnc_fd
 };
 
 // 悬浮球的一些设置
@@ -18,6 +20,19 @@ const suspensionConfig = {
   width: 80,
   height: 80,
 }
+
+// 启动日志
+logger.info('应用程序启动', { version: app.getVersion() });
+
+// 全局错误捕获
+process.on('uncaughtException', (error) => {
+  logger.error('未捕获的异常', { error: error.stack });
+});
+
+//开启日志监听
+ipcMain.handle('app-log', async (event, msg,ctx) => {
+  logger.info(msg, ctx);
+});
 
 // const suspensionConfig = {
 //   width: 200,
@@ -71,8 +86,10 @@ ipcMain.handle('hnc_stt', async (event, filePath) => {
         timeout: 5000 
        }
     );
+    logger.info('请求接口hnc_stt', response);
     return response.data;
   } catch (error) {
+    logger.error('请求接口hnc_stt异常', error);
     return {code:"999",data:{message:error.message}};
   }
 });
@@ -93,8 +110,10 @@ ipcMain.handle('hnc_tti', async (event, info) => {
       },
       timeout: 5000 
    });
+   logger.info('请求接口hnc_tti', response);
    return response.data;
-  } catch (error) {
+ } catch (error) {
+   logger.error('请求接口hnc_tti异常', error);
     return {code:"999",data:{message:error.message}};
   }
 });
@@ -115,14 +134,18 @@ ipcMain.handle('hnc_fd', async (event, info) => {
       },
       timeout: 5000 
    });
-    return response.data;
+      logger.info('请求接口hnc_fd', response);
+      return response.data;
   } catch (error) {
+      logger.error('请求接口hnc_fd异常', error);
     return {code:"999",data:{msg:error.message}};
   }
 });
 
 
 ipcMain.on('message-from-renderer', (event, { target, data }) => {
+
+  logger.info('窗口间消息推送', {target,data});
   // 查找目标窗口
   var targetWindow=null;
   if(target=="tip")
@@ -149,12 +172,12 @@ ipcMain.on('message-from-renderer', (event, { target, data }) => {
 
 // 确保初始化顺序
 app.whenReady().then(() => {
-  console.log('[主进程] Electron准备就绪');
+  logger.info('[主进程] Electron准备就绪');
   //注册麦克风录音
   recorder.initialize();
   pages.suspensionWin = createSuspensionWindow(suspensionConfig)
 }).catch(err => {
-  console.error('应用启动失败:', err);
+  logger.error('应用启动失败:', err);
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -170,7 +193,7 @@ app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
-    console.log('activate [主进程] Electron准备就绪');
+    logger.info('activate [主进程] Electron准备就绪');
     //注册麦克风录音
     recorder.initialize();
     pages.suspensionWin = createSuspensionWindow(suspensionConfig)
