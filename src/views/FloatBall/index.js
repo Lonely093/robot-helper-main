@@ -7,7 +7,7 @@ const { ref } = require('vue')
 const draggableElement = ref(null);
 
 const mqttClient = require("../../utils/mqtt")
-const stateStore = require("../../utils/mqtt_persistence");
+const stateStore = require("../../utils/localStorage");
 const path = require('path');
 
 
@@ -71,7 +71,7 @@ async mounted() {
     window.addEventListener('app-launch', this.handleAppLaunchResult);
     window.addEventListener('app-message', this.handleAppMessage);
 
-    //监听故障诊断页面传来的消息
+    //监听故障诊断页面传来的消息    1 根据文本请求故障诊断     2 执行 commd指令
     ipcRenderer.on('message-to-renderer', (event, data) => {
       console.log('收到消息:', data); 
     });
@@ -355,6 +355,8 @@ async mounted() {
     //指令处理结果返回
     handleCommandResult(event) {
       const { appId, msg } = event.detail;
+      console.log("handleCommandResult:",msg);
+      console.log("handleCommandResult:",this.runingcmd);
       if(this.runingcmd!=null)
       {
         if(msg=="ok") //指令执行完成
@@ -376,9 +378,9 @@ async mounted() {
           {
             this.floatballtodo(0,"指令执行失败:"+msg);
           }
+          this.runingcmd=null;
+          if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         }
-        this.runingcmd=null;
-        if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
       }
     },
 
@@ -395,12 +397,10 @@ async mounted() {
         if(this.runingcmd.type==1)
         {
           this.docommand();
-          if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         }
         if(this.runingcmd.type==2)
         { 
           this.fddocommand(this.runingcmd.cmd);
-          if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         }
       }
     },
@@ -523,19 +523,20 @@ async mounted() {
       }
       //每次执行一个指令，等待指令完成之后继续执行下一个指令
       const cmd=this.commandList[0];
-      var app = stateStore.getCurrentState(cmd.app_id);
+      var app = stateStore.getApp(cmd.app_id);
+      console.log("docommand-app:",app);
       if(app){
         this.runingcmd={type : 1, cmd };
-        if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
-        this.checkTimeoutId = this.checkTimeout();
+        this.checkTimeout();
+        console.log("checkTimeoutId:",this.checkTimeoutId);
         if(app.state=="0"){ //先启动
-          console.log("Command/Open",app);
+          console.log("Command/Open",cmd);
           mqttClient.publish('Command/Open', {
             app_id: cmd.app_id,
             timestamp: Date.now()
           })
         }else{ //直接发送指令
-          console.log("Command/Action",app);
+          console.log("Command/Action",cmd);
           mqttClient.publish('Command/Action/'+cmd.app_id, {
             app_id: cmd.app_id,
             command:cmd.command,
@@ -551,11 +552,10 @@ async mounted() {
 
     //故障诊断的指令处理
     fddocommand(cmd){
-      var app = stateStore.getCurrentState(cmd.app_id);
+      var app = stateStore.getApp(cmd.app_id);
       if(app){
         this.runingcmd={ type : 2 , cmd };
-        if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
-        this.checkTimeoutId = this.checkTimeout();
+        this.checkTimeout();
         if(app.state=="0"){ //先启动
           mqttClient.publish('Command/Open', {
             app_id: cmd.app_id,
@@ -576,9 +576,14 @@ async mounted() {
 
     //处理超时情况
     checkTimeout(){
-      return setTimeout(() => {
+      if (this.checkTimeoutId) {
+        console.log('清除定时器 ID:', this.checkTimeoutId);
+        clearTimeout(this.checkTimeoutId);
+      }
+      this.checkTimeoutId = setTimeout(() => {
         //超过3秒还没执行完成一个指令
-        if(this.this.runingcmd!=null){
+        console.log('定时器触发，ID:', this.checkTimeoutId);
+        if(this.runingcmd!=null){
           if(this.runingcmd.type==1)
           {
             this.floatballtip(0,"指令执行超时");
@@ -591,6 +596,7 @@ async mounted() {
           this.commandList=[];
         }
       }, 3000);
+      console.log('设置新定时器 ID:', this.checkTimeoutId);
     },
 
     /****************** HTTP接口处理结束 ****************/
