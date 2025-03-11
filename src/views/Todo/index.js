@@ -104,7 +104,7 @@ const app = Vue.createApp({
 
     //悬浮窗传递过来的消息
     ipcRenderer.on('message-to-renderer', (event, data) => {
-      console.log('收到消息:', data);
+      this.log('收到消息:', data);
       //  data.type 0 错误消息  1 正常消息   
       //  data.message  
       //  data.commandlist    注意可能存在  undefined  null 数据，需要判断一下
@@ -141,6 +141,10 @@ const app = Vue.createApp({
   },
   methods: {
 
+    //发送日志记录
+    log(msg,ctx){
+      ipcRenderer.invoke('app-log', { msg: 'todo--'+msg,  ctx });
+    },
 
     // ***********************麦克风录音 ***************//
     async toggleRecording() {
@@ -167,7 +171,7 @@ const app = Vue.createApp({
         // 初始化音频流
         try {
           this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          console.log('[Renderer] 已获得麦克风权限');
+          this.log('[Renderer] 已获得麦克风权限');
         } catch (err) {
           console.error('[Renderer] 麦克风访问被拒绝:', err);
           this.$emit('error', '请允许麦克风访问权限');
@@ -177,7 +181,7 @@ const app = Vue.createApp({
         this.setupAudioAnalysis();
         // 通知主进程开始录音
         const { path } = await ipcRenderer.invoke('audio-start');
-        console.log(`[Renderer] 录音文件路径: ${path}`);
+        this.log(`[Renderer] 录音文件路径: ${path}`);
         // 创建媒体录音器
         this.mediaRecorder = new MediaRecorder(this.mediaStream);
         this.setupDataHandler();
@@ -194,7 +198,7 @@ const app = Vue.createApp({
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 2048;
       source.connect(this.analyser);
-      console.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
+      this.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
     },
     setupDataHandler() {
       this.mediaRecorder.ondataavailable = async (e) => {
@@ -208,7 +212,7 @@ const app = Vue.createApp({
       };
 
       this.mediaRecorder.start(500); // 每1秒收集数据
-      console.log('[Renderer] 媒体录音器已启动');
+      this.log('[Renderer] 媒体录音器已启动');
     },
     startMonitoring() {
       const checkStatus = () => {
@@ -229,12 +233,12 @@ const app = Vue.createApp({
     checkSilence(volume) {
       if (this.isStopRecording) return;
       const SILENCE_THRESHOLD = 0.7; //可调整的静音阈值 最大值为1  
-      //console.log(volume);
+      //this.log(volume);
       //此处为超过2s检测到的麦克风电流小于0.7则停止录音
       if (volume < SILENCE_THRESHOLD) {
         this.silenceCount += 1 / 60;
         if (this.silenceCount >= 2) {
-          console.log('[Renderer] 检测到持续静音，自动停止');
+          this.log('[Renderer] 检测到持续静音，自动停止');
           this.stopRecording();
         }
       } else {
@@ -257,8 +261,7 @@ const app = Vue.createApp({
         }
         // 通知主进程停止 保存录音文件并上传接口，返回结果
         result = await ipcRenderer.invoke('audio-stop');
-        console.log('[Renderer] 录音保存结果:', result);
-        console.log(Date.now());
+        this.log('[Renderer] 录音保存结果:', result);
         this.$emit('record-complete', result);
       } catch (err) {
         console.error('[Renderer] 停止失败:', err);
@@ -284,7 +287,7 @@ const app = Vue.createApp({
 
       this.isRecording = false;
       this.silenceCount = 0;
-      console.log('[Renderer] 资源已清理');
+      this.log('[Renderer] 资源已清理');
     },
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
@@ -293,10 +296,8 @@ const app = Vue.createApp({
         this.userInput = "录音故障:" + result.message;
       } else {
         const normalizedPath = path.normalize(result.path);
-        console.log(normalizedPath);
         const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
         fs.unlinkSync(normalizedPath) // 删除文件
-        console.log("uploadres:", uploadres);
         if (!uploadres || uploadres.code != 200) {
           this.userInput = "上传录音文件故障 " + uploadres?.data?.message;
         } else {
@@ -317,8 +318,7 @@ const app = Vue.createApp({
       ipcRenderer.send("close-todo")
     },
     formatText(message) {
-      console.log("formatText(message)", message.text)
-
+      //this.log("formatText(message)", message.text)
       // 生成正则表达式匹配所有指令参数
       let commands = [];
       if (message.type == 'bot') {
@@ -344,7 +344,7 @@ const app = Vue.createApp({
         });
     },
     handleCommandClick(appCommand, appId) {
-      console.log('Selected app_id:', appCommand, appId);
+      this.log('选择执行指令:', appCommand, appId);
       let resp = '选择执行指令:' + appCommand;
       this.messages.push({ text: resp, type: 'user', commandlist: [] });
       this.scrollToBottom();

@@ -84,7 +84,7 @@ const app = Vue.createApp({
     this.subColor = storage.subColor
     this.opacity = storage.opacity
     ipcRenderer.on("update", (e, data) => {
-      //console.log(data)
+      //this.log(data)
       this.count = data
     })
     ipcRenderer.on("config", (e, data) => {
@@ -126,10 +126,10 @@ const app = Vue.createApp({
     //     this.finalTranscript += data.text + ' '
     //   }
     //   this.interimTranscript = data.text
-    //   console.log(this.interimTranscript);
+    //   this.log(this.interimTranscript);
     // })
     // ipcRenderer.on('asr-error', (event, error) => {
-    //   console.log(error.message );
+    //   this.log(error.message );
     // })
 
     this.initThrottledMove();
@@ -180,7 +180,7 @@ const app = Vue.createApp({
       }else{
         this.reverse = false;
       }
-      // console.log(" this.reverse", closestEdge,this.reverse)
+      // this.log(" this.reverse", closestEdge,this.reverse)
       ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY,closestEdge:closestEdge ,display:display})
     },
 
@@ -190,7 +190,7 @@ const app = Vue.createApp({
     },
 
     async snapToEdge() {
-      //console.log("draggableElement.value", this.$refs)
+      //this.log("draggableElement.value", this.$refs)
       const rect = this.$refs.draggableElement.getBoundingClientRect();
       //this.log("rect", rect)
       // 获取窗口内容区域边界信息
@@ -199,20 +199,20 @@ const app = Vue.createApp({
       // 计算屏幕绝对坐标
       const screenX = winBounds.x + rect.left;
       const screenY = winBounds.y + rect.top;
-      console.log("screenX,screenY", screenX, screenY)
+      //this.log("screenX,screenY", screenX, screenY)
       // 获取最近的显示器
       const display = await ipcRenderer.invoke('get-display-nearest-point', {
         x: screenX,
         y: screenY
       });
 
-      console.log("winBounds", winBounds)
-      console.log("display.workArea", display.workArea)
+      //this.log("winBounds", winBounds)
+      //this.log("display.workArea", display.workArea)
       // 吸附阈值（20px）
       const workArea = display.workArea;
       const SNAP_THRESHOLD = (display.workArea.width- workArea.x)/2;
-      // console.log("screenX - workArea.x", screenX - workArea.x)
-      // console.log("workArea.x + workArea.width - (screenX + rect.width)", workArea.x + workArea.width - (screenX + rect.width))
+      // this.log("screenX - workArea.x", screenX - workArea.x)
+      // this.log("workArea.x + workArea.width - (screenX + rect.width)", workArea.x + workArea.width - (screenX + rect.width))
       // 计算与各边的距离
       const edges = {
         left: screenX - workArea.x,
@@ -220,7 +220,7 @@ const app = Vue.createApp({
         // top: screenY - workArea.y,
         // bottom: workArea.y + workArea.height - (screenY + rect.height)
       };
-      //console.log("edges", edges)
+      //this.log("edges", edges)
       // 找到最近边缘
       let minDist = Infinity;
       let closestEdge = null;
@@ -244,11 +244,11 @@ const app = Vue.createApp({
       //   });
       // }
 
-      // console.log("minDist ", minDist)
-      // console.log("closestEdge ", closestEdge)
-      // console.log("SNAP_THRESHOLD", SNAP_THRESHOLD)
+      // this.log("minDist ", minDist)
+      // this.log("closestEdge ", closestEdge)
+      // this.log("SNAP_THRESHOLD", SNAP_THRESHOLD)
       // 执行吸附
-      // console.log("minDist", minDist)
+      // this.log("minDist", minDist)
       if (minDist <= SNAP_THRESHOLD) {
         let newX = winBounds.x;
         let newY = winBounds.y;
@@ -256,7 +256,7 @@ const app = Vue.createApp({
         switch (closestEdge) {
           case 'left':
             this.reverse =true;
-            // console.log(" workArea.x - rect.left",  workArea.x, rect.left)
+            // this.log(" workArea.x - rect.left",  workArea.x, rect.left)
             newX = workArea.x - rect.left;
             break;
           case 'right':
@@ -270,12 +270,12 @@ const app = Vue.createApp({
           //   newY = workArea.y + workArea.height - rect.top - rect.height;
           //   break;
         }
-        // console.log("11111111111");
-        // console.log("111111111screenX - workArea.x ",screenX, workArea.x );
+        // this.log("11111111111");
+        // this.log("111111111screenX - workArea.x ",screenX, workArea.x );
         if(screenX - workArea.x < 0){
-          // console.log("222222");
+          // this.log("222222");
           newX = workArea.x - rect.left;
-          // console.log(newX);
+          // this.log(newX);
         }else if(workArea.x + workArea.width - (screenX + rect.width) < 0){
           newX = workArea.x + workArea.width - rect.left - rect.width;
         }
@@ -288,7 +288,7 @@ const app = Vue.createApp({
         }
         this.opacity = 0.3;
         // this.isNotMore = true;
-        console.log("set-win-position", {newX, newY})
+        //this.log("set-win-position", {newX, newY})
         // 更新窗口位置
         ipcRenderer.send('set-win-position', {
           x: Math.round(newX),
@@ -324,19 +324,19 @@ const app = Vue.createApp({
         // 初始化音频流
         try {
           this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          console.log('[Renderer] 已获得麦克风权限');
+          this.log('[Renderer] 已获得麦克风权限');
         } catch (err) {
           if(err.message=="Requested device not found"){
             this.floatballtip(0, "未检测到麦克风设备");
           }
-          console.log('[Renderer] 麦克风访问被拒绝:', err.message);
+          this.log('[Renderer] 麦克风访问被拒绝:', err.message);
           return;
         }
         // 初始化音频分析
         this.setupAudioAnalysis();
         // 通知主进程开始录音
         const { path } = await ipcRenderer.invoke('audio-start');
-        console.log(`[Renderer] 录音文件路径: ${path}`);
+        this.log(`[Renderer] 录音文件路径: ${path}`);
         // 创建媒体录音器
         this.mediaRecorder = new MediaRecorder(this.mediaStream);
         this.setupDataHandler();
@@ -345,7 +345,7 @@ const app = Vue.createApp({
         this.floatballtip(3, '');
       } catch (err) {
         this.floatballtip(0, '录音启动失败:', err.message);
-        console.log('录音启动失败:', err.message);
+        this.log('录音启动失败:', err.message);
       }
     },
     setupAudioAnalysis() {
@@ -355,7 +355,7 @@ const app = Vue.createApp({
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 2048;
       source.connect(this.analyser);
-      console.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
+      this.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
     },
     setupDataHandler() {
       this.mediaRecorder.ondataavailable = async (e) => {
@@ -363,12 +363,12 @@ const app = Vue.createApp({
           const buffer = await e.data.arrayBuffer();
           ipcRenderer.send('audio-chunk', buffer);
         } catch (err) {
-          console.log('[Renderer] 数据处理失败:', err);
+          this.log('[Renderer] 数据处理失败:', err);
         }
       };
 
       this.mediaRecorder.start(500); // 每1秒收集数据
-      console.log('[Renderer] 媒体录音器已启动');
+      this.log('[Renderer] 媒体录音器已启动');
     },
     startMonitoring() {
       const checkStatus = () => {
@@ -389,12 +389,12 @@ const app = Vue.createApp({
     checkSilence(volume) {
       if (this.isStopRecording) return;
       const SILENCE_THRESHOLD = 0.7; //可调整的静音阈值 最大值为1  
-      console.log(volume);
+      //this.log(volume);
       //此处为超过1s检测到的麦克风电流小于0.6则停止录音
       if (volume < SILENCE_THRESHOLD) {
         this.silenceCount += 1 / 60;
         if (this.silenceCount >= 2) {
-          console.log('[Renderer] 检测到持续静音，自动停止');
+          this.log('[Renderer] 检测到持续静音，自动停止');
           this.stopRecording();
         }
       } else {
@@ -417,9 +417,9 @@ const app = Vue.createApp({
         }
         // 通知主进程停止 保存录音文件并上传接口，返回结果
         result = await ipcRenderer.invoke('audio-stop');
-        console.log('[Renderer] 录音保存结果:', result);
+        this.log('[Renderer] 录音保存结果:', result);
       } catch (err) {
-        console.log('[Renderer] 停止失败:', err.message);
+        this.log('[Renderer] 停止失败:', err.message);
         result.message = err.message;
       } finally {
         //如果是tip暂停的，则不进行后续调用接口操作
@@ -451,7 +451,7 @@ const app = Vue.createApp({
 
       this.isRecording = false;
       this.silenceCount = 0;
-      console.log('[Renderer] 资源已清理');
+      this.log('[Renderer] 资源已清理');
     },
 
     // ***********************麦克风录音结束 ***************//
@@ -462,15 +462,15 @@ const app = Vue.createApp({
         // 等待连接成功
         await mqttClient.connect()
       } catch (error) {
-        console.log('MQTT连接失败:', error.message);
+        this.log('MQTT连接失败:', error.message);
       }
     },
 
     //指令处理结果返回
     handleCommandResult(event) {
       const { appId, msg } = event.detail;
-      console.log("handleCommandResult:",msg);
-      console.log("handleCommandResult:",this.runingcmd);
+      this.log("handleCommandResult:",msg);
+      //this.log("handleCommandResult:",this.runingcmd);
       if(this.runingcmd!=null)
       {
         if(msg=="ok") //指令执行完成
@@ -562,7 +562,7 @@ const app = Vue.createApp({
         const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
         fs.unlinkSync(normalizedPath) // 删除文件
         if(!uploadres || uploadres.code!= 200){
-          this.floatballtip(0, "上传录音文件故障 " + uploadres?.status);
+          this.floatballtip(0, "上传录音文件故障 " + uploadres?.data?.message);
           return;
         }
         result.message=uploadres.data.result;
@@ -575,7 +575,7 @@ const app = Vue.createApp({
         this.floatballtip(1,result.message);
         await this.ExeHNC_TTI(result.message);
       } catch (error) {
-        console.log("录音或者网络故障",error);
+        this.log("录音或者网络故障",error.message);
         this.floatballtip(0, "录音或者网络故障:" + error.message);
       }finally{
         //等所有的接口处理完成之后，在进行录音资源释放
@@ -620,14 +620,12 @@ const app = Vue.createApp({
 
     //故障诊断接口
     async FaultDiagnosis(message) {
-      console.log("FaultDiagnosis",message);
       this.closeTip();
       this.showTodo();//展示故障诊断
       //存在偶发消息丢失
       try {
         //res = await apis.hnc_fd(result.message);
         const res = await ipcRenderer.invoke('hnc_fd', message);
-        console.log("hnc_fd:",res);
         if(res && res.code=="200"){
           setTimeout(() => {
             this.floatballtodo(3,message);
@@ -640,7 +638,7 @@ const app = Vue.createApp({
           }, 200);
         }
       } catch (error) {
-        console.log("hnc_fd 异常:",error.message);
+        this.log("hnc_fd 异常:",error.message);
         setTimeout(() => {
           this.floatballtodo(3,message);
           this.floatballtodo(0,"故障诊断异常:"+error.message);
@@ -659,13 +657,12 @@ const app = Vue.createApp({
       if(app){
         this.runingcmd={type : 1, cmd };
         this.checkTimeout();
-        console.log("checkTimeoutId:",this.checkTimeoutId);
         if(app.state=="0"){ //先启动
           var runingcmd={
             app_id: cmd.app_id,
             timestamp: Date.now()
           }
-          console.log("推送MQTT指令：",runingcmd);
+          this.log("推送MQTT指令：",runingcmd);
           mqttClient.publish('Command/Open', runingcmd)
         }else{ //直接发送指令
           var runingcmd={
@@ -673,7 +670,7 @@ const app = Vue.createApp({
             command:cmd.command,
             timestamp: Date.now()
           }
-          console.log("推送MQTT指令：",runingcmd);
+          this.log("推送MQTT指令：",runingcmd);
           mqttClient.publish('Command/Action/'+cmd.app_id, runingcmd)
         }
       }else{
@@ -685,7 +682,6 @@ const app = Vue.createApp({
 
     //故障诊断的指令处理
     fddocommand(cmd){
-      console.log("fddocommand",cmd);
       var app = stateStore.getApp(cmd.app_id);
       if(app){
         this.runingcmd={ type : 2 , cmd };
@@ -711,12 +707,12 @@ const app = Vue.createApp({
     //处理超时情况
     checkTimeout(){
       if (this.checkTimeoutId) {
-        console.log('清除定时器 ID:', this.checkTimeoutId);
+        this.log('清除定时器 ID:', this.checkTimeoutId);
         clearTimeout(this.checkTimeoutId);
       }
       this.checkTimeoutId = setTimeout(() => {
         //超过3秒还没执行完成一个指令
-        console.log('定时器触发，ID:', this.checkTimeoutId);
+        this.log('定时器触发，ID:', this.checkTimeoutId);
         if(this.runingcmd!=null){
           if(this.runingcmd.type==1)
           {
@@ -730,7 +726,7 @@ const app = Vue.createApp({
           this.commandList=[];
         }
       }, 3000);
-      console.log('设置新定时器 ID:', this.checkTimeoutId);
+      this.log('设置新定时器 ID:', this.checkTimeoutId);
     },
 
     /****************** HTTP接口处理结束 ****************/
@@ -806,7 +802,7 @@ const app = Vue.createApp({
         ipcRenderer.send("showTodo", "open")
       }
       // 如果不是拖动而是点击，就开始录音
-      //console.log("calcS()",calcS());
+      //this.log("calcS()",calcS());
       if (calcS()) {
         this.closeTodo();
         await this.toggleRecording();
@@ -821,13 +817,13 @@ const app = Vue.createApp({
     //     ipcRenderer.send("showTip", "show")
     //     ipcRenderer.send("showTodo", "show")
     //   }
-    //   // console.log(calcS(),"close-tip")
+    //   // this.log(calcS(),"close-tip")
     //   if (newValue == true) {
-    //     // console.log("close-tip")
+    //     // this.log("close-tip")
     //     ipcRenderer.send('close-tip');
     //   }
 
-    //   console.log("isNotMore changed to:", newValue);
+    //   this.log("isNotMore changed to:", newValue);
     // }
 
 

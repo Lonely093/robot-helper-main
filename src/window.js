@@ -27,7 +27,7 @@ const createSuspensionWindow = (suspensionConfig) => {
   // mainWindow.setBounds({ x: left, y: top, width: suspensionConfig.width, height: suspensionConfig.height })
   win.setPosition(left, top)
   // mainWindow.setIgnoreMouseEvents(true, { forward: true })
-  win.webContents.openDevTools({ mode: 'detach' })
+  //win.webContents.openDevTools({ mode: 'detach' })
 
   return win
 };
@@ -106,7 +106,7 @@ const createTodoWindow = (data) => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
-  win.webContents.openDevTools({ mode: 'detach' })
+  //win.webContents.openDevTools({ mode: 'detach' })
   return win
 }
 
@@ -183,7 +183,7 @@ const createConfigWindow = () => {
     },
   });
   win.loadFile(path.join(__dirname, 'views/Config/index.html'));
-  win.webContents.openDevTools()
+  //win.webContents.openDevTools()
   return win
 }
 

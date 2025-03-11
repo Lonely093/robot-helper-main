@@ -37,7 +37,7 @@ const app = Vue.createApp({
     this.startTipCloseTimer();
 
     ipcRenderer.on('message-to-renderer', (event, data) => {
-      console.log('收到消息:', data); // 输出 "Hello from Renderer A"
+      this.log('收到消息:', data); // 输出 "Hello from Renderer A"
       if(data.type==3) //显示录音图标
       {
         this.showtext=false;
@@ -55,6 +55,11 @@ const app = Vue.createApp({
     clearTimeout(this.tipCloseTimeoutId)
   },
   methods: {
+
+    //发送日志记录
+    log(msg,ctx){
+      ipcRenderer.invoke('app-log', { msg: 'tip--'+msg,  ctx });
+    },
 
     changeInput(){
       this.showinput=true;
@@ -95,7 +100,7 @@ const app = Vue.createApp({
   },
   watch: {
     tipText(newVal) {
-      console.log(newVal);
+      this.log(newVal);
       this.resetTipCloseTimer() // 值变化时重置倒计时
     }
   }
