@@ -1,6 +1,6 @@
 const { ipcRenderer } = require("electron");
 const Vue = require('vue')
-
+const throttle = require('lodash.throttle');
 const { defaultConfig, getConfig, applyConfig } = require("../../utils/store")
 
 const { ref } = require('vue')
@@ -20,10 +20,7 @@ function calcS() {
   const res = Math.pow(moveS[0] - moveS[2], 2) + Math.pow(moveS[1] - moveS[3], 2)
   return res < 5
 }
-function handleMove(e) {
-  // console.log("handleMove",e.screenX - biasX, e.screenY - biasY)
-  ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY })
-}
+
 
 
 /**
@@ -127,9 +124,58 @@ async mounted() {
     // ipcRenderer.on('asr-error', (event, error) => {
     //   console.log(error.message );
     // })
+
+    this.initThrottledMove();
+  },
+  beforeUnmount() {
+    this.throttledMoveHandler.cancel(); // 重要！销毁时取消节流
   },
   methods: {
+    initThrottledMove() {
+      this.throttledMoveHandler = throttle(async (e) => {
+        await this.handleMove(e);
+        }, 3); // 60 FPS
+    },
+
+    async handleMove(e) {
+      const rect = this.$refs.draggableElement.getBoundingClientRect();
+      // 获取窗口内容区域边界信息
+      // const winBounds = await ipcRenderer.invoke('get-win-content-bounds');
+    
+      // // 计算屏幕绝对坐标
+      // const screenX = winBounds.x + rect.left;
+      // const screenY = winBounds.y + rect.top;
+      // // 获取最近的显示器
+      // const display = await ipcRenderer.invoke('get-display-nearest-point', {
+      //   x: screenX,
+      //   y: screenY
+      // });
+      const display= await ipcRenderer.invoke('get-primary-display');
+      const screenX = e.screenX - biasX;
+      const workArea = display.workArea;
+      const edges = {
+        left: screenX - workArea.x,
+        right: workArea.x + workArea.width - (screenX + rect.width),
   
+      };
+    
+      let minDist = Infinity;
+      let closestEdge = null;
+    
+      Object.entries(edges).forEach(([edge, dist]) => {
+        if ( dist < minDist) {
+          minDist = dist;
+          closestEdge = edge;
+        }
+      });
+      if(closestEdge == "left"){
+        this.reverse = true;
+      }else{
+        this.reverse = false;
+      }
+      // console.log(" this.reverse", closestEdge,this.reverse)
+      ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY,closestEdge:closestEdge ,display:display})
+    },
 
     //发送日志记录
     log(msg,ctx){
@@ -241,7 +287,7 @@ async mounted() {
           x: Math.round(newX),
           y: Math.round(newY)
         });
-        ipcRenderer.send('ballWindowMove', { x: Math.round(newX), y:  Math.round(newY)})
+        ipcRenderer.send('ballWindowMove', { x: Math.round(newX), y:  Math.round(newY),closestEdge:closestEdge ,display:display})
       }
     },
 
@@ -697,9 +743,8 @@ async mounted() {
       biasY = e.y;
       moveS[0] = e.screenX - biasX
       moveS[1] = e.screenY - biasY
-      document.addEventListener('mousemove', handleMove)
-      document.addEventListener('mousemove', this.dragFloatBall)
-      document.addEventListener('mouseup', this.stopDragFloatBall)
+      document.addEventListener('mousemove', this.throttledMoveHandler)
+
     },
 
     async handleMouseUp(e) {
@@ -708,7 +753,7 @@ async mounted() {
 
       biasX = 0
       biasY = 0
-      document.removeEventListener('mousemove', handleMove)
+      document.removeEventListener('mousemove', this.throttledMoveHandler)
 
       await this.snapToEdge();
       if (calcS() && e.button == 0) {
@@ -724,15 +769,6 @@ async mounted() {
       }
     },
 
-    dragFloatBall(){
-      // console.log("dragFloatBall");
-    },
-
-    stopDragFloatBall(){
-      // console.log("stopDragFloatBall");
-      document.removeEventListener('mousemove', this.dragFloatBall)
-      document.removeEventListener('mouseup', this.stopDragFloatBall)
-    },
 
   },
   watch: {
