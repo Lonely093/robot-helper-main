@@ -56,8 +56,25 @@ const createEssayWindow = () => {
   return win
 }
 
-const createTodoWindow = () => {
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 580, top: screen.getPrimaryDisplay().workAreaSize.height * 0.2 }
+const createTodoWindow = (data) => {
+  let display =data.display;
+  let todoWinX = data.x - 505;
+    let todoWinY = data.y - 350;
+    if(data.closestEdge == "left"){
+      todoWinX = data.x + 85;
+    }else if(data.closestEdge == "right"){
+      todoWinX = data.x - 505;
+    }
+    if(todoWinX < 0){
+      todoWinX = 0
+    }else if(todoWinX > display.workArea.width - 300){
+      todoWinX = display.workArea.width - 300
+    }
+    if(todoWinY < 0){
+      todoWinY = 0
+    }else if(todoWinY > display.workArea.height - 500){
+      todoWinY = display.workArea.height - 500
+    }
   const win = new BrowserWindow({
     skipTaskbar: true, // 新增这行关闭任务栏显示
     frame: false,
@@ -66,8 +83,8 @@ const createTodoWindow = () => {
     width: 500,
     height: 400,
     resizable: false,
-    x: left,
-    y: top,
+    x: todoWinX,
+    y: todoWinY,
     show: false,
     alwaysOnTop: true,
     // menuBarVisible: false,
@@ -93,16 +110,38 @@ const createTodoWindow = () => {
   return win
 }
 
-const createTipWindow = () => {
+const createTipWindow = (data) => {
+  // console.log("suspensionWinPositionsuspensionWinPosition",data)
+  let display =data.display;
   //const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 280, top: 100 }
   const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 270, top: screen.getPrimaryDisplay().workAreaSize.height - 140 }
+  let tipWinX = data.x - 205;
+  let tipWinY = data.y;
+  // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"111111111")
+  if(data.closestEdge == "left"){
+    tipWinX = data.x + 85;
+  }else if(data.closestEdge == "right"){
+    tipWinX = data.x - 205;
+  }
+  // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"222222222222222")
+  if(tipWinX < 0){
+    tipWinX = 0
+  }else if(tipWinX > display.workArea.width - 200){
+    tipWinX = display.workArea.width - 200
+  }
+  if(tipWinY < 0){
+    tipWinY = 0
+  }else if(tipWinY > display.workArea.height - 80){
+    tipWinY = display.workArea.height - 80
+  }
+
   const win = new BrowserWindow({
     width: 200,
     minWidth: 200,
     resizable: false,
     height: 80,
-    x: left,
-    y: top,
+    x: tipWinX,
+    y: tipWinY,
     frame: false,
     alwaysOnTop: true,
     show: false,
