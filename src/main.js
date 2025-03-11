@@ -259,7 +259,42 @@ ipcMain.on('close-tip', (event) => {
 
 ipcMain.on('ballWindowMove', (e, data) => {
   pages.suspensionWin.setBounds({ x: data.x, y: data.y, width: suspensionConfig.width, height: suspensionConfig.height })
-  // pages.floatWin.setPosition(data.x, data.y)
+  let display =screen.getPrimaryDisplay();
+  // console.log(display.workArea.width,display.workArea.height)
+  if (pages.tipWin) {
+    let tipWinX = data.x - 205;
+    let tipWinY = data.y;
+
+    if(tipWinX < 0){
+      tipWinX = 0
+    }else if(tipWinX > display.workArea.width - 200){
+      tipWinX = display.workArea.width - 200
+    }
+    if(tipWinY < 0){
+      tipWinY = 0
+    }else if(tipWinY > display.workArea.height - 80){
+      tipWinY = display.workArea.height - 80
+    }
+    pages.tipWin.setBounds({ x: tipWinX , y: tipWinY})
+  }
+  if (pages.todoWin) {
+    let todoWinX = data.x - 505;
+    let todoWinY = data.y - 350;
+
+    if(todoWinX < 0){
+      todoWinX = 0
+    }else if(todoWinX > display.workArea.width - 300){
+      todoWinX = display.workArea.width - 300
+    }
+    if(todoWinY < 0){
+      todoWinY = 0
+    }else if(todoWinY > display.workArea.height - 500){
+      todoWinY = display.workArea.height - 500
+    }
+    pages.todoWin.setBounds({ x: todoWinX, y: todoWinY })
+  }
+  
+  
 })
 
 let suspensionMenu
@@ -353,7 +388,7 @@ ipcMain.handle('get-display-nearest-point', (event, point) => {
 });
 ipcMain.on('set-win-position', (event, position) => {
   const win = BrowserWindow.fromWebContents(event.sender)
-  console.log("set-win-position", event, position)
+  // console.log("set-win-position", event, position)
   // 设置窗口位置（单位：像素）
   win.setPosition(
     Math.round(position.x),
