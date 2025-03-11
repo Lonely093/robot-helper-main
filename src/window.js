@@ -94,7 +94,8 @@ const createTodoWindow = () => {
 }
 
 const createTipWindow = () => {
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 280, top: 100 }
+  //const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 280, top: 100 }
+  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 270, top: screen.getPrimaryDisplay().workAreaSize.height - 140 }
   const win = new BrowserWindow({
     width: 200,
     minWidth: 200,

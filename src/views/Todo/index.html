@@ -27,7 +27,8 @@
       <div class="input-container">
         <input v-model="userInput" placeholder="输入消息..." @keyup.enter="sendMessage" class="input-field">
         </input>
-        <button @click="toggleRecording" class="send-button">语音</button>
+        <button v-show="!isRecording" @click="toggleRecording" class="send-button">语音</button>
+        <img v-show="isRecording " src="../../assets/vedio.gif"   width="44" height="28">
         <button @click="sendMessage" class="send-button">发送</button>
       </div>
     </div>

@@ -25,7 +25,9 @@ const app = Vue.createApp({
 
   data() {
     return {
-      showtext:false,
+      showtext : false,
+      showinput : false,
+      userInput:"",
       tipText: '请问你需要什么帮助？',
       tipCloseTimeoutId: null,
     }
@@ -33,28 +35,19 @@ const app = Vue.createApp({
 
   mounted() {
     this.startTipCloseTimer();
-    window.addEventListener('floatball-tip', (event) => {
-      //type 0 错误消息    1 正常 语音转文字结果
-      const { type, message } = event.detail;
-      console.log(event.detail);
-      this.tipText = message;
-    });
 
     ipcRenderer.on('message-to-renderer', (event, data) => {
       console.log('收到消息:', data); // 输出 "Hello from Renderer A"
-      if(data.type==3)
+      if(data.type==3) //显示录音图标
       {
         this.showtext=false;
-      }else{
+        this.showinput=false;
+      }else{  //显示文字
+        this.showinput=false;
         this.showtext=true;
         this.tipText = data.message;
       }
     });
-
-      // 监听主进程位置更新
-      // this.$electron.ipcRenderer.on('window-moved', (_, pos) => {
-      //   this.position = pos
-      // })
  
   },
   beforeUnmount() {
@@ -62,6 +55,34 @@ const app = Vue.createApp({
     clearTimeout(this.tipCloseTimeoutId)
   },
   methods: {
+
+    changeInput(){
+      this.showinput=true;
+      this.showtext=false;
+      //同时将消息发送至悬浮窗，      3  暂停录音
+      ipcRenderer.send('message-from-renderer', {
+        target: 'floatball', // 指定目标窗口
+        data: {type: 3}
+      });
+    },
+
+    sendMessage(){
+      if (this.userInput.trim() !== '') {
+        this.showinput = false;
+        this.showtext = true;
+        this.tipText = this.userInput;
+        this.userInput="";
+        //同时将消息发送至悬浮窗，      4  表示tip发送的消息
+        ipcRenderer.send('message-from-renderer', {
+          target: 'floatball', // 指定目标窗口
+          data: {
+            type: 4, 
+            message:this.tipText
+          }
+        });
+
+      }
+    },
     startTipCloseTimer() {
       // this.timeoutId = setTimeout(() => {
       //   ipcRenderer.send('close-tip');

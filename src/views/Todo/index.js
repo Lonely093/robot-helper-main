@@ -15,7 +15,7 @@ const app = Vue.createApp({
       userInput: '',
       messages: [
         {
-          text: '',//'1. **参数配置不合理的原因及解决方案**  \n   - 参数配置不合理的原因包括：坐标轴参数103517“最高速度限制” 是否设置正确；坐标轴参数103587“电机额定转速” 是否设置正确；轴参数中的103005“电子齿轮比分母”、103067 “轴每转脉冲数”、设备接口参数中的503015“反馈位置循环脉冲数”数值设置不一致；系统超速的限值(每个周期的最大长度增量)是否正确计算；以及超速系数是否设置正确。  \n   - 对应的解决方案：检查上述参数是否设置正确，计算超速限值，确保参数配置正确，必要时进行调整。  \n\n2. **编码器反馈信号异常的原因及解决方案**  \n   - 编码器反馈信号异常的原因包括：驱动单元或电机参数（如103005“电子齿轮比分母”、103067 “轴每转脉冲数”）设置不正确；编码器线缆或反馈信号异常。  \n   - 对应的解决方案：更换驱动单元或电机，通过交换法逐一排查；检查编码器线缆，更换并测试。',
+          text: '当前是故障诊断页面，您有相关问题可以进行咨询',
           type: 'bot',
           commandlist: [
             {
@@ -95,15 +95,11 @@ const app = Vue.createApp({
       analyser: null,
       silenceCount: 0,
       animationFrameId: null,
-
+      isruning:false
     }
   },
 
   mounted() {
-    window.addEventListener('floatball-todo', (event) => {
-      //type 0 错误消息    1 正常 故障诊断消息
-      const { type, commandlist, message } = event.detail;
-    });
 
     //悬浮窗传递过来的消息
     ipcRenderer.on('message-to-renderer', (event, data) => {
@@ -147,11 +143,20 @@ const app = Vue.createApp({
 
     // ***********************麦克风录音 ***************//
     async toggleRecording() {
+
+      //防止重复点击
+      if(this.isruning ) return;
+      this.isruning = true
+
       if (this.isRecording) {
         await this.stopRecording();
       } else {
         await this.startRecording();
       }
+
+      setTimeout(() => {
+        this.isruning = false
+      }, 1000)
     },
     async startRecording() {
       if (this.isRecording) {
@@ -170,8 +175,8 @@ const app = Vue.createApp({
         // 初始化音频分析
         this.setupAudioAnalysis();
         // 通知主进程开始录音
-        const { pathurl } = await ipcRenderer.invoke('audio-start');
-        console.log(`[Renderer] 录音文件路径: ${pathurl}`);
+        const { path } = await ipcRenderer.invoke('audio-start');
+        console.log(`[Renderer] 录音文件路径: ${path}`);
         // 创建媒体录音器
         this.mediaRecorder = new MediaRecorder(this.mediaStream);
         this.setupDataHandler();
@@ -298,11 +303,6 @@ const app = Vue.createApp({
           this.userInput = uploadres.data.result;
           if (this.userInput.trim() !== '') {
             this.sendMessage();
-            //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
-            ipcRenderer.send('message-from-renderer', {
-              target: 'floatball', // 指定目标窗口
-              data: { type: 1, message: uploadres.data.result }
-            });
           }
         }
       }
@@ -344,8 +344,8 @@ const app = Vue.createApp({
     },
     handleCommandClick(appCommand, appId) {
       console.log('Selected app_id:', appCommand, appId);
-      let resp = 'Selected app_id:' + appCommand + appId;
-      this.messages.push({ text: resp, type: 'bot', commandlist: [] });
+      let resp = '选择执行指令:' + appCommand;
+      this.messages.push({ text: resp, type: 'user', commandlist: [] });
       this.scrollToBottom();
 
       //同时将消息发送至悬浮窗，      2 表示执行指令
@@ -370,17 +370,14 @@ const app = Vue.createApp({
     sendMessage() {
       if (this.userInput.trim() !== '') {
         this.messages.push({ text: this.userInput, type: 'user', commandlist: [] })
-
-
-
-        this.userInput = ''
-        // 模拟AI回复
-        setTimeout(() => {
-          this.messages.push({ text: '这是AI机器人的回复。', type: 'bot', commandlist: [] })
-          this.scrollToBottom()
-        }, 1000)
-
         this.scrollToBottom()
+
+        //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
+        ipcRenderer.send('message-from-renderer', {
+          target: 'floatball', // 指定目标窗口
+          data: { type: 1, message:this.userInput }
+        });
+        this.userInput = ''
       }
     },
     scrollToBottom() {
