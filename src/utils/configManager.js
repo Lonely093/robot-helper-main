@@ -11,7 +11,8 @@ const DEFAULT_CONFIG = {
     clientId: 'AIRobot', //`robot-ai${Math.random().toString(16).substr(2, 8)}`,
     username: '',
     password: '',
-  }
+  },
+  pagehidetime:5000,   //配置鼠标离开窗口后 自动隐藏的时间 单位毫秒
 };
 
 // 读取配置

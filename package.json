@@ -1,7 +1,7 @@
 {
   "name": "AIRobot",
   "productName": "AIRobot",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "Hi, have a good day!",
   "main": "src/main.js",
   "scripts": {
@@ -13,8 +13,7 @@
   },
   "keywords": [],
   "author": {
-    "name": "Baday19",
-    "email": "1556330234@qq.com"
+    "name": "HNC"
   },
   "license": "MIT",
   "dependencies": {

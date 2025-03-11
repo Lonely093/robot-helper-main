@@ -2,6 +2,7 @@ const { ipcRenderer } = require("electron");
 const Vue = require('vue')
 const { formatterTime } = require("../../utils/date.js")
 const { getConfig, defaultConfig } = require("../../utils/store.js")
+const configManager = require("../../utils/configManager");
 
 
 let currConfig = {}
@@ -30,6 +31,7 @@ const app = Vue.createApp({
       userInput: "",
       tipText: '请问你需要什么帮助？',
       tipCloseTimeoutId: null,
+
     }
   },
 
@@ -52,7 +54,7 @@ const app = Vue.createApp({
   },
   beforeUnmount() {
     window.removeEventListener('floatball-tip');
-    clearTimeout(this.tipCloseTimeoutId)
+    if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
   },
   methods: {
 
@@ -85,7 +87,6 @@ const app = Vue.createApp({
             message: this.tipText
           }
         });
-
       }
     },
     startTipCloseTimer() {
@@ -94,9 +95,32 @@ const app = Vue.createApp({
       // }, 6000)
     },
     resetTipCloseTimer() {
-      clearTimeout(this.tipCloseTimeoutId) // 清除旧定时器
+      if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId) // 清除旧定时器
       this.startTipCloseTimer() // 重新开始倒计时
     },
+
+    hanleMouseEnter() {
+      if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
+      //通知floatball取消关闭定时器
+      ipcRenderer.send('message-from-renderer', {
+        target: 'floatball', // 指定目标窗口
+        data: {
+          type: 5
+        }
+      });
+    },
+
+    hanleMouseLeave() {
+      //设置定时器 超过几秒隐藏tip框
+      if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
+      //限定条件  没有文本输入
+      if(!this.showinput){
+        this.tipCloseTimeoutId = setTimeout(() => {
+          ipcRenderer.send("close-tip");
+        },  parseInt(configManager.pagehidetime))  
+      }
+    },
+
   },
   watch: {
     tipText(newVal) {

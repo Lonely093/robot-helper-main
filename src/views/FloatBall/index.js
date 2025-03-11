@@ -9,7 +9,7 @@ const mqttClient = require("../../utils/mqtt")
 const stateStore = require("../../utils/localStorage");
 const path = require('path');
 const fs = require('fs');
-
+const configManager = require("../../utils/configManager");
 
 applyConfig()
 let biasX = 0
@@ -72,6 +72,7 @@ const app = Vue.createApp({
       commandList: [],
       runingcmd: null,
       checkTimeoutId: null,
+      closetipTimeoutId:null,
       reverse: false,
       isTipStop: false,
       isruning: false,
@@ -101,7 +102,7 @@ const app = Vue.createApp({
     window.addEventListener('app-launch', this.handleAppLaunchResult);
     window.addEventListener('app-message', this.handleAppMessage);
 
-    //监听其他页面传来的消息    1 根据文本请求故障诊断     2 执行 commd指令      3  暂停录音    4 根据文本请求指令交互
+    //监听其他页面传来的消息    1 根据文本请求故障诊断     2 执行 commd指令    3  暂停录音    4 根据文本请求指令交互    5 取消tip关闭定时器
     ipcRenderer.on('message-to-renderer', (event, data) => {
       if (data.type == 1)  //根据文字请求故障诊断
       {
@@ -111,12 +112,16 @@ const app = Vue.createApp({
       {
         this.fddocommand(data.command);
       }
-      if (data.type == 3) { // 暂停录音
+      if (data.type == 3) {    //暂停录音且不进行后续处理
         this.isTipStop = true;
         this.stopRecording();
       }
       if (data.type == 4) {  //根据文本请求指令交互
         this.ExeHNC_TTI(data.message);
+      }
+      if(data.type==5) //取消tip关闭定时器
+      {
+        if(this.closetipTimeoutId) clearTimeout(this.closetipTimeoutId);
       }
     });
 
@@ -363,7 +368,7 @@ const app = Vue.createApp({
           const buffer = await e.data.arrayBuffer();
           ipcRenderer.send('audio-chunk', buffer);
         } catch (err) {
-          this.log('[Renderer] 数据处理失败:', err);
+          this.log('[Renderer] 数据处理失败:', err.message);
         }
       };
 
@@ -583,15 +588,15 @@ const app = Vue.createApp({
         if (res && res.code == 200) {
           if (res.data.command_list && res.data.command_list.length > 0) {
             //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
-            await this.FaultDiagnosis(message);
-            // if(res.data.command_list[0].app_id=="fault_diagnosis"){
-            //   await this.FaultDiagnosis(message);
-            // }
-            // //需要处理的指令集合
-            // else {
-            //   this.commandList = res.data.command_list;
-            //   this.docommand();
-            // }
+            //await this.FaultDiagnosis(message);
+            if(res.data.command_list[0].app_id=="fault_diagnosis"){
+              await this.FaultDiagnosis(message);
+            }
+            //需要处理的指令集合
+            else {
+              this.commandList = res.data.command_list;
+              this.docommand();
+            }
           } else {
             this.floatballtip(0, "未能识别到指令，请重试");
           }
@@ -698,12 +703,12 @@ const app = Vue.createApp({
     //处理超时情况
     checkTimeout() {
       if (this.checkTimeoutId) {
-        this.log('清除定时器 ID:', this.checkTimeoutId);
+        //this.log('清除定时器 ID:', this.checkTimeoutId);
         clearTimeout(this.checkTimeoutId);
       }
       this.checkTimeoutId = setTimeout(() => {
         //超过3秒还没执行完成一个指令
-        this.log('定时器触发，ID:', this.checkTimeoutId);
+        //this.log('定时器触发，ID:', this.checkTimeoutId);
         if (this.runingcmd != null) {
           if (this.runingcmd.type == 1) {
             this.floatballtip(0, "指令执行超时");
@@ -715,7 +720,7 @@ const app = Vue.createApp({
           this.commandList = [];
         }
       }, 3000);
-      this.log('设置新定时器 ID:', this.checkTimeoutId);
+      //this.log('设置新定时器 ID:', this.checkTimeoutId);
     },
 
     /****************** HTTP接口处理结束 ****************/
@@ -726,10 +731,20 @@ const app = Vue.createApp({
     // },
     hanleMouseEnter() {
       this.opacity = 0.8;
+      if(this.closetipTimeoutId) clearTimeout(this.closetipTimeoutId);
     },
 
     hanleMouseLeave() {
       this.opacity = 0.3;
+      //设置定时器 超过几秒隐藏tip框
+      if(this.closetipTimeoutId) clearTimeout(this.closetipTimeoutId);
+      //限定条件  提示框处于消息显示，且没有录音，且没有文本输入
+      //console.log("11111",this.isRecording ,this.isStopRecording,this.isTipStop);
+      if(!this.isRecording && !this.isStopRecording){
+        this.closetipTimeoutId = setTimeout(() => {
+          this.closeTip();
+        },  parseInt(configManager.pagehidetime))  
+      }
     },
     closeTip() {
       ipcRenderer.send("close-tip");
@@ -797,7 +812,6 @@ const app = Vue.createApp({
         await this.toggleRecording();
       }
     },
-
 
   },
   watch: {
