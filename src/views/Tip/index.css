@@ -59,3 +59,57 @@ div {
   max-width: 65ch;
   /* 最佳可读宽度 */
 }
+
+
+.input-container {
+  position: absolute;
+  /* 改为相对父容器定位 */
+  bottom: 25px;
+  left: 5px;
+  right: 5px;
+  /* 横向排列 */
+  display: flex;
+  gap: 10px;
+}
+
+.input-field {
+  flex: 1;
+  /* 输入框占据剩余空间 */
+  color: #fff;
+  border: 1px solid rgba(50, 53, 54, 0.9);
+  background: linear-gradient(to right,
+      /* 渐变方向：从上到下 */
+      #000000,
+      /* 起始黑色 */
+      #1a1a1a 25%,
+      /* 中间过渡色 */
+      #004c97 75%,
+      /* 蓝黑色过渡 */
+      #003366
+      /* 最终蓝色 */
+    );
+  width:80px;
+  border-radius: 4px;
+  outline: none;
+  font-size: 12px;
+}
+
+input::-webkit-input-placeholder{
+color: #fff;
+}
+
+.send-button {
+  padding: 5px 10px;
+  background: rgba(21, 92, 224, 0.9); 
+  color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.5;
+  transition: background 0.3s;
+  font-size: 12px;
+}
+
+.send-button:hover {
+  background: #0056b3;
+}

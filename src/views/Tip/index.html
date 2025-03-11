@@ -9,9 +9,14 @@
 
 <body>
   <div id="app">
-    <div class="tip-root">
-      <img v-show="!showtext" src="../../assets/vedio.gif"  width="200" height="80">
-       <p v-show="showtext" class="content">{{tipText}}</p> 
+    <div class="tip-root" >
+       <img v-show="!showtext && !showinput" src="../../assets/vedio.gif"  @click="changeInput" width="200" height="80">
+       <p v-show="showtext && !showinput" class="content">{{tipText}}</p> 
+      <!-- 输入框 -->
+      <div v-show="showinput" class="input-container">
+        <input v-model="userInput" placeholder="输入消息..." @keyup.enter="sendMessage" class="input-field"></input>
+        <button @click="sendMessage" class="send-button">发送</button>
+      </div>
     </div>
   </div>
   <script src="./index.js"></script>

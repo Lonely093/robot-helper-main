@@ -1,8 +1,6 @@
 const { ipcRenderer } = require("electron");
 const Vue = require('vue')
-
 const { defaultConfig, getConfig, applyConfig } = require("../../utils/store")
-
 const { ref } = require('vue')
 const draggableElement = ref(null);
 
@@ -75,11 +73,12 @@ const app = Vue.createApp({
       commandList:[],
       runingcmd:null,
       checkTimeoutId:null,
-      reverse: false
+      reverse: false,
+      isTipStop:false,
+      isruning:false,
     }
   },
-
-async mounted() {
+  async mounted() {
 
     const storage = getConfig()
     this.mainColor = storage.mainColor
@@ -103,7 +102,7 @@ async mounted() {
     window.addEventListener('app-launch', this.handleAppLaunchResult);
     window.addEventListener('app-message', this.handleAppMessage);
 
-    //监听故障诊断页面传来的消息    1 根据文本请求故障诊断     2 执行 commd指令
+    //监听其他页面传来的消息    1 根据文本请求故障诊断     2 执行 commd指令      3  暂停录音    4 根据文本请求指令交互
     ipcRenderer.on('message-to-renderer', (event, data) => {
       if(data.type==1)  //根据文字请求故障诊断
       {
@@ -112,6 +111,13 @@ async mounted() {
       if(data.type==2)  //根据指令直接执行
       {
         this.fddocommand(data.command);
+      }
+      if(data.type==3){ // 暂停录音
+        this.isTipStop = true;
+        this.stopRecording();
+      }
+      if(data.type==4) {  //根据文本请求指令交互
+        this.ExeHNC_TTI(data.message);
       }
     });
 
@@ -245,10 +251,20 @@ async mounted() {
 
     // ***********************麦克风录音 ***************//
     async toggleRecording() {
-      if (this.isRecording) {
-        await this.stopRecording();
-      } else {
-        await this.startRecording();
+      //防止重复点击
+      if(this.isruning ) return;
+      this.isruning = true
+
+      try {
+        if (this.isRecording) {
+          await this.stopRecording();
+        } else {
+          await this.startRecording();
+        }
+      } finally {
+        setTimeout(() => {
+          this.isruning = false
+        }, 1000)
       }
     },
     async startRecording() {
@@ -357,8 +373,18 @@ async mounted() {
         console.log('[Renderer] 停止失败:', err.message);
         result.message = err.message;
       } finally {
-        this.handlestopRecordAfter(result);
-        this.isStopRecording = false;
+        //如果是tip暂停的，则不进行后续调用接口操作
+        if(!this.isTipStop)
+        {
+          this.handlestopRecordAfter(result).then(res=>{
+            this.isStopRecording = false;
+          });
+        }else{
+          const normalizedPath = path.normalize(result.path);
+          fs.unlinkSync(normalizedPath) // 删除文件
+          this.isStopRecording = false;
+        }
+        this.isTipStop = false;
       }
     },
     cleanup() {
@@ -487,7 +513,7 @@ async mounted() {
         const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
         fs.unlinkSync(normalizedPath) // 删除文件
         if(!uploadres || uploadres.code!= 200){
-          this.floatballtip(0, "上传录音文件故障 " + uploadres?.data?.message);
+          this.floatballtip(0, "上传录音文件故障 " + uploadres?.status);
           return;
         }
         result.message=uploadres.data.result;
@@ -498,41 +524,50 @@ async mounted() {
           return;
         }
         this.floatballtip(1,result.message);
-         //调用 指令交互接口    根据结果判断
-         const res = await ipcRenderer.invoke('hnc_tti', result.message);
-         if (res && res.code == 200) {
-           if (res.data.command_list && res.data.command_list.length > 0) {
-             //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
-             //await this.FaultDiagnosis(result.message);
-             if(res.data.command_list[0].app_id=="fault_diagnosis"){
-               await this.FaultDiagnosis(result.message);
-             }
-             //需要处理的指令集合
-             else {
-               this.commandList = res.data.command_list;
-               this.docommand();
-             }
-           } else {
-             //小提示框 显示 空的指令列表
-             this.floatballtip(0, "未能识别到指令，请重试");
-           }
-         } else if (res?.code == 1001 || res?.code == 1002) {
-           //故障码 1001   APP不存在
-           //故障码 1002   指令不存在
-           //提示未能识别指令，请重试
-           this.floatballtip(0,"APP或者指令不存在,请重试");
-         }else{
-           //小提示框  提示网络故障，请重试
-           this.floatballtip(0, "服务故障:" + res?.message);
-         }
+        await this.ExeHNC_TTI(result.message);
       } catch (error) {
-        console.log("11111",error);
+        console.log("录音或者网络故障",error);
         this.floatballtip(0, "录音或者网络故障:" + error.message);
       }finally{
         //等所有的接口处理完成之后，在进行录音资源释放
         this.cleanup();
       }
     },
+
+    //执行指令交互
+    async ExeHNC_TTI(message)
+    {
+      try {
+        //调用 指令交互接口    根据结果判断
+        const res = await ipcRenderer.invoke('hnc_tti', message);
+        if (res && res.code == 200) {
+          if (res.data.command_list && res.data.command_list.length > 0) {
+            //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
+            await this.FaultDiagnosis(message);
+            // if(res.data.command_list[0].app_id=="fault_diagnosis"){
+            //   await this.FaultDiagnosis(message);
+            // }
+            // //需要处理的指令集合
+            // else {
+            //   this.commandList = res.data.command_list;
+            //   this.docommand();
+            // }
+          } else {
+            this.floatballtip(0, "未能识别到指令，请重试");
+          }
+        } 
+        else if (res?.code == 1001 || res?.code == 1002) {
+          //故障码 1001   APP不存在
+          //故障码 1002   指令不存在
+          this.floatballtip(0,"APP或者指令不存在");
+        }else{
+          this.floatballtip(0, "指令交互服务故障:" + res?.message);
+        }
+      } catch (error) {
+        this.floatballtip(0, "指令交互服务异常:" + error.message);
+      }
+    },
+
 
     //故障诊断接口
     async FaultDiagnosis(message) {
@@ -543,16 +578,16 @@ async mounted() {
         //res = await apis.hnc_fd(result.message);
         const res = await ipcRenderer.invoke('hnc_fd', message);
         console.log("hnc_fd:",res);
-        //同时发送用户说的话
-        this.floatballtodo(3,message);
         if(res && res.code=="200"){
+          this.floatballtodo(3,message);
           this.floatballtodo(1,res.data.msg,res.data.command_list);
         }else{
-          // 需要在大提示框中显示：  故障诊断错误  res.data.msg
+          this.floatballtodo(3,message);
           this.floatballtodo(0,"故障诊断错误:"+res.data.msg);
         }
       } catch (error) {
         console.log("hnc_fd 异常:",error.message);
+        this.floatballtodo(3,message);
         this.floatballtodo(0,"故障诊断异常:"+error.message);
       }
     },
@@ -715,6 +750,7 @@ async mounted() {
       // 如果不是拖动而是点击，就开始录音
       //console.log("calcS()",calcS());
       if (calcS()) {
+        this.closeTodo();
         await this.toggleRecording();
       }
     },
