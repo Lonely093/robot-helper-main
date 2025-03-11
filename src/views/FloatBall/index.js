@@ -76,6 +76,7 @@ const app = Vue.createApp({
       reverse: false,
       isTipStop: false,
       isruning: false,
+      IsMouseLeave:false
     }
   },
   async mounted() {
@@ -730,11 +731,18 @@ const app = Vue.createApp({
     //   // ipcRenderer.send('setFloatIgnoreMouse', false)
     // },
     hanleMouseEnter() {
+      this.IsMouseLeave=false;
       this.opacity = 0.8;
       if(this.closetipTimeoutId) clearTimeout(this.closetipTimeoutId);
+      //通知tip 鼠标在悬浮窗上
+      ipcRenderer.send('message-from-renderer', {
+        target: 'tip', // 指定目标窗口
+        data: { type: 4}
+      });
     },
 
     hanleMouseLeave() {
+      this.IsMouseLeave=true;
       this.opacity = 0.3;
       //设置定时器 超过几秒隐藏tip框
       if(this.closetipTimeoutId) clearTimeout(this.closetipTimeoutId);
@@ -744,6 +752,12 @@ const app = Vue.createApp({
         this.closetipTimeoutId = setTimeout(() => {
           this.closeTip();
         },  parseInt(configManager.pagehidetime))  
+      }else{
+        //通知tip 鼠标离开了悬浮窗
+        ipcRenderer.send('message-from-renderer', {
+          target: 'tip', // 指定目标窗口
+          data: { type: 5}
+        });
       }
     },
     closeTip() {

@@ -21,6 +21,14 @@ const suspensionConfig = {
   height: 80,
 }
 
+
+// 单实例锁
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  // 如果已经有实例运行，直接退出
+  app.quit()
+} 
+
 // 启动日志
 logger.info('应用程序启动', { version: app.getVersion() });
 

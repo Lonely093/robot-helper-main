@@ -18,7 +18,6 @@ let currConfig = {}
  * - 提示内容更新时重置倒计时
  * 
  * @component
- * @listens floatball-tip - 监听悬浮球提示事件
  * @listens message-to-renderer - 监听主进程消息
  * @emits close-tip - 发送关闭提示框事件到主进程
  */
@@ -30,13 +29,14 @@ const app = Vue.createApp({
       showinput: false,
       userInput: "",
       tipText: '请问你需要什么帮助？',
+      IsMouseLeave:true,
+      isMouseOnFloatBall:true,
       tipCloseTimeoutId: null,
 
     }
   },
 
   mounted() {
-    this.startTipCloseTimer();
 
     ipcRenderer.on('message-to-renderer', (event, data) => {
       this.log('收到消息:', data); // 输出 "Hello from Renderer A"
@@ -44,16 +44,26 @@ const app = Vue.createApp({
       {
         this.showtext = false;
         this.showinput = false;
-      } else {  //显示文字
+      }
+      else if(data.type == 4){  //鼠标在机器人上
+        if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId) 
+          this.isMouseOnFloatBall=true;
+      }
+    else if(data.type==5){ //鼠标离开了机器人
+        this.isMouseOnFloatBall=false;
+    }
+      else {  //显示文字
         this.showinput = false;
         this.showtext = true;
         this.tipText = data.message;
+        if(this.IsMouseLeave && !this.isMouseOnFloatBall) //值变化时，且鼠标不在悬浮窗则启动关闭
+        {
+          this.startTipCloseTimer();
+        }
       }
     });
-
   },
   beforeUnmount() {
-    window.removeEventListener('floatball-tip');
     if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
   },
   methods: {
@@ -89,17 +99,16 @@ const app = Vue.createApp({
         });
       }
     },
+
     startTipCloseTimer() {
-      // this.timeoutId = setTimeout(() => {
-      //   ipcRenderer.send('close-tip');
-      // }, 6000)
-    },
-    resetTipCloseTimer() {
       if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId) // 清除旧定时器
-      this.startTipCloseTimer() // 重新开始倒计时
+      this.tipCloseTimeoutId = setTimeout(() => {
+        ipcRenderer.send("close-tip");
+        },  parseInt(configManager.pagehidetime))  
     },
 
     hanleMouseEnter() {
+      this.IsMouseLeave=false;
       if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
       //通知floatball取消关闭定时器
       ipcRenderer.send('message-from-renderer', {
@@ -111,21 +120,18 @@ const app = Vue.createApp({
     },
 
     hanleMouseLeave() {
-      //设置定时器 超过几秒隐藏tip框
+      this.IsMouseLeave=true;
       if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
-      //限定条件  没有文本输入
-      if(!this.showinput){
-        this.tipCloseTimeoutId = setTimeout(() => {
-          ipcRenderer.send("close-tip");
-        },  parseInt(configManager.pagehidetime))  
-      }
+      //限定条件  只有显示文本时，离开才隐藏
+      // if(this.showtext){
+       this.startTipCloseTimer();
+      //}
     },
 
   },
   watch: {
     tipText(newVal) {
-      this.log(newVal);
-      this.resetTipCloseTimer() // 值变化时重置倒计时
+      //this.startTipCloseTimer() // 值变化时重置倒计时
     }
   }
 })
