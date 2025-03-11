@@ -65,7 +65,7 @@ const createTodoWindow = () => {
     minHeight: 400,
     width: 500,
     height: 400,
-    // resizable: false,
+    resizable: false,
     x: left,
     y: top,
     show: false,

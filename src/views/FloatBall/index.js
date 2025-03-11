@@ -21,6 +21,7 @@ function calcS() {
   return res < 5
 }
 function handleMove(e) {
+  // console.log("handleMove",e.screenX - biasX, e.screenY - biasY)
   ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY })
 }
 
@@ -152,8 +153,8 @@ async mounted() {
         y: screenY
       });
 
-      //this.log("winBounds", winBounds)
-      // console.log("display.workArea", display.workArea)
+      console.log("winBounds", winBounds)
+      console.log("display.workArea", display.workArea)
       // 吸附阈值（20px）
       const workArea = display.workArea;
       const SNAP_THRESHOLD = (display.workArea.width- workArea.x)/2;
@@ -240,6 +241,7 @@ async mounted() {
           x: Math.round(newX),
           y: Math.round(newY)
         });
+        ipcRenderer.send('ballWindowMove', { x: Math.round(newX), y:  Math.round(newY)})
       }
     },
 
@@ -696,6 +698,8 @@ async mounted() {
       moveS[0] = e.screenX - biasX
       moveS[1] = e.screenY - biasY
       document.addEventListener('mousemove', handleMove)
+      document.addEventListener('mousemove', this.dragFloatBall)
+      document.addEventListener('mouseup', this.stopDragFloatBall)
     },
 
     async handleMouseUp(e) {
@@ -705,6 +709,7 @@ async mounted() {
       biasX = 0
       biasY = 0
       document.removeEventListener('mousemove', handleMove)
+
       await this.snapToEdge();
       if (calcS() && e.button == 0) {
         ipcRenderer.send("openTip", "open")
@@ -718,6 +723,17 @@ async mounted() {
         await this.toggleRecording();
       }
     },
+
+    dragFloatBall(){
+      // console.log("dragFloatBall");
+    },
+
+    stopDragFloatBall(){
+      // console.log("stopDragFloatBall");
+      document.removeEventListener('mousemove', this.dragFloatBall)
+      document.removeEventListener('mouseup', this.stopDragFloatBall)
+    },
+
   },
   watch: {
     // isNotMore(newValue) {
