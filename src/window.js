@@ -97,6 +97,7 @@ const createTipWindow = () => {
   //const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 280, top: 100 }
   const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 270, top: screen.getPrimaryDisplay().workAreaSize.height - 140 }
   const win = new BrowserWindow({
+    skipTaskbar: true, // 新增这行关闭任务栏显示
     width: 200,
     minWidth: 200,
     resizable: false,
@@ -120,7 +121,7 @@ const createTipWindow = () => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Tip/index.html'));
-  win.webContents.openDevTools({ mode: 'detach' })
+  //win.webContents.openDevTools({ mode: 'detach' })
   return win
 }
 const createConfigWindow = () => {

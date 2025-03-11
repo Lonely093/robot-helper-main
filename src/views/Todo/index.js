@@ -13,45 +13,46 @@ const app = Vue.createApp({
   data: () => {
     return {
       userInput: '',
+      dfmessage:"当前是故障诊断页面，您有相关问题可以进行咨询",
       messages: [
-        {
-          text: '当前是故障诊断页面，您有相关问题可以进行咨询',
-          type: 'bot',
-          commandlist: [
-            {
-              "app_id": "(hmi_id)103005",
-              "command": "103005"
-            },
-            {
-              "app_id": "(hmi_id)103034",
-              "command": "103034"
-            },
-            {
-              "app_id": "(hmi_id)103048",
-              "command": "103048"
-            },
-            {
-              "app_id": "(hmi_id)103067",
-              "command": "103067"
-            },
-            {
-              "app_id": "(hmi_id)103517",
-              "command": "103517"
-            },
-            {
-              "app_id": "(hmi_id)103526",
-              "command": "103526"
-            },
-            {
-              "app_id": "(hmi_id)103587",
-              "command": "103587"
-            },
-            {
-              "app_id": "(hmi_id)503015",
-              "command": "503015"
-            }
-          ],
-        }
+        // {
+        //   text: '当前是故障诊断页面，您有相关问题可以进行咨询',
+        //   type: 'bot',
+        //   commandlist: [
+        //     {
+        //       "app_id": "(hmi_id)103005",
+        //       "command": "103005"
+        //     },
+        //     {
+        //       "app_id": "(hmi_id)103034",
+        //       "command": "103034"
+        //     },
+        //     {
+        //       "app_id": "(hmi_id)103048",
+        //       "command": "103048"
+        //     },
+        //     {
+        //       "app_id": "(hmi_id)103067",
+        //       "command": "103067"
+        //     },
+        //     {
+        //       "app_id": "(hmi_id)103517",
+        //       "command": "103517"
+        //     },
+        //     {
+        //       "app_id": "(hmi_id)103526",
+        //       "command": "103526"
+        //     },
+        //     {
+        //       "app_id": "(hmi_id)103587",
+        //       "command": "103587"
+        //     },
+        //     {
+        //       "app_id": "(hmi_id)503015",
+        //       "command": "503015"
+        //     }
+        //   ],
+        // }
       ],
       // commandlist: [
       //   {
@@ -227,14 +228,13 @@ const app = Vue.createApp({
     },
     checkSilence(volume) {
       if (this.isStopRecording) return;
-      const SILENCE_THRESHOLD = 0.6; //可调整的静音阈值 最大值为1  
+      const SILENCE_THRESHOLD = 0.7; //可调整的静音阈值 最大值为1  
       //console.log(volume);
-      //此处为超过1s检测到的麦克风电流小于0.2则停止录音
+      //此处为超过2s检测到的麦克风电流小于0.7则停止录音
       if (volume < SILENCE_THRESHOLD) {
         this.silenceCount += 1 / 60;
         if (this.silenceCount >= 2) {
           console.log('[Renderer] 检测到持续静音，自动停止');
-          console.log(Date.now());
           this.stopRecording();
         }
       } else {
@@ -317,7 +317,8 @@ const app = Vue.createApp({
       ipcRenderer.send("close-todo")
     },
     formatText(message) {
-      console.log("formatText(message)", message)
+      console.log("formatText(message)", message.text)
+
       // 生成正则表达式匹配所有指令参数
       let commands = [];
       if (message.type == 'bot') {
@@ -369,8 +370,8 @@ const app = Vue.createApp({
     },
     sendMessage() {
       if (this.userInput.trim() !== '') {
-        this.messages.push({ text: this.userInput, type: 'user', commandlist: [] })
-        this.scrollToBottom()
+        // this.messages.push({ text: this.userInput, type: 'user', commandlist: [] })
+        // this.scrollToBottom()
 
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
         ipcRenderer.send('message-from-renderer', {
