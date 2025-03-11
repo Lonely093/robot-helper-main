@@ -222,7 +222,7 @@ ipcMain.on('showTodo', (e, data) => {
     pages.todoWin.close()
     pages.todoWin = null
   }
-  pages.todoWin = createTodoWindow()
+  pages.todoWin = createTodoWindow(suspensionWinPosition)
   pages.todoWin.on('close', (e, data) => {
     pages.todoWin = null
   })
@@ -249,7 +249,7 @@ ipcMain.on('showTip', (e, data) => {
     pages.tipWin = null
   }
 
-  pages.tipWin = createTipWindow()
+  pages.tipWin = createTipWindow(suspensionWinPosition)
   pages.tipWin.on('close', (e, data) => {
     pages.tipWin = null
   })
