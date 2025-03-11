@@ -68,13 +68,13 @@ const app = Vue.createApp({
       analyser: null,
       silenceCount: 0,
       animationFrameId: null,
-      finalTranscript:"",
-      commandList:[],
-      runingcmd:null,
-      checkTimeoutId:null,
+      finalTranscript: "",
+      commandList: [],
+      runingcmd: null,
+      checkTimeoutId: null,
       reverse: false,
-      isTipStop:false,
-      isruning:false,
+      isTipStop: false,
+      isruning: false,
     }
   },
   async mounted() {
@@ -103,19 +103,19 @@ const app = Vue.createApp({
 
     //监听其他页面传来的消息    1 根据文本请求故障诊断     2 执行 commd指令      3  暂停录音    4 根据文本请求指令交互
     ipcRenderer.on('message-to-renderer', (event, data) => {
-      if(data.type==1)  //根据文字请求故障诊断
+      if (data.type == 1)  //根据文字请求故障诊断
       {
         this.FaultDiagnosis(data.message);
       }
-      if(data.type==2)  //根据指令直接执行
+      if (data.type == 2)  //根据指令直接执行
       {
         this.fddocommand(data.command);
       }
-      if(data.type==3){ // 暂停录音
+      if (data.type == 3) { // 暂停录音
         this.isTipStop = true;
         this.stopRecording();
       }
-      if(data.type==4) {  //根据文本请求指令交互
+      if (data.type == 4) {  //根据文本请求指令交互
         this.ExeHNC_TTI(data.message);
       }
     });
@@ -141,14 +141,14 @@ const app = Vue.createApp({
     initThrottledMove() {
       this.throttledMoveHandler = throttle(async (e) => {
         await this.handleMove(e);
-        }, 3); // 60 FPS
+      }, 3); // 60 FPS
     },
 
     async handleMove(e) {
       const rect = this.$refs.draggableElement.getBoundingClientRect();
       // 获取窗口内容区域边界信息
       // const winBounds = await ipcRenderer.invoke('get-win-content-bounds');
-    
+
       // // 计算屏幕绝对坐标
       // const screenX = winBounds.x + rect.left;
       // const screenY = winBounds.y + rect.top;
@@ -157,36 +157,36 @@ const app = Vue.createApp({
       //   x: screenX,
       //   y: screenY
       // });
-      const display= await ipcRenderer.invoke('get-primary-display');
+      const display = await ipcRenderer.invoke('get-primary-display');
       const screenX = e.screenX - biasX;
       const workArea = display.workArea;
       const edges = {
         left: screenX - workArea.x,
         right: workArea.x + workArea.width - (screenX + rect.width),
-  
+
       };
-    
+
       let minDist = Infinity;
       let closestEdge = null;
-    
+
       Object.entries(edges).forEach(([edge, dist]) => {
-        if ( dist < minDist) {
+        if (dist < minDist) {
           minDist = dist;
           closestEdge = edge;
         }
       });
-      if(closestEdge == "left"){
+      if (closestEdge == "left") {
         this.reverse = true;
-      }else{
+      } else {
         this.reverse = false;
       }
       // this.log(" this.reverse", closestEdge,this.reverse)
-      ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY,closestEdge:closestEdge ,display:display})
+      ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY, closestEdge: closestEdge, display: display })
     },
 
     //发送日志记录
-    log(msg,ctx){
-      ipcRenderer.invoke('app-log', { msg: 'floatball--'+msg,  ctx });
+    log(msg, ctx) {
+      ipcRenderer.invoke('app-log', { msg: 'floatball--' + msg, ctx });
     },
 
     async snapToEdge() {
@@ -210,7 +210,7 @@ const app = Vue.createApp({
       //this.log("display.workArea", display.workArea)
       // 吸附阈值（20px）
       const workArea = display.workArea;
-      const SNAP_THRESHOLD = (display.workArea.width- workArea.x)/2;
+      const SNAP_THRESHOLD = (display.workArea.width - workArea.x) / 2;
       // this.log("screenX - workArea.x", screenX - workArea.x)
       // this.log("workArea.x + workArea.width - (screenX + rect.width)", workArea.x + workArea.width - (screenX + rect.width))
       // 计算与各边的距离
@@ -226,7 +226,7 @@ const app = Vue.createApp({
       let closestEdge = null;
 
       Object.entries(edges).forEach(([edge, dist]) => {
-        if ( dist < minDist) {
+        if (dist < minDist) {
           minDist = dist;
           closestEdge = edge;
         }
@@ -255,12 +255,12 @@ const app = Vue.createApp({
 
         switch (closestEdge) {
           case 'left':
-            this.reverse =true;
+            this.reverse = true;
             // this.log(" workArea.x - rect.left",  workArea.x, rect.left)
             newX = workArea.x - rect.left;
             break;
           case 'right':
-            this.reverse =false;
+            this.reverse = false;
             newX = workArea.x + workArea.width - rect.left - rect.width;
             break;
           // case 'top':
@@ -272,18 +272,18 @@ const app = Vue.createApp({
         }
         // this.log("11111111111");
         // this.log("111111111screenX - workArea.x ",screenX, workArea.x );
-        if(screenX - workArea.x < 0){
+        if (screenX - workArea.x < 0) {
           // this.log("222222");
           newX = workArea.x - rect.left;
           // this.log(newX);
-        }else if(workArea.x + workArea.width - (screenX + rect.width) < 0){
+        } else if (workArea.x + workArea.width - (screenX + rect.width) < 0) {
           newX = workArea.x + workArea.width - rect.left - rect.width;
         }
 
 
-        if(screenY - workArea.y < 0){
+        if (screenY - workArea.y < 0) {
           newY = workArea.y - rect.top;
-        }else if(workArea.y + workArea.height - (screenY + rect.height) < 0){
+        } else if (workArea.y + workArea.height - (screenY + rect.height) < 0) {
           newY = workArea.y + workArea.height - rect.top - rect.height;
         }
         this.opacity = 0.3;
@@ -294,14 +294,14 @@ const app = Vue.createApp({
           x: Math.round(newX),
           y: Math.round(newY)
         });
-        ipcRenderer.send('ballWindowMove', { x: Math.round(newX), y:  Math.round(newY),closestEdge:closestEdge ,display:display})
+        ipcRenderer.send('ballWindowMove', { x: Math.round(newX), y: Math.round(newY), closestEdge: closestEdge, display: display })
       }
     },
 
     // ***********************麦克风录音 ***************//
     async toggleRecording() {
       //防止重复点击
-      if(this.isruning ) return;
+      if (this.isruning) return;
       this.isruning = true
 
       try {
@@ -317,7 +317,7 @@ const app = Vue.createApp({
       }
     },
     async startRecording() {
-      if (this.isRecording ||  this.commandList.length > 0) {
+      if (this.isRecording || this.commandList.length > 0) {
         return;
       }
       try {
@@ -326,7 +326,7 @@ const app = Vue.createApp({
           this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           this.log('[Renderer] 已获得麦克风权限');
         } catch (err) {
-          if(err.message=="Requested device not found"){
+          if (err.message == "Requested device not found") {
             this.floatballtip(0, "未检测到麦克风设备");
           }
           this.log('[Renderer] 麦克风访问被拒绝:', err.message);
@@ -423,12 +423,11 @@ const app = Vue.createApp({
         result.message = err.message;
       } finally {
         //如果是tip暂停的，则不进行后续调用接口操作
-        if(!this.isTipStop)
-        {
-          this.handlestopRecordAfter(result).then(res=>{
+        if (!this.isTipStop) {
+          this.handlestopRecordAfter(result).then(res => {
             this.isStopRecording = false;
           });
-        }else{
+        } else {
           const normalizedPath = path.normalize(result.path);
           fs.unlinkSync(normalizedPath) // 删除文件
           this.isStopRecording = false;
@@ -469,38 +468,34 @@ const app = Vue.createApp({
     //指令处理结果返回
     handleCommandResult(event) {
       const { appId, msg } = event.detail;
-      this.log("handleCommandResult:",msg);
+      this.log("handleCommandResult:", msg);
       //this.log("handleCommandResult:",this.runingcmd);
-      if(this.runingcmd!=null)
-      {
-        if(msg=="ok") //指令执行完成
+      if (this.runingcmd != null) {
+        if (msg == "ok") //指令执行完成
         {
-          if(this.runingcmd.type==1)
-          {
+          if (this.runingcmd.type == 1) {
             this.commandList = this.commandList.shift()
-            if(this.commandList.length>0){
+            if (this.commandList.length > 0) {
               this.docommand();
-            }else{
+            } else {
               //指令全部处理完成  关闭tip
               this.closeTip();
             }
-          }else{
+          } else {
             //故障诊断指令执行成功，关闭故障诊断
             this.closeTodo();
           }
-        }else{  
+        } else {
           //指令执行失败
-          if(this.runingcmd.type==1)
-          {
-            this.floatballtip(0,"指令执行失败:"+ msg);
-            this.commandList =[];
+          if (this.runingcmd.type == 1) {
+            this.floatballtip(0, "指令执行失败:" + msg);
+            this.commandList = [];
           }
-          if(this.runingcmd.type==2)
-          {
-            this.floatballtodo(0,"指令执行失败:"+msg);
+          if (this.runingcmd.type == 2) {
+            this.floatballtodo(0, "指令执行失败:" + msg);
           }
-          this.runingcmd=null;
-          if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+          this.runingcmd = null;
+          if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         }
       }
     },
@@ -509,18 +504,16 @@ const app = Vue.createApp({
     handleAppMessage(event) {
       const { appId, msg } = event.detail;
     },
-    
+
     //APP启动反馈
     async handleAppLaunchResult(event) {
       const { appId } = event.detail;
       //说明有正在执行的指令，继续执行
-      if(this.runingcmd != null){
-        if(this.runingcmd.type==1)
-        {
+      if (this.runingcmd != null) {
+        if (this.runingcmd.type == 1) {
           this.docommand();
         }
-        if(this.runingcmd.type==2)
-        { 
+        if (this.runingcmd.type == 2) {
           this.fddocommand(this.runingcmd.cmd);
         }
       }
@@ -531,61 +524,59 @@ const app = Vue.createApp({
     //****************** HTTP接口处理 ****************/
 
     //将结果回传给Tip 进行提示   1 正常消息    0 错误提示
-    floatballtip(type,message){
+    floatballtip(type, message) {
 
       //需要先触发显示页面，再推送
 
       // 发送消息到主进程
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
-        data: { type : type,  message : message }
+        data: { type: type, message: message }
       });
     },
 
     //通知故障诊断页面
-    floatballtodo(type,message,commandlist){
+    floatballtodo(type, message, commandlist) {
       // 发送消息到主进程
       ipcRenderer.send('message-from-renderer', {
         target: 'todo', // 指定目标窗口
-        data: { type : type,  message : message,commandlist }
+        data: { type: type, message: message, commandlist }
       });
     },
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
-    async handlestopRecordAfter(result){
+    async handlestopRecordAfter(result) {
       try {
-        if(!result.success){
+        if (!result.success) {
           this.floatballtip(0, "录音故障:" + result.message);
           return;
         }
         const normalizedPath = path.normalize(result.path);
         const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
         fs.unlinkSync(normalizedPath) // 删除文件
-        if(!uploadres || uploadres.code!= 200){
+        if (!uploadres || uploadres.code != 200) {
           this.floatballtip(0, "上传录音文件故障 " + uploadres?.data?.message);
           return;
         }
-        result.message=uploadres.data.result;
+        result.message = uploadres.data.result;
         //如果出现为空，说明没有说话，进行提示
-        if(result.message.trim() == ''||result.message.trim() == "")
-        {
-          this.floatballtip(0,"未检测到声音");
+        if (result.message.trim() == '' || result.message.trim() == "") {
+          this.floatballtip(0, "未检测到声音");
           return;
         }
-        this.floatballtip(1,result.message);
+        this.floatballtip(1, result.message);
         await this.ExeHNC_TTI(result.message);
       } catch (error) {
-        this.log("录音或者网络故障",error.message);
+        this.log("录音或者网络故障", error.message);
         this.floatballtip(0, "录音或者网络故障:" + error.message);
-      }finally{
+      } finally {
         //等所有的接口处理完成之后，在进行录音资源释放
         this.cleanup();
       }
     },
 
     //执行指令交互
-    async ExeHNC_TTI(message)
-    {
+    async ExeHNC_TTI(message) {
       try {
         //调用 指令交互接口    根据结果判断
         const res = await ipcRenderer.invoke('hnc_tti', message);
@@ -604,12 +595,12 @@ const app = Vue.createApp({
           } else {
             this.floatballtip(0, "未能识别到指令，请重试");
           }
-        } 
+        }
         else if (res?.code == 1001 || res?.code == 1002) {
           //故障码 1001   APP不存在
           //故障码 1002   指令不存在
-          this.floatballtip(0,"APP或者指令不存在");
-        }else{
+          this.floatballtip(0, "APP或者指令不存在");
+        } else {
           this.floatballtip(0, "指令交互服务故障:" + res?.message);
         }
       } catch (error) {
@@ -626,86 +617,86 @@ const app = Vue.createApp({
       try {
         //res = await apis.hnc_fd(result.message);
         const res = await ipcRenderer.invoke('hnc_fd', message);
-        if(res && res.code=="200"){
+        if (res && res.code == "200") {
           setTimeout(() => {
-            this.floatballtodo(3,message);
-            this.floatballtodo(1,res.data.msg,res.data.command_list);
+            this.floatballtodo(3, message);
+            this.floatballtodo(1, res.data.msg, res.data.command_list);
           }, 200);
-        }else{
+        } else {
           setTimeout(() => {
-            this.floatballtodo(3,message);
-            this.floatballtodo(0,"故障诊断错误:"+res.data.msg);
+            this.floatballtodo(3, message);
+            this.floatballtodo(0, "故障诊断错误:" + res.data.msg);
           }, 200);
         }
       } catch (error) {
-        this.log("hnc_fd 异常:",error.message);
+        this.log("hnc_fd 异常:", error.message);
         setTimeout(() => {
-          this.floatballtodo(3,message);
-          this.floatballtodo(0,"故障诊断异常:"+error.message);
+          this.floatballtodo(3, message);
+          this.floatballtodo(0, "故障诊断异常:" + error.message);
         }, 200);
       }
     },
 
     //直接处理指令
-    docommand(){
-      if(!this.commandList || this.commandList.length<=0){
+    docommand() {
+      if (!this.commandList || this.commandList.length <= 0) {
         return;
       }
       //每次执行一个指令，等待指令完成之后继续执行下一个指令
-      const cmd=this.commandList[0];
+      const cmd = this.commandList[0];
       var app = stateStore.getApp(cmd.app_id);
-      if(app){
-        this.runingcmd={type : 1, cmd };
+      if (app) {
+        this.runingcmd = { type: 1, cmd };
         this.checkTimeout();
-        if(app.state=="0"){ //先启动
-          var runingcmd={
+        if (app.state == "0") { //先启动
+          var runingcmd = {
             app_id: cmd.app_id,
             timestamp: Date.now()
           }
-          this.log("推送MQTT指令：",runingcmd);
+          this.log("推送MQTT指令：", runingcmd);
           mqttClient.publish('Command/Open', runingcmd)
-        }else{ //直接发送指令
-          var runingcmd={
+        } else { //直接发送指令
+          var runingcmd = {
             app_id: cmd.app_id,
-            command:cmd.command,
+            command: cmd.command,
             timestamp: Date.now()
           }
-          this.log("推送MQTT指令：",runingcmd);
-          mqttClient.publish('Command/Action/'+cmd.app_id, runingcmd)
+          this.log("推送MQTT指令：", runingcmd);
+          mqttClient.publish('Command/Action/' + cmd.app_id, runingcmd)
         }
-      }else{
+      } else {
         //提示当前APP未注册
-        this.floatballtip(0,"当前APP未注册");
-        this.commandList=[];
+        this.floatballtip(0, "当前APP未注册");
+        this.commandList = [];
       }
     },
 
     //故障诊断的指令处理
-    fddocommand(cmd){
+    fddocommand(cmd) {
       var app = stateStore.getApp(cmd.app_id);
-      if(app){
-        this.runingcmd={ type : 2 , cmd };
+      if (app) {
+        this.runingcmd = { type: 2, cmd };
         this.checkTimeout();
-        if(app.state=="0"){ //先启动
+        if (app.state == "0") { //先启动
           mqttClient.publish('Command/Open', {
             app_id: cmd.app_id,
             timestamp: Date.now()
           })
-        }else{ //直接发送指令
-          mqttClient.publish('Command/Action/'+cmd.app_id, {
+        } else { //直接发送指令
+          mqttClient.publish('Command/Action/' + cmd.app_id, {
             app_id: cmd.app_id,
-            command:cmd.command,
+            command: cmd.command,
             timestamp: Date.now()
           })
         }
       } else {
         //提示当前APP未注册
-        this.floatballtodo(0,"当前APP未注册");
+        this.floatballtodo(0, "当前APP未注册");
       }
     },
 
     //处理超时情况
-    checkTimeout(){
+    checkTimeout() {
       if (this.checkTimeoutId) {
         this.log('清除定时器 ID:', this.checkTimeoutId);
         clearTimeout(this.checkTimeoutId);
@@ -713,17 +704,15 @@ const app = Vue.createApp({
       this.checkTimeoutId = setTimeout(() => {
         //超过3秒还没执行完成一个指令
         this.log('定时器触发，ID:', this.checkTimeoutId);
-        if(this.runingcmd!=null){
-          if(this.runingcmd.type==1)
-          {
-            this.floatballtip(0,"指令执行超时");
+        if (this.runingcmd != null) {
+          if (this.runingcmd.type == 1) {
+            this.floatballtip(0, "指令执行超时");
           }
-          if(this.runingcmd.type==2)
-          {
-            this.floatballtodo(0,"指令执行超时");
+          if (this.runingcmd.type == 2) {
+            this.floatballtodo(0, "指令执行超时");
           }
-          this.runingcmd=null;
-          this.commandList=[];
+          this.runingcmd = null;
+          this.commandList = [];
         }
       }, 3000);
       this.log('设置新定时器 ID:', this.checkTimeoutId);
@@ -735,18 +724,18 @@ const app = Vue.createApp({
     //   this.isNotMore = false
     //   // ipcRenderer.send('setFloatIgnoreMouse', false)
     // },
-    hanleMouseEnter(){
-      this.opacity=0.8;
+    hanleMouseEnter() {
+      this.opacity = 0.8;
     },
 
-    hanleMouseLeave(){
-      this.opacity=0.3;
+    hanleMouseLeave() {
+      this.opacity = 0.3;
     },
-    closeTip(){
-      ipcRenderer.send("close-tip"); 
+    closeTip() {
+      ipcRenderer.send("close-tip");
     },
-    closeTodo(){
-      ipcRenderer.send("close-todo"); 
+    closeTodo() {
+      ipcRenderer.send("close-todo");
     },
     showEssay(e) {
       if (calcS())
@@ -769,7 +758,7 @@ const app = Vue.createApp({
     //   // ipcRenderer.send('setFloatIgnoreMouse', true)
     // },
     handleMouseDown(e) {
-      this.opacity=0.8;
+      this.opacity = 0.8;
       if (e.button == 2) {
         // ipcRenderer.send('close-tip');
         // ipcRenderer.send("close-todo")

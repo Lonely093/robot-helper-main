@@ -1,7 +1,7 @@
 const { ipcMain, app } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const wav = require('waveheader'); 
+const wav = require('waveheader');
 const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
 ffmpeg.setFfmpegPath(ffmpegPath)
@@ -37,8 +37,8 @@ class AudioRecorder {
     )
   }
 
-   // 验证并创建存储目录
-   verifyStorageDir() {
+  // 验证并创建存储目录
+  verifyStorageDir() {
     try {
       if (!fs.existsSync(this.recordDir)) {
         fs.mkdirSync(this.recordDir, { recursive: true });
@@ -98,7 +98,7 @@ class AudioRecorder {
   setupASRHandlers() {
     this.asrClient.ws.onmessage = (event) => {
       const result = JSON.parse(event.data)
-      
+
       // 通过IPC转发到渲染进程
       ipcMain.webContents.send('asr-transcript', {
         sessionId: this.currentSessionId,
@@ -115,8 +115,8 @@ class AudioRecorder {
     }
   }
 
-   // 生成 WAV 文件头
-   generateWavHeader(options = {}) {
+  // 生成 WAV 文件头
+  generateWavHeader(options = {}) {
     const defaultOptions = {
       sampleRate: this.audioConfig.sampleRate,
       bitDepth: this.audioConfig.bitDepth,
@@ -133,35 +133,35 @@ class AudioRecorder {
     }
     try {
 
-        // 新增ASR连接
-        // try {
-        //   await this.asrClient.connect()
-        //   this.setupASRHandlers()
-        // } catch (err) {
-        //   console.error('ASR连接失败:', err)
-        //   throw new Error('语音服务不可用')
-        // }
+      // 新增ASR连接
+      // try {
+      //   await this.asrClient.connect()
+      //   this.setupASRHandlers()
+      // } catch (err) {
+      //   console.error('ASR连接失败:', err)
+      //   throw new Error('语音服务不可用')
+      // }
 
-         // 生成带时间戳的文件名
-          this.filePath = path.join(
-          this.recordDir,
-          `recording_${Date.now()}.webm`
-          //`recording_${Date.now()}.${this.audioConfig.audioFormat}`
-        );
-        // 验证路径可写性
-        try {
-          await fs.promises.access(path.dirname(this.filePath), fs.constants.W_OK);
-        } catch (err) {
-          throw new Error(`无写入权限: ${this.filePath}`);
-        }
-        this.writer = fs.createWriteStream(this.filePath);
-        // 生成 WAV 文件头
-        // const header = this.generateWavHeader();
-        // this.writer.write(header);
-        this.isRecording = true;
-      
-        //console.log(`[Recorder] 录音开始: ${this.filePath}`);
-        return { success: true, path: this.filePath };
+      // 生成带时间戳的文件名
+      this.filePath = path.join(
+        this.recordDir,
+        `recording_${Date.now()}.webm`
+        //`recording_${Date.now()}.${this.audioConfig.audioFormat}`
+      );
+      // 验证路径可写性
+      try {
+        await fs.promises.access(path.dirname(this.filePath), fs.constants.W_OK);
+      } catch (err) {
+        throw new Error(`无写入权限: ${this.filePath}`);
+      }
+      this.writer = fs.createWriteStream(this.filePath);
+      // 生成 WAV 文件头
+      // const header = this.generateWavHeader();
+      // this.writer.write(header);
+      this.isRecording = true;
+
+      //console.log(`[Recorder] 录音开始: ${this.filePath}`);
+      return { success: true, path: this.filePath };
     } catch (err) {
       this.isRecording = false;
       throw new Error(`录音启动失败: ${err.message}`);
@@ -191,7 +191,7 @@ class AudioRecorder {
     // }
 
   }
-  
+
   //音频文件格式转换
   convertAudioData(float32Array) {
     const int16Array = new Int16Array(float32Array.length)
@@ -212,7 +212,7 @@ class AudioRecorder {
   convertWebmToWav(inputPath) {
     return new Promise((resolve, reject) => {
       const outputPath = inputPath.replace('.webm', '.wav')
-      
+
       ffmpeg(inputPath)
         .inputOptions([
           '-hide_banner',
@@ -229,10 +229,10 @@ class AudioRecorder {
   }
 
   async handleStop() {
-     
+
     return new Promise(async (resolve, reject) => {
 
-       // 同时检查 writer 和录音状态
+      // 同时检查 writer 和录音状态
       if (!this.writer || !this.isRecording) {
         reject(new Error('写入流未初始化或录音未开始'));
         return;
@@ -266,10 +266,10 @@ class AudioRecorder {
             //文件转换
             const newpath = await this.convertWebmToWav(this.filePath);
             fs.unlinkSync(this.filePath) // 删除原始webm文件
-            var result={ 
-              success: true, 
+            var result = {
+              success: true,
               path: newpath,
-              message:"",
+              message: "",
             }
             resolve(result);
           } catch (err) {
@@ -315,17 +315,17 @@ class AudioRecorder {
   //       try {
   //         // 检查文件存在性
   //         await fs.promises.access(this.filePath, fs.constants.F_OK);
-          
+
   //         // 检查文件头有效性
   //         const fd = await fs.promises.open(this.filePath, 'r');
   //         const header = Buffer.alloc(44);
   //         await fd.read(header, 0, 44, 0);
   //         await fd.close();
-  
+
   //         if (!header.slice(0, 4).equals(Buffer.from('RIFF'))) {
   //           throw new Error('无效的WAV文件头');
   //         }
-          
+
   //         resolve();
   //       } catch (err) {
   //         if (Date.now() - startTime < 5000) {
@@ -335,7 +335,7 @@ class AudioRecorder {
   //         }
   //       }
   //     };
-  
+
   //     const startTime = Date.now();
   //     check();
   //   });
@@ -357,7 +357,7 @@ class AudioRecorder {
         console.log('清理失败:', err.message);
       }
     }
-    
+
     this.writer = null;
     this.isRecording = false;
     this.filePath = '';
@@ -376,7 +376,7 @@ class ASRWebSocket {
   connect() {
     return new Promise((resolve, reject) => {
       this.ws = new WebSocket(`${this.url}?token=${this.token}`)
-      
+
       this.ws.onopen = () => {
         this.isConnected = true
         resolve()

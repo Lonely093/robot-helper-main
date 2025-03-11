@@ -1,5 +1,5 @@
 // src/utils/storage.js
-module.exports =  {
+module.exports = {
   // 保存消息（自动覆盖旧数据）
   saveApp(id, app) {
     const apps = JSON.parse(localStorage.getItem('mqttApps') || '{}');

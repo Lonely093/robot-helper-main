@@ -3,13 +3,13 @@ const path = require('path');
 const { createSuspensionWindow, createEssayWindow, createTodoWindow, createTipWindow, createConfigWindow } = require("./window.js")
 Menu.setApplicationMenu(null);
 const recorder = require('./utils/recorder');
-const readConfig  = require('./utils/configManager');
+const readConfig = require('./utils/configManager');
 const logger = require('./utils/logger');
-const axios= require("axios");
+const axios = require("axios");
 const FormData = require('form-data');
 const fs = require('fs');
 let suspensionWinPosition = null;
-const  urlconfig={
+const urlconfig = {
   hnc_stt: readConfig.http.hnc_stt,
   hnc_tti: readConfig.http.hnc_tti,
   hnc_fd: readConfig.http.hnc_fd
@@ -30,7 +30,7 @@ process.on('uncaughtException', (error) => {
 });
 
 //开启日志监听
-ipcMain.handle('app-log',  (event, {msg,ctx}) => {
+ipcMain.handle('app-log', (event, { msg, ctx }) => {
   logger.info(msg, ctx);
 });
 
@@ -63,7 +63,7 @@ ipcMain.handle('hnc_stt', async (event, filePath) => {
     // 2. 验证文件路径并附加到 FormData
     const absolutePath = path.resolve(filePath);
     if (!fs.existsSync(absolutePath)) {
-      return {code:"999",data:{message:"录音失败"}};
+      return { code: "999", data: { message: "录音失败" } };
     }
 
     const fileStream = fs.createReadStream(absolutePath);
@@ -77,90 +77,87 @@ ipcMain.handle('hnc_stt', async (event, filePath) => {
       {
         method: 'post',
         url: urlconfig.hnc_stt,
-        data:form,
+        data: form,
         headers: {
           'accept': 'application/json',
           //'Content-Type': 'multipart/form-data'
           ...form.getHeaders(), // 自动生成 multipart/form-data 的 Content-Type 和 boundary
         },
-        timeout: 5000 
-       }
+        timeout: 5000
+      }
     );
     logger.info('请求接口hnc_stt', response.data);
     return response.data;
   } catch (error) {
     logger.error('请求接口hnc_stt异常', error);
-    return {code:"999",data:{message:error.message}};
+    return { code: "999", data: { message: error.message } };
   }
 });
 
 // 处理渲染进程发起的文件上传请求
 ipcMain.handle('hnc_tti', async (event, info) => {
   try {
-    
+
     // 3. 发送请求
     const response = await axios({
       method: 'post',
       url: urlconfig.hnc_tti,
-      data:{
-          "inputs":info
+      data: {
+        "inputs": info
       },
-      headers:{
+      headers: {
         'Content-Type': 'application/json' // ✅ 必须明确指定
       },
-      timeout: 5000 
-   });
-   logger.info('请求接口hnc_tti', response.data);
-   return response.data;
- } catch (error) {
-   logger.error('请求接口hnc_tti异常', error);
-    return {code:"999",data:{message:error.message}};
+      timeout: 5000
+    });
+    logger.info('请求接口hnc_tti', response.data);
+    return response.data;
+  } catch (error) {
+    logger.error('请求接口hnc_tti异常', error);
+    return { code: "999", data: { message: error.message } };
   }
 });
 
 // 处理渲染进程发起的文件上传请求
 ipcMain.handle('hnc_fd', async (event, info) => {
   try {
-    
-     // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
-     const response = await axios({
+
+    // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
+    const response = await axios({
       method: 'post',
       url: urlconfig.hnc_fd,
-      data:{
-          "inputs":info
+      data: {
+        "inputs": info
       },
-      headers:{
+      headers: {
         'Content-Type': 'application/json' // ✅ 必须明确指定
       },
-      timeout: 5000 
-   });
-      logger.info('请求接口hnc_fd', response.data);
-      return response.data;
+      timeout: 5000
+    });
+    logger.info('请求接口hnc_fd', response.data);
+    return response.data;
   } catch (error) {
-      logger.error('请求接口hnc_fd异常', error);
-    return {code:"999",data:{msg:error.message}};
+    logger.error('请求接口hnc_fd异常', error);
+    return { code: "999", data: { msg: error.message } };
   }
 });
 
 ipcMain.on('message-from-renderer', (event, { target, data }) => {
 
-  logger.info('窗口间消息推送', {target,data});
+  logger.info('窗口间消息推送', { target, data });
   // 查找目标窗口
-  var targetWindow=null;
-  if(target=="tip")
-  {
-    targetWindow=pages.tipWin;
+  var targetWindow = null;
+  if (target == "tip") {
+    targetWindow = pages.tipWin;
   }
-  if(target=="todo")
-  {
-    targetWindow=pages.todoWin;
+  if (target == "todo") {
+    targetWindow = pages.todoWin;
   }
-  if(target=="floatball")
-  {
-    targetWindow=pages.suspensionWin;
+  if (target == "floatball") {
+    targetWindow = pages.suspensionWin;
   }
   if (targetWindow) {
-      targetWindow.webContents.send('message-to-renderer', data);
+    targetWindow.webContents.send('message-to-renderer', data);
   }
 });
 
@@ -218,7 +215,7 @@ ipcMain.on('showEssay', (e, data) => {
 })
 
 ipcMain.on('showTodo', (e, data) => {
-  if (pages.todoWin==null) {
+  if (pages.todoWin == null) {
     pages.todoWin = createTodoWindow(suspensionWinPosition)
     pages.todoWin.on('close', (e, data) => {
       pages.todoWin = null
@@ -231,7 +228,7 @@ ipcMain.on('close-todo', (event) => {
 });
 
 ipcMain.on('openTip', (e, data) => {
-  console.log("openTipopenTipopenTipopenTipopenTip",suspensionWinPosition);
+  console.log("openTipopenTipopenTipopenTipopenTip", suspensionWinPosition);
   if (!pages.tipWin) {
     pages.tipWin = createTipWindow(suspensionWinPosition)
   }
@@ -242,7 +239,7 @@ ipcMain.on('openTip', (e, data) => {
 
 
 ipcMain.on('showTip', (e, data) => {
-  if (pages.tipWin==null) {
+  if (pages.tipWin == null) {
     pages.tipWin = createTipWindow(suspensionWinPosition)
     pages.tipWin.on('close', (e, data) => {
       pages.tipWin = null
@@ -257,28 +254,28 @@ ipcMain.on('close-tip', (event) => {
 ipcMain.on('ballWindowMove', (e, data) => {
   pages.suspensionWin.setBounds({ x: data.x, y: data.y, width: suspensionConfig.width, height: suspensionConfig.height })
   // let display =screen.getPrimaryDisplay();
-  let display =data.display;
+  let display = data.display;
 
   suspensionWinPosition = data;
   if (pages.tipWin) {
     let tipWinX = data.x - 205;
     let tipWinY = data.y;
-    if(data.closestEdge == "left"){
+    if (data.closestEdge == "left") {
       tipWinX = data.x + 85;
-    }else if(data.closestEdge == "right"){
+    } else if (data.closestEdge == "right") {
       tipWinX = data.x - 205;
     }
-    if(tipWinX < 0){
+    if (tipWinX < 0) {
       tipWinX = 0
-    }else if(tipWinX > display.workArea.width - 200){
+    } else if (tipWinX > display.workArea.width - 200) {
       tipWinX = display.workArea.width - 200
     }
-    if(tipWinY < 0){
+    if (tipWinY < 0) {
       tipWinY = 0
-    }else if(tipWinY > display.workArea.height - 80){
+    } else if (tipWinY > display.workArea.height - 80) {
       tipWinY = display.workArea.height - 80
     }
-    pages.tipWin.setBounds({ x: tipWinX , y: tipWinY})
+    pages.tipWin.setBounds({ x: tipWinX, y: tipWinY })
   }
 
 
@@ -286,25 +283,25 @@ ipcMain.on('ballWindowMove', (e, data) => {
   if (pages.todoWin) {
     let todoWinX = data.x - 505;
     let todoWinY = data.y - 350;
-    if(data.closestEdge == "left"){
+    if (data.closestEdge == "left") {
       todoWinX = data.x + 85;
-    }else if(data.closestEdge == "right"){
+    } else if (data.closestEdge == "right") {
       todoWinX = data.x - 505;
     }
-    if(todoWinX < 0){
+    if (todoWinX < 0) {
       todoWinX = 0
-    }else if(todoWinX > display.workArea.width - 300){
+    } else if (todoWinX > display.workArea.width - 300) {
       todoWinX = display.workArea.width - 300
     }
-    if(todoWinY < 0){
+    if (todoWinY < 0) {
       todoWinY = 0
-    }else if(todoWinY > display.workArea.height - 500){
+    } else if (todoWinY > display.workArea.height - 500) {
       todoWinY = display.workArea.height - 500
     }
     pages.todoWin.setBounds({ x: todoWinX, y: todoWinY })
   }
-  
-  
+
+
 })
 
 let suspensionMenu

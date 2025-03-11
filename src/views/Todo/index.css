@@ -109,6 +109,7 @@ body {
   /* background: rgba(255, 255, 255, 0.05); */
 
 }
+
 /* Webkit浏览器滚动条样式 */
 .messages::-webkit-scrollbar {
   width: 8px;
@@ -172,11 +173,14 @@ body {
 }
 
 .command-link {
-  color: #409eff; /* Element UI蓝色标准值 */
+  color: #409eff;
+  /* Element UI蓝色标准值 */
   cursor: pointer;
   text-decoration: underline;
   transition: color 0.3s;
 }
+
 .command-link:hover {
-  color: #79bbff; /* 悬停高亮色 */
+  color: #79bbff;
+  /* 悬停高亮色 */
 }

@@ -13,7 +13,7 @@ const app = Vue.createApp({
   data: () => {
     return {
       userInput: '',
-      dfmessage:"当前是故障诊断页面，您有相关问题可以进行咨询",
+      dfmessage: "当前是故障诊断页面，您有相关问题可以进行咨询",
       messages: [
         // {
         //   text: '当前是故障诊断页面，您有相关问题可以进行咨询',
@@ -96,7 +96,7 @@ const app = Vue.createApp({
       analyser: null,
       silenceCount: 0,
       animationFrameId: null,
-      isruning:false
+      isruning: false
     }
   },
 
@@ -112,8 +112,8 @@ const app = Vue.createApp({
       let messageType = "bot";
       let commandlist = [];
       if (data.type == 3) {
-        messageType="user";
-      }else if (data.type == 0) {
+        messageType = "user";
+      } else if (data.type == 0) {
         botMessage = data.message;
       } else if (data.type == 1) {
         const separator = "</think>\n\n";
@@ -142,15 +142,15 @@ const app = Vue.createApp({
   methods: {
 
     //发送日志记录
-    log(msg,ctx){
-      ipcRenderer.invoke('app-log', { msg: 'todo--'+msg,  ctx });
+    log(msg, ctx) {
+      ipcRenderer.invoke('app-log', { msg: 'todo--' + msg, ctx });
     },
 
     // ***********************麦克风录音 ***************//
     async toggleRecording() {
 
       //防止重复点击
-      if(this.isruning ) return;
+      if (this.isruning) return;
       this.isruning = true
 
       if (this.isRecording) {
@@ -376,7 +376,7 @@ const app = Vue.createApp({
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
         ipcRenderer.send('message-from-renderer', {
           target: 'floatball', // 指定目标窗口
-          data: { type: 1, message:this.userInput }
+          data: { type: 1, message: this.userInput }
         });
         this.userInput = ''
       }

@@ -57,24 +57,24 @@ const createEssayWindow = () => {
 }
 
 const createTodoWindow = (data) => {
-  let display =data.display;
+  let display = data.display;
   let todoWinX = data.x - 505;
-    let todoWinY = data.y - 350;
-    if(data.closestEdge == "left"){
-      todoWinX = data.x + 85;
-    }else if(data.closestEdge == "right"){
-      todoWinX = data.x - 505;
-    }
-    if(todoWinX < 0){
-      todoWinX = 0
-    }else if(todoWinX > display.workArea.width - 300){
-      todoWinX = display.workArea.width - 300
-    }
-    if(todoWinY < 0){
-      todoWinY = 0
-    }else if(todoWinY > display.workArea.height - 500){
-      todoWinY = display.workArea.height - 500
-    }
+  let todoWinY = data.y - 350;
+  if (data.closestEdge == "left") {
+    todoWinX = data.x + 85;
+  } else if (data.closestEdge == "right") {
+    todoWinX = data.x - 505;
+  }
+  if (todoWinX < 0) {
+    todoWinX = 0
+  } else if (todoWinX > display.workArea.width - 300) {
+    todoWinX = display.workArea.width - 300
+  }
+  if (todoWinY < 0) {
+    todoWinY = 0
+  } else if (todoWinY > display.workArea.height - 500) {
+    todoWinY = display.workArea.height - 500
+  }
   const win = new BrowserWindow({
     skipTaskbar: true, // 新增这行关闭任务栏显示
     frame: false,
@@ -91,8 +91,8 @@ const createTodoWindow = (data) => {
     // minimizable: false,   // 禁用最小化按钮
     // maximizable: false,   // 禁用最大化按钮
     // closable: true,        // 保留关闭按钮（默认已启用）
-    transparent: true,  
-    backgroundColor: '#00000000', 
+    transparent: true,
+    backgroundColor: '#00000000',
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -112,26 +112,26 @@ const createTodoWindow = (data) => {
 
 const createTipWindow = (data) => {
   // console.log("suspensionWinPositionsuspensionWinPosition",data)
-  let display =data.display;
+  let display = data.display;
   //const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 280, top: 100 }
   const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 270, top: screen.getPrimaryDisplay().workAreaSize.height - 140 }
   let tipWinX = data.x - 205;
   let tipWinY = data.y;
   // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"111111111")
-  if(data.closestEdge == "left"){
+  if (data.closestEdge == "left") {
     tipWinX = data.x + 85;
-  }else if(data.closestEdge == "right"){
+  } else if (data.closestEdge == "right") {
     tipWinX = data.x - 205;
   }
   // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"222222222222222")
-  if(tipWinX < 0){
+  if (tipWinX < 0) {
     tipWinX = 0
-  }else if(tipWinX > display.workArea.width - 200){
+  } else if (tipWinX > display.workArea.width - 200) {
     tipWinX = display.workArea.width - 200
   }
-  if(tipWinY < 0){
+  if (tipWinY < 0) {
     tipWinY = 0
-  }else if(tipWinY > display.workArea.height - 80){
+  } else if (tipWinY > display.workArea.height - 80) {
     tipWinY = display.workArea.height - 80
   }
 

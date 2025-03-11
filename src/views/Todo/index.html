@@ -15,7 +15,7 @@
       </div>
 
       <div class="messages">
-        <div  class="message bot"  style="width: 475px;">
+        <div class="message bot" style="width: 475px;">
           <div class="message-content" v-html="dfmessage"></div>
         </div>
         <div v-for="(message, index) in messages" :key="index" class="message" :class="message.type">
@@ -31,7 +31,7 @@
         <input v-model="userInput" placeholder="输入消息..." @keyup.enter="sendMessage" class="input-field">
         </input>
         <button v-show="!isRecording" @click="toggleRecording" class="send-button">语音</button>
-        <img v-show="isRecording " src="../../assets/vedio.gif"   width="44" height="28">
+        <img v-show="isRecording " src="../../assets/vedio.gif" width="44" height="28">
         <button @click="sendMessage" class="send-button">发送</button>
       </div>
     </div>

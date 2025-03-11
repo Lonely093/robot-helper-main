@@ -1,6 +1,6 @@
-const mqtt= require("mqtt");
+const mqtt = require("mqtt");
 const stateStore = require("./localStorage");
-const readConfig   = require('./configManager');
+const readConfig = require('./configManager');
 
 class MqttClient {
   constructor(options = {}) {
@@ -35,47 +35,47 @@ class MqttClient {
     this.pendingPublishes = [] // 待处理的发布队列
     this.reconnectAttempts = 0     // 当前重连尝试次数
     this.reconnectTimer = null      // 重连定时器
-    this.setoptions={qos:1,retain:true}  //设置发布订阅的消息等级  以及是否存储
+    this.setoptions = { qos: 1, retain: true }  //设置发布订阅的消息等级  以及是否存储
   }
 
-  _test(){
+  _test() {
     console.log("_test");
     const event = new CustomEvent('floatball-test', {
-      detail: { type:1,message:"teste121212" }
+      detail: { type: 1, message: "teste121212" }
     });
     window.dispatchEvent(event);
   }
 
-    // 格式化遗嘱消息
+  // 格式化遗嘱消息
   _formatWillMessage() {
     if (!this.options.will) return null
-    const will = { 
-        ...this.options.will,
-        payload: this._convertPayload(this.options.will.payload),
-        properties: {
+    const will = {
+      ...this.options.will,
+      payload: this._convertPayload(this.options.will.payload),
+      properties: {
         willDelayInterval: this.options.will.delayInterval || 0 // MQTT 5.0属性
-        }
+      }
     }
 
     // 保留标准字段
     return {
-        topic: will.topic,
-        payload: will.payload,
-        qos: will.qos || 0,
-        retain: will.retain || false,
-        properties: will.properties
+      topic: will.topic,
+      payload: will.payload,
+      qos: will.qos || 0,
+      retain: will.retain || false,
+      properties: will.properties
     }
   }
 
-   // 通用消息转换
-   _convertPayload(payload) {
-    return typeof payload === 'object' 
+  // 通用消息转换
+  _convertPayload(payload) {
+    return typeof payload === 'object'
       ? JSON.stringify(payload)
       : payload.toString()
   }
 
   // 连接MQTT服务
- async connect() {
+  async connect() {
     if (this.client && this.isConnected) return
     // 清除旧连接
     if (this.client) {
@@ -83,70 +83,70 @@ class MqttClient {
     }
     // 初始化连接
     return new Promise((resolve, reject) => {
-        this.client = mqtt.connect(this.options.brokerUrl, {
-          clientId: this.options.clientId,
-          username: this.options.username,
-          password: this.options.password,
-          clean: this.options.clean,
-          connectTimeout: this.options.connectTimeout,
-          reconnectPeriod: 0, // 禁用内置自动重连
-          //will: this._formatWillMessage() // 添加遗嘱消息
-        })
-        // 连接成功回调
-        this.client.once('connect', () => {
-          this._handleConnectSuccess()
-          resolve()
-        })
-        // 首次连接错误处理
-        this.client.once('error', (error) => {
-          this._handleConnectionError(error, reject)
-        })
-  
-        // 通用事件监听
-        this._setupEventListeners()
+      this.client = mqtt.connect(this.options.brokerUrl, {
+        clientId: this.options.clientId,
+        username: this.options.username,
+        password: this.options.password,
+        clean: this.options.clean,
+        connectTimeout: this.options.connectTimeout,
+        reconnectPeriod: 0, // 禁用内置自动重连
+        //will: this._formatWillMessage() // 添加遗嘱消息
+      })
+      // 连接成功回调
+      this.client.once('connect', () => {
+        this._handleConnectSuccess()
+        resolve()
+      })
+      // 首次连接错误处理
+      this.client.once('error', (error) => {
+        this._handleConnectionError(error, reject)
+      })
+
+      // 通用事件监听
+      this._setupEventListeners()
     })
   }
 
-    // 处理连接成功
-    _handleConnectSuccess() {
-        console.log('MQTT Connected')
-        this.isConnected = true
-        this.reconnectAttempts = 0
-        clearTimeout(this.reconnectTimer)
-        
-        // 恢复订阅
-        this.subscriptions.forEach((callback, topic) => {
-            this.client.subscribe(topic,this.setoptions)
-        })
+  // 处理连接成功
+  _handleConnectSuccess() {
+    console.log('MQTT Connected')
+    this.isConnected = true
+    this.reconnectAttempts = 0
+    clearTimeout(this.reconnectTimer)
 
-        // 处理待订阅主题
-        this.pendingSubscribes.forEach(({ topic, callback }) => {
-            try {
-            this._realSubscribe(topic, callback)
-            } catch (error) {
-            console.error(`订阅失败 [${topic}]:`, error)
-            }
-        })
-        this.pendingSubscribes = []
-    
-        // 处理待发布消息
-        this.pendingPublishes.forEach(({ topic, message, options }) => {
-            try {
-            this._realPublish(topic, message, options)
-            } catch (error) {
-            console.error(`发布失败 [${topic}]:`, error)
-            }
-        })
-        this.pendingPublishes = []
+    // 恢复订阅
+    this.subscriptions.forEach((callback, topic) => {
+      this.client.subscribe(topic, this.setoptions)
+    })
 
-        //新增初始化订阅
-        this.initialize();
-    }
+    // 处理待订阅主题
+    this.pendingSubscribes.forEach(({ topic, callback }) => {
+      try {
+        this._realSubscribe(topic, callback)
+      } catch (error) {
+        console.error(`订阅失败 [${topic}]:`, error)
+      }
+    })
+    this.pendingSubscribes = []
 
-    // 处理连接错误
+    // 处理待发布消息
+    this.pendingPublishes.forEach(({ topic, message, options }) => {
+      try {
+        this._realPublish(topic, message, options)
+      } catch (error) {
+        console.error(`发布失败 [${topic}]:`, error)
+      }
+    })
+    this.pendingPublishes = []
+
+    //新增初始化订阅
+    this.initialize();
+  }
+
+  // 处理连接错误
   _handleConnectionError(error, reject) {
     console.error('Initial connection failed:', error)
-    
+
     if (this.options.autoReconnect) {
       this._scheduleReconnect()
       reject(new Error('Initial connection failed, starting reconnect...'))
@@ -155,8 +155,8 @@ class MqttClient {
     }
   }
 
-   // 安排重连
-   _scheduleReconnect() {
+  // 安排重连
+  _scheduleReconnect() {
     if (!this.options.autoReconnect) return
     if (this.reconnectAttempts >= this.options.maxReconnectAttempts) {
       console.error('Maximum reconnect attempts reached')
@@ -175,21 +175,21 @@ class MqttClient {
     }, Math.min(delay, 30000)) // 最大间隔30秒
   }
 
-    // 安全断开连接
+  // 安全断开连接
   async _safeDisconnect() {
     return new Promise((resolve) => {
-        if (this.client) {
+      if (this.client) {
         this.client.end(false, {}, () => {
-            this.client = null
-            resolve()
+          this.client = null
+          resolve()
         })
-        } else {
+      } else {
         resolve()
-        }
+      }
     })
   }
 
- // 设置事件监听
+  // 设置事件监听
   _setupEventListeners() {
     // 连接断开处理
     this.client.on('close', () => {
@@ -203,14 +203,14 @@ class MqttClient {
     this.client.on('message', (topic, message) => {
       const msg = this.parseMessage(message)
       const callback = this.subscriptions.get(topic)
-      callback && callback(topic,msg)
+      callback && callback(topic, msg)
     })
   }
 
-    //实际订阅方法
-   _realSubscribe(topic, callback) {
+  //实际订阅方法
+  _realSubscribe(topic, callback) {
     this.subscriptions.set(topic, callback)
-    this.client.subscribe(topic,this.setoptions, (err) => {
+    this.client.subscribe(topic, this.setoptions, (err) => {
       if (err) {
         console.error('Subscribe error:', err)
       }
@@ -220,10 +220,10 @@ class MqttClient {
   // 订阅主题
   subscribe(topic, callback) {
     if (this.isConnected) {
-        this._realSubscribe(topic, callback)
-      } else {
-        this.pendingSubscribes.push({ topic, callback })
-      }
+      this._realSubscribe(topic, callback)
+    } else {
+      this.pendingSubscribes.push({ topic, callback })
+    }
   }
 
   // 取消订阅
@@ -236,35 +236,35 @@ class MqttClient {
 
   // 实际发布方法
   _realPublish(topic, message, options) {
-    const payload = typeof message === 'object' 
+    const payload = typeof message === 'object'
       ? JSON.stringify(message)
       : message.toString()
     this.client.publish(topic, payload, options)
   }
 
   // 发布消息
-  publish(topic, message, options =  { qos: 1, retain: false }) {
+  publish(topic, message, options = { qos: 1, retain: false }) {
     if (this.isConnected) {
-        this._realPublish(topic, message, options)
+      this._realPublish(topic, message, options)
     } else {
-        this.pendingPublishes.push({ topic, message, options })
+      this.pendingPublishes.push({ topic, message, options })
     }
   }
 
   // 断开连接
   disconnect() {
     return new Promise((resolve) => {
-        if (this.client) {
-          this.client.end(false, {}, () => {
-            this.isConnected = false
-            this.subscriptions.clear()
-            this.pendingSubscribes = []
-            this.pendingPublishes = []
-            resolve()
-          })
-        } else {
+      if (this.client) {
+        this.client.end(false, {}, () => {
+          this.isConnected = false
+          this.subscriptions.clear()
+          this.pendingSubscribes = []
+          this.pendingPublishes = []
           resolve()
-        }
+        })
+      } else {
+        resolve()
+      }
     })
   }
 
@@ -278,80 +278,78 @@ class MqttClient {
   }
 
   //初始化MQTT 订阅基础的APP注册，并根据获取到的注册结果，进行各个APP消息注册
-  initialize(){
+  initialize() {
     //APP注册发布
-    if(this.subscriptions.length>0) return;
-    this.subscriptions.set('AppCenter/Apps', ( topic,message) => {
-     //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
-     console.log("AppCenter:",message);
-    
-     if(message.apps&&message.apps.length>0){
-      message.apps.forEach(app=>{
-        app.state="0";//默认设置为未启动
-        stateStore.saveApp(app.app_id,app);
-        //根据app是否支持启动，来订阅  启动/关闭/指令执行功能
-        if(app.ai_interaction.action){
-          this.subscribe("App/Launch/"+app.app_id,(topic,message) => {
-            this.AppLaunch(topic,message)
-          });
-          this.subscribe("App/Exit/"+app.app_id,( topic,message) => {
-            this.AppExit(topic,message)
-          });
-          this.subscribe("App/Message/"+app.app_id,(topic,message) => {
-            this.AppMessage(topic,message)
-          });
-        }
-        //是否可执行指令
-        if(app.ai_interaction.exec)
-        {
-          this.subscribe("App/Reply/"+app.app_id,(topic,message ) => {
-            this.AppReply(topic,message)
-          });
-        }
-      });
-     }
+    if (this.subscriptions.length > 0) return;
+    this.subscriptions.set('AppCenter/Apps', (topic, message) => {
+      //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
+      console.log("AppCenter:", message);
+
+      if (message.apps && message.apps.length > 0) {
+        message.apps.forEach(app => {
+          app.state = "0";//默认设置为未启动
+          stateStore.saveApp(app.app_id, app);
+          //根据app是否支持启动，来订阅  启动/关闭/指令执行功能
+          if (app.ai_interaction.action) {
+            this.subscribe("App/Launch/" + app.app_id, (topic, message) => {
+              this.AppLaunch(topic, message)
+            });
+            this.subscribe("App/Exit/" + app.app_id, (topic, message) => {
+              this.AppExit(topic, message)
+            });
+            this.subscribe("App/Message/" + app.app_id, (topic, message) => {
+              this.AppMessage(topic, message)
+            });
+          }
+          //是否可执行指令
+          if (app.ai_interaction.exec) {
+            this.subscribe("App/Reply/" + app.app_id, (topic, message) => {
+              this.AppReply(topic, message)
+            });
+          }
+        });
+      }
     })
-    this.client.subscribe('AppCenter/Apps', {qos:2,retain:true} );
+    this.client.subscribe('AppCenter/Apps', { qos: 2, retain: true });
   }
 
-  AppLaunch(topic,message){
-    console.log("AppLaunch:",message);
-    var app= stateStore.getApp(message.app_id);
-    var appid="";
-    if(app){
-      app.state="1";
-     stateStore.saveApp(app.app_id,app);
-     appid=app.app_id;
-    }else{
-      
+  AppLaunch(topic, message) {
+    console.log("AppLaunch:", message);
+    var app = stateStore.getApp(message.app_id);
+    var appid = "";
+    if (app) {
+      app.state = "1";
+      stateStore.saveApp(app.app_id, app);
+      appid = app.app_id;
+    } else {
+
     }
     this.triggerAppLaunchEvent(appid);
   }
 
-  AppExit(topic,message){
-    console.log("AppExit:",message);
-    var app= stateStore.getApp(message.app_id);
-    if(app){
-      app.state="0";
-     stateStore.saveApp(app.app_id,app);
+  AppExit(topic, message) {
+    console.log("AppExit:", message);
+    var app = stateStore.getApp(message.app_id);
+    if (app) {
+      app.state = "0";
+      stateStore.saveApp(app.app_id, app);
     }
   }
-  
+
   //指令执行反馈
-  AppReply(topic,message){
-    console.log("AppReply:",message);
-     //逻辑处理
-    if(message.command=="ok")
-    {
+  AppReply(topic, message) {
+    console.log("AppReply:", message);
+    //逻辑处理
+    if (message.command == "ok") {
 
-    }else{
+    } else {
 
     }
-    this.triggerCommandResultEvent(app.app_id,app.command);
+    this.triggerCommandResultEvent(app.app_id, app.command);
   }
 
-  AppMessage(topic,message){
-    this.triggerAppMessagetEvent(message.app_id,message.message);
+  AppMessage(topic, message) {
+    this.triggerAppMessagetEvent(message.app_id, message.message);
   }
 
   triggerAppLaunchEvent(appId) {

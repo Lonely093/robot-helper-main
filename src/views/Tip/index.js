@@ -25,9 +25,9 @@ const app = Vue.createApp({
 
   data() {
     return {
-      showtext : false,
-      showinput : false,
-      userInput:"",
+      showtext: false,
+      showinput: false,
+      userInput: "",
       tipText: '请问你需要什么帮助？',
       tipCloseTimeoutId: null,
     }
@@ -38,17 +38,17 @@ const app = Vue.createApp({
 
     ipcRenderer.on('message-to-renderer', (event, data) => {
       this.log('收到消息:', data); // 输出 "Hello from Renderer A"
-      if(data.type==3) //显示录音图标
+      if (data.type == 3) //显示录音图标
       {
-        this.showtext=false;
-        this.showinput=false;
-      }else{  //显示文字
-        this.showinput=false;
-        this.showtext=true;
+        this.showtext = false;
+        this.showinput = false;
+      } else {  //显示文字
+        this.showinput = false;
+        this.showtext = true;
         this.tipText = data.message;
       }
     });
- 
+
   },
   beforeUnmount() {
     window.removeEventListener('floatball-tip');
@@ -57,32 +57,32 @@ const app = Vue.createApp({
   methods: {
 
     //发送日志记录
-    log(msg,ctx){
-      ipcRenderer.invoke('app-log', { msg: 'tip--'+msg,  ctx });
+    log(msg, ctx) {
+      ipcRenderer.invoke('app-log', { msg: 'tip--' + msg, ctx });
     },
 
-    changeInput(){
-      this.showinput=true;
-      this.showtext=false;
+    changeInput() {
+      this.showinput = true;
+      this.showtext = false;
       //同时将消息发送至悬浮窗，      3  暂停录音
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball', // 指定目标窗口
-        data: {type: 3}
+        data: { type: 3 }
       });
     },
 
-    sendMessage(){
+    sendMessage() {
       if (this.userInput.trim() !== '') {
         this.showinput = false;
         this.showtext = true;
         this.tipText = this.userInput;
-        this.userInput="";
+        this.userInput = "";
         //同时将消息发送至悬浮窗，      4  表示tip发送的消息
         ipcRenderer.send('message-from-renderer', {
           target: 'floatball', // 指定目标窗口
           data: {
-            type: 4, 
-            message:this.tipText
+            type: 4,
+            message: this.tipText
           }
         });
 

@@ -88,19 +88,19 @@ div {
       #003366
       /* 最终蓝色 */
     );
-  width:80px;
+  width: 80px;
   border-radius: 4px;
   outline: none;
   font-size: 12px;
 }
 
-input::-webkit-input-placeholder{
-color: #fff;
+input::-webkit-input-placeholder {
+  color: #fff;
 }
 
 .send-button {
   padding: 5px 10px;
-  background: rgba(21, 92, 224, 0.9); 
+  background: rgba(21, 92, 224, 0.9);
   color: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 4px;

@@ -7,7 +7,7 @@ const defaultConfig = {
 
 const getConfig = () => {
   const config = localStorage.getItem('config')
-  return config?JSON.parse(config):defaultConfig
+  return config ? JSON.parse(config) : defaultConfig
 }
 
 /**
