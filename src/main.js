@@ -8,7 +8,7 @@ const logger = require('./utils/logger');
 const axios= require("axios");
 const FormData = require('form-data');
 const fs = require('fs');
-
+let suspensionWinPosition = null;
 const  urlconfig={
   hnc_stt: readConfig.http.hnc_stt,
   hnc_tti: readConfig.http.hnc_tti,
@@ -231,8 +231,9 @@ ipcMain.on('close-todo', (event) => {
 });
 
 ipcMain.on('openTip', (e, data) => {
+  console.log("openTipopenTipopenTipopenTipopenTip",suspensionWinPosition);
   if (!pages.tipWin) {
-    pages.tipWin = createTipWindow()
+    pages.tipWin = createTipWindow(suspensionWinPosition)
   }
   pages.tipWin.on('close', (e, data) => {
     pages.tipWin = null
@@ -255,12 +256,18 @@ ipcMain.on('close-tip', (event) => {
 
 ipcMain.on('ballWindowMove', (e, data) => {
   pages.suspensionWin.setBounds({ x: data.x, y: data.y, width: suspensionConfig.width, height: suspensionConfig.height })
-  let display =screen.getPrimaryDisplay();
-  // console.log(display.workArea.width,display.workArea.height)
+  // let display =screen.getPrimaryDisplay();
+  let display =data.display;
+
+  suspensionWinPosition = data;
   if (pages.tipWin) {
     let tipWinX = data.x - 205;
     let tipWinY = data.y;
-
+    if(data.closestEdge == "left"){
+      tipWinX = data.x + 85;
+    }else if(data.closestEdge == "right"){
+      tipWinX = data.x - 205;
+    }
     if(tipWinX < 0){
       tipWinX = 0
     }else if(tipWinX > display.workArea.width - 200){
@@ -273,10 +280,17 @@ ipcMain.on('ballWindowMove', (e, data) => {
     }
     pages.tipWin.setBounds({ x: tipWinX , y: tipWinY})
   }
+
+
+
   if (pages.todoWin) {
     let todoWinX = data.x - 505;
     let todoWinY = data.y - 350;
-
+    if(data.closestEdge == "left"){
+      todoWinX = data.x + 85;
+    }else if(data.closestEdge == "right"){
+      todoWinX = data.x - 505;
+    }
     if(todoWinX < 0){
       todoWinX = 0
     }else if(todoWinX > display.workArea.width - 300){
@@ -381,6 +395,11 @@ ipcMain.handle('get-display-nearest-point', (event, point) => {
     x: Math.round(point.x),
     y: Math.round(point.y)
   })
+});
+
+ipcMain.handle('get-primary-display', (event, point) => {
+  // point 参数结构：{ x: number, y: number }
+  return screen.getPrimaryDisplay();
 });
 ipcMain.on('set-win-position', (event, position) => {
   const win = BrowserWindow.fromWebContents(event.sender)
