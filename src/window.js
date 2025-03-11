@@ -136,6 +136,7 @@ const createTipWindow = (data) => {
   }
 
   const win = new BrowserWindow({
+    skipTaskbar: true, // 新增这行关闭任务栏显示
     width: 200,
     minWidth: 200,
     resizable: false,
@@ -159,7 +160,7 @@ const createTipWindow = (data) => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Tip/index.html'));
-  win.webContents.openDevTools({ mode: 'detach' })
+  //win.webContents.openDevTools({ mode: 'detach' })
   return win
 }
 const createConfigWindow = () => {

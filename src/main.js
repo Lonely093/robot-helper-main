@@ -218,14 +218,12 @@ ipcMain.on('showEssay', (e, data) => {
 })
 
 ipcMain.on('showTodo', (e, data) => {
-  if (pages.todoWin) {
-    pages.todoWin.close()
-    pages.todoWin = null
+  if (pages.todoWin==null) {
+    pages.todoWin = createTodoWindow(suspensionWinPosition)
+    pages.todoWin.on('close', (e, data) => {
+      pages.todoWin = null
+    })
   }
-  pages.todoWin = createTodoWindow(suspensionWinPosition)
-  pages.todoWin.on('close', (e, data) => {
-    pages.todoWin = null
-  })
 })
 
 ipcMain.on('close-todo', (event) => {
@@ -244,15 +242,12 @@ ipcMain.on('openTip', (e, data) => {
 
 
 ipcMain.on('showTip', (e, data) => {
-  if (pages.tipWin) {
-    pages.tipWin.close()
-    pages.tipWin = null
+  if (pages.tipWin==null) {
+    pages.tipWin = createTipWindow(suspensionWinPosition)
+    pages.tipWin.on('close', (e, data) => {
+      pages.tipWin = null
+    })
   }
-
-  pages.tipWin = createTipWindow(suspensionWinPosition)
-  pages.tipWin.on('close', (e, data) => {
-    pages.tipWin = null
-  })
 })
 
 ipcMain.on('close-tip', (event) => {

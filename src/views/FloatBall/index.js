@@ -388,8 +388,8 @@ const app = Vue.createApp({
     },
     checkSilence(volume) {
       if (this.isStopRecording) return;
-      const SILENCE_THRESHOLD = 0.6; //可调整的静音阈值 最大值为1  
-      //console.log(volume);
+      const SILENCE_THRESHOLD = 0.7; //可调整的静音阈值 最大值为1  
+      console.log(volume);
       //此处为超过1s检测到的麦克风电流小于0.6则停止录音
       if (volume < SILENCE_THRESHOLD) {
         this.silenceCount += 1 / 60;
@@ -623,21 +623,28 @@ const app = Vue.createApp({
       console.log("FaultDiagnosis",message);
       this.closeTip();
       this.showTodo();//展示故障诊断
+      //存在偶发消息丢失
       try {
         //res = await apis.hnc_fd(result.message);
         const res = await ipcRenderer.invoke('hnc_fd', message);
         console.log("hnc_fd:",res);
         if(res && res.code=="200"){
-          this.floatballtodo(3,message);
-          this.floatballtodo(1,res.data.msg,res.data.command_list);
+          setTimeout(() => {
+            this.floatballtodo(3,message);
+            this.floatballtodo(1,res.data.msg,res.data.command_list);
+          }, 200);
         }else{
-          this.floatballtodo(3,message);
-          this.floatballtodo(0,"故障诊断错误:"+res.data.msg);
+          setTimeout(() => {
+            this.floatballtodo(3,message);
+            this.floatballtodo(0,"故障诊断错误:"+res.data.msg);
+          }, 200);
         }
       } catch (error) {
         console.log("hnc_fd 异常:",error.message);
-        this.floatballtodo(3,message);
-        this.floatballtodo(0,"故障诊断异常:"+error.message);
+        setTimeout(() => {
+          this.floatballtodo(3,message);
+          this.floatballtodo(0,"故障诊断异常:"+error.message);
+        }, 200);
       }
     },
 

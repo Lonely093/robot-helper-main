@@ -15,6 +15,9 @@
       </div>
 
       <div class="messages">
+        <div  class="message bot"  style="width: 475px;">
+          <div class="message-content" v-html="dfmessage"></div>
+        </div>
         <div v-for="(message, index) in messages" :key="index" class="message" :class="message.type">
           <!-- <div class="message-content">
             {{ message.text }}
