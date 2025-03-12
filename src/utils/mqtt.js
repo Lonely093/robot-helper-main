@@ -35,7 +35,7 @@ class MqttClient {
     this.pendingPublishes = [] // 待处理的发布队列
     this.reconnectAttempts = 0     // 当前重连尝试次数
     this.reconnectTimer = null      // 重连定时器
-    this.setoptions = { qos: 1, retain: true }  //设置发布订阅的消息等级  以及是否存储
+    this.setoptions = { qos: 1, retain: false }  //设置发布订阅的消息等级  以及是否存储
   }
 
   _test() {
@@ -316,15 +316,11 @@ class MqttClient {
   AppLaunch(topic, message) {
     console.log("AppLaunch:", message);
     var app = stateStore.getApp(message.app_id);
-    var appid = "";
     if (app) {
       app.state = "1";
       stateStore.saveApp(app.app_id, app);
-      appid = app.app_id;
-    } else {
-
-    }
-    this.triggerAppLaunchEvent(appid);
+      this.triggerAppLaunchEvent(app.app_id);
+    } 
   }
 
   AppExit(topic, message) {
@@ -339,13 +335,11 @@ class MqttClient {
   //指令执行反馈
   AppReply(topic, message) {
     console.log("AppReply:", message);
-    //逻辑处理
-    if (message.command == "ok") {
+    this.triggerCommandResultEvent(message.app_id, message.reply);
+  }
 
-    } else {
-
-    }
-    this.triggerCommandResultEvent(app.app_id, app.command);
+  GetConnected(){
+    return this.isConnected;
   }
 
   AppMessage(topic, message) {

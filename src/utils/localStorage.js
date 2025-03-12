@@ -18,4 +18,9 @@ module.exports = {
     return JSON.parse(localStorage.getItem('mqttApps') || '{}');
   },
 
+  //清空 mqttApps 消息
+  clearAllApp(){
+    localStorage.removeItem('mqttApps');
+  }
+
 };
