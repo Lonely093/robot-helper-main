@@ -76,6 +76,7 @@ const app = Vue.createApp({
       reverse: false,
       isTipStop: false,
       isruning: false,
+      lastruningtime:new Date(),
       IsMouseLeave:false
     }
   },
@@ -117,8 +118,10 @@ const app = Vue.createApp({
       if (data.type == 3) {    //暂停录音且不进行后续处理
         this.isTipStop = true;
         this.stopRecording();
+        this.isruning = false
       }
       if (data.type == 4) {  //根据文本请求指令交互
+        this.isruning = true
         this.ExeHNC_TTI(data.message);
       }
       if(data.type==5) //取消tip关闭定时器
@@ -308,24 +311,30 @@ const app = Vue.createApp({
 
     // ***********************麦克风录音 ***************//
     async toggleRecording() {
-      //防止重复点击
-      if (this.isruning) return;
-      this.isruning = true
+      
+      //在1秒间隔内点击 则不触发事件
+      const diff = Math.abs(new Date() - this.lastruningtime);
+      if(diff  < 1000)   return;
+      this.lastruningtime=new Date();
 
-      try {
+      //防止重复点击
+      if (this.isruning) {
+        //只允许停止
         if (this.isRecording) {
           await this.stopRecording();
-        } else {
-          await this.startRecording();
         }
-      } finally {
-        setTimeout(() => {
-          this.isruning = false
-        }, 1000)
+        return;
+      };
+      this.isruning = true
+      if (this.isRecording) {
+        await this.stopRecording();
+      } else {
+        await this.startRecording();
       }
     },
     async startRecording() {
-      if (this.isRecording || this.commandList.length > 0) {
+      //需要多重判断  是否正在录音 ，是否正在执行指令
+      if (this.isRecording || this.isStopRecording  || this.commandList.length > 0 || this.runingcmd != null ) {
         return;
       }
       try {
@@ -350,9 +359,9 @@ const app = Vue.createApp({
         this.setupDataHandler();
         this.isRecording = true;
         this.startMonitoring();
-        this.floatballtip(3, '');
+        this.floatballtip(3, '');//通知tip改为录音图标
       } catch (err) {
-        this.floatballtip(0, '启动麦克风失败 ', err.message);
+        this.floatballtip(0, '启动麦克风失败 ' + err.message);
         this.log('启动麦克风失败:', err.message);
       }
     },
@@ -490,10 +499,12 @@ const app = Vue.createApp({
             } else {
               //指令全部处理完成  关闭tip
               this.closeTip();
+              this.isruning=false;
             }
           } else {
             //故障诊断指令执行成功，关闭故障诊断
             //this.closeTodo();
+            this.isruning=false;
           }
         } else {
           //指令执行失败
@@ -537,6 +548,9 @@ const app = Vue.createApp({
 
     //将结果回传给Tip 进行提示   1 正常消息    0 错误提示
     floatballtip(type, message) {
+      if(type==0){
+        this.isruning = false
+      }
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
         data: { type: type, message: message }
@@ -641,6 +655,8 @@ const app = Vue.createApp({
           this.floatballtodo(3, message);
           this.floatballtodo(0, "故障诊断异常:" + error.message);
         }, 200);
+      }finally{
+        this.isruning=false;
       }
     },
 
@@ -769,6 +785,7 @@ const app = Vue.createApp({
           target: target, // 指定目标窗口
           data: { type: 0, message }
         });
+        this.isruning = false;
       }, 2000);
       this.commandList = [];
     },
@@ -787,6 +804,7 @@ const app = Vue.createApp({
           }
           this.runingcmd = null;
           this.commandList = [];
+          this.isruning = false;
         }
       }, 3000);
     },

@@ -13,6 +13,11 @@ const DEFAULT_CONFIG = {
     password: '',
   },
   pagehidetime:5000,   //配置鼠标离开窗口后 自动隐藏的时间 单位毫秒
+  about:{
+    appname:"语音助手APP",
+    version : "1.0.0",
+    info : "支持语音交互，识别指令，自动执行指令，故障诊断，手动执行指令等功能"
+  }
 };
 
 // 读取配置

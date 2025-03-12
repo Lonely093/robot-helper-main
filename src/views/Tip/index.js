@@ -39,7 +39,7 @@ const app = Vue.createApp({
   mounted() {
 
     ipcRenderer.on('message-to-renderer', (event, data) => {
-      this.log('收到消息:', data); // 输出 "Hello from Renderer A"
+      //this.log('收到消息:', data); // 输出 "Hello from Renderer A"
       if (data.type == 3) //显示录音图标
       {
         this.showtext = false;
@@ -76,10 +76,11 @@ const app = Vue.createApp({
     changeInput() {
       this.showinput = true;
       this.showtext = false;
+      this.userInput = "";
       //同时将消息发送至悬浮窗，      3  暂停录音
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball', // 指定目标窗口
-        data: { type: 3 }
+        data: { type: 3,message:"暂停录音" }
       });
     },
 
@@ -114,7 +115,8 @@ const app = Vue.createApp({
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball', // 指定目标窗口
         data: {
-          type: 5
+          type: 5,
+          message:"鼠标悬浮在tip上"
         }
       });
     },

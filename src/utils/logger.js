@@ -20,12 +20,23 @@ const LogLevel = {
   ERROR: 'ERROR'
 };
 
+const formatterTime = () => {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1) < 10 ? ('0' + (date.getMonth() + 1)) : (date.getMonth() + 1)
+  const day = date.getDate() < 10 ? ('0' + date.getDate()) : date.getDate()
+  const hour = date.getHours() < 10 ? ('0' + date.getHours()) : date.getHours()
+  const min = date.getMinutes() < 10 ? ('0' + date.getMinutes()) : date.getMinutes()
+  const seconds = date.getSeconds() < 10 ? ('0' + date.getSeconds()) : date.getSeconds()
+  return `${year}-${month}-${day} ${hour}:${min}:${seconds}`
+}
+
 // 核心日志函数
 function log(level, message, context = {}) {
   if (context == null || context == undefined) {
     context = {};
   }
-  const timestamp = new Date().toISOString();
+  const timestamp = formatterTime();
   const logEntry = JSON.stringify({
     timestamp,
     level,

@@ -104,7 +104,7 @@ const app = Vue.createApp({
 
     //悬浮窗传递过来的消息
     ipcRenderer.on('message-to-renderer', (event, data) => {
-      this.log('收到消息:', data);
+      //this.log('收到消息:', data);
       //  data.type 0 错误消息  1 正常消息   
       //  data.message  
       //  data.commandlist    注意可能存在  undefined  null 数据，需要判断一下
