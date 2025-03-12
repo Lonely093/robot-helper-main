@@ -5,6 +5,7 @@ const { formatterTime } = require("../../utils/date.js")
 const { applyConfig } = require("../../utils/store.js")
 const path = require('path');
 const fs = require('fs');
+const configManager = require("../../utils/configManager");
 
 applyConfig()
 
@@ -96,7 +97,8 @@ const app = Vue.createApp({
       analyser: null,
       silenceCount: 0,
       animationFrameId: null,
-      isruning: false
+      isruning: false,
+      maxDuration : parseInt(configManager.maxDuration)
     }
   },
 
@@ -164,9 +166,7 @@ const app = Vue.createApp({
       }, 1000)
     },
     async startRecording() {
-      if (this.isRecording) {
-        return;
-      }
+      if (this.isRecording || this.isStopRecording)  return;
       try {
         // 初始化音频流
         try {
@@ -187,8 +187,11 @@ const app = Vue.createApp({
         this.setupDataHandler();
         this.isRecording = true;
         this.startMonitoring();
+        if(this.maxDuration > 2){
+          setTimeout(() => stopRecording(), this.maxDuration * 1000);
+        }
       } catch (err) {
-        console.error('录音启动失败:', err);
+        this.log('录音启动失败:', err.message);
       }
     },
     setupAudioAnalysis() {
@@ -262,10 +265,10 @@ const app = Vue.createApp({
         // 通知主进程停止 保存录音文件并上传接口，返回结果
         result = await ipcRenderer.invoke('audio-stop');
         this.log('[Renderer] 录音保存结果:', result);
-        this.$emit('record-complete', result);
+        //this.$emit('record-complete', result);
       } catch (err) {
         console.error('[Renderer] 停止失败:', err);
-        this.$emit('error', err.message);
+        //this.$emit('error', err.message);
         result.message = err.message;
       } finally {
         this.handlestopRecordAfter(result);
@@ -292,7 +295,7 @@ const app = Vue.createApp({
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
     async handlestopRecordAfter(result) {
-      if (!result.success) {
+      if (!result.success || result.path) {
         this.userInput = "录音故障:" + result.message;
       } else {
         const normalizedPath = path.normalize(result.path);

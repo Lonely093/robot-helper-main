@@ -77,7 +77,8 @@ const app = Vue.createApp({
       isTipStop: false,
       isruning: false,
       lastruningtime:new Date(),
-      IsMouseLeave:false
+      IsMouseLeave:false,
+      maxDuration : parseInt(configManager.maxDuration)
     }
   },
   async mounted() {
@@ -315,7 +316,7 @@ const app = Vue.createApp({
       //在1秒间隔内点击 则不触发事件
       const diff = Math.abs(new Date() - this.lastruningtime);
       if(diff  < 1000)   return;
-      this.lastruningtime=new Date();
+      this.lastruningtime = new Date();
 
       //防止重复点击
       if (this.isruning) {
@@ -360,6 +361,9 @@ const app = Vue.createApp({
         this.isRecording = true;
         this.startMonitoring();
         this.floatballtip(3, '');//通知tip改为录音图标
+        if(this.maxDuration > 2){
+          setTimeout(() => stopRecording(), this.maxDuration * 1000);
+        }
       } catch (err) {
         this.floatballtip(0, '启动麦克风失败 ' + err.message);
         this.log('启动麦克风失败:', err.message);
@@ -436,19 +440,22 @@ const app = Vue.createApp({
         result = await ipcRenderer.invoke('audio-stop');
         this.log('[Renderer] 录音保存结果:', result);
       } catch (err) {
-        this.floatballtip(0, '音频数据处理失败 ', err.message);
+        if(!this.isTipStop)  this.floatballtip(0, '音频数据处理失败 '+ err.message);
         this.log('[Renderer] 停止失败:', err.message);
         result.message = err.message;
       } finally {
         //如果是tip暂停的，则不进行后续调用接口操作
         if (!this.isTipStop) {
-          this.handlestopRecordAfter(result).then(res => {
+            this.handlestopRecordAfter(result).then(res => {
             this.isStopRecording = false;
           });
         } else {
-          const normalizedPath = path.normalize(result.path);
-          fs.unlinkSync(normalizedPath) // 删除文件
-          this.isStopRecording = false;
+          if(result.path)
+          {
+            const normalizedPath = path.normalize(result.path);
+            fs.unlinkSync(normalizedPath) // 删除文件
+          }
+          this.cleanup();
         }
         this.isTipStop = false;
       }
@@ -467,8 +474,9 @@ const app = Vue.createApp({
       }
 
       this.isRecording = false;
+      this.isStopRecording = false;
       this.silenceCount = 0;
-      //this.log('[Renderer] 资源已清理');
+      this.log('[Renderer] 资源已清理');
     },
 
     // ***********************麦克风录音结束 ***************//
@@ -634,7 +642,7 @@ const app = Vue.createApp({
     async FaultDiagnosis(message) {
       this.closeTip();
       this.showTodo();
-      //存在偶发消息丢失  目前采用 延时200ms 发送
+      //存在偶发消息丢失  目前采用 延时300ms 发送
       try {
         //res = await apis.hnc_fd(result.message);
         const res = await ipcRenderer.invoke('hnc_fd', message);
@@ -642,19 +650,19 @@ const app = Vue.createApp({
           setTimeout(() => {
             this.floatballtodo(3, message);
             this.floatballtodo(1, res.data.msg, res.data.command_list);
-          }, 200);
+          }, 300);
         } else {
           setTimeout(() => {
             this.floatballtodo(3, message);
             this.floatballtodo(0, "故障诊断错误:" + res.data.msg);
-          }, 200);
+          }, 300);
         }
       } catch (error) {
         this.log("hnc_fd 异常:", error.message);
         setTimeout(() => {
           this.floatballtodo(3, message);
           this.floatballtodo(0, "故障诊断异常:" + error.message);
-        }, 200);
+        }, 300);
       }finally{
         this.isruning=false;
       }
@@ -836,7 +844,7 @@ const app = Vue.createApp({
       if(!this.isRecording && !this.isStopRecording){
         this.closetipTimeoutId = setTimeout(() => {
           this.closeTip();
-        },  parseInt(configManager.pagehidetime))  
+        },  parseInt(configManager.pagehidetime) * 1000)  
       }else{
         //通知tip 鼠标离开了悬浮窗
         ipcRenderer.send('message-from-renderer', {

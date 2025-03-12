@@ -105,7 +105,7 @@ const app = Vue.createApp({
       if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId) // 清除旧定时器
       this.tipCloseTimeoutId = setTimeout(() => {
         ipcRenderer.send("close-tip");
-        },  parseInt(configManager.pagehidetime))  
+        },  parseInt(configManager.pagehidetime) * 1000)  
     },
 
     hanleMouseEnter() {
