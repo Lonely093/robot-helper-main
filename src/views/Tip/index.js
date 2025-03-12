@@ -39,24 +39,35 @@ const app = Vue.createApp({
   mounted() {
 
     ipcRenderer.on('message-to-renderer', (event, data) => {
-      //this.log('收到消息:', data); // 输出 "Hello from Renderer A"
-      if (data.type == 3) //显示录音图标
+      //显示录音图标
+      if (data.type == 3) 
       {
         this.showtext = false;
         this.showinput = false;
       }
-      else if(data.type == 4){  //鼠标在机器人上
+      //鼠标在机器人上
+      else if(data.type == 4){ 
         if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId) 
-          this.isMouseOnFloatBall=true;
+        this.isMouseOnFloatBall=true;
       }
-    else if(data.type==5){ //鼠标离开了机器人
+      //鼠标离开了机器人
+      else if(data.type == 5){ 
         this.isMouseOnFloatBall=false;
-    }
-      else {  //显示文字
+      }
+      //录音故障，显示输入框
+      else if(data.type == 6)
+      {
+        this.showinput = true;
+        this.showtext = false;
+        this.userInput = "";
+      }
+      //显示文字
+      else {  
         this.showinput = false;
         this.showtext = true;
         this.tipText = data.message;
-        if(this.IsMouseLeave && !this.isMouseOnFloatBall) //值变化时，且鼠标不在悬浮窗则启动关闭
+        //值变化时，且鼠标不在悬浮窗则启动关闭
+        if(this.IsMouseLeave && !this.isMouseOnFloatBall) 
         {
           this.startTipCloseTimer();
         }
@@ -80,7 +91,7 @@ const app = Vue.createApp({
       //同时将消息发送至悬浮窗，      3  暂停录音
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball', // 指定目标窗口
-        data: { type: 3,message:"暂停录音" }
+        data: { type: 3 , message : "暂停录音" }
       });
     },
 

@@ -107,7 +107,7 @@ const app = Vue.createApp({
     window.addEventListener('app-message', this.handleAppMessage);
 
     //监听其他页面传来的消息    1 根据文本请求故障诊断     2 执行 commd指令    3  暂停录音    4 根据文本请求指令交互    5 取消tip关闭定时器
-    ipcRenderer.on('message-to-renderer', (event, data) => {
+    ipcRenderer.on('message-to-renderer',  (event, data) => {
       if (data.type == 1)  //根据文字请求故障诊断
       {
         this.FaultDiagnosis(data.message);
@@ -116,16 +116,19 @@ const app = Vue.createApp({
       {
         this.fddocommand(data.command);
       }
-      if (data.type == 3) {    //暂停录音且不进行后续处理
+      //暂停录音且不进行后续处理
+      if (data.type == 3) {    
         this.isTipStop = true;
         this.stopRecording();
         this.isruning = false
       }
-      if (data.type == 4) {  //根据文本请求指令交互
+      //根据文本请求指令交互
+      if (data.type == 4) {  
         this.isruning = true
         this.ExeHNC_TTI(data.message);
       }
-      if(data.type==5) //取消tip关闭定时器
+      //取消tip关闭定时器
+      if(data.type==5) 
       {
         if(this.closetipTimeoutId) clearTimeout(this.closetipTimeoutId);
       }
@@ -318,6 +321,10 @@ const app = Vue.createApp({
       if(diff  < 1000)   return;
       this.lastruningtime = new Date();
 
+      console.log("this.isruning",this.isruning);
+      console.log("this.isRecording",this.isRecording);
+      console.log("this.isStopRecording",this.isStopRecording);
+
       //防止重复点击
       if (this.isruning) {
         //只允许停止
@@ -345,7 +352,7 @@ const app = Vue.createApp({
           this.log('[Renderer] 已获得麦克风权限');
         } catch (err) {
           if (err.message == "Requested device not found") {
-            this.floatballtip(0, "未检测到麦克风设备");
+            this.floatballtip(99, "未检测到麦克风设备");
           }
           this.log('[Renderer] 麦克风访问被拒绝:', err.message);
           return;
@@ -362,10 +369,10 @@ const app = Vue.createApp({
         this.startMonitoring();
         this.floatballtip(3, '');//通知tip改为录音图标
         if(this.maxDuration > 2){
-          setTimeout(() => stopRecording(), this.maxDuration * 1000);
+          setTimeout(() => this.stopRecording(), this.maxDuration * 1000);
         }
       } catch (err) {
-        this.floatballtip(0, '启动麦克风失败 ' + err.message);
+        this.floatballtip(99, '启动麦克风失败 ');
         this.log('启动麦克风失败:', err.message);
       }
     },
@@ -384,7 +391,7 @@ const app = Vue.createApp({
           const buffer = await e.data.arrayBuffer();
           ipcRenderer.send('audio-chunk', buffer);
         } catch (err) {
-          this.floatballtip(0, '音频数据处理失败 ', err.message);
+          this.floatballtip(99, '音频数据处理失败 ');
           this.log('[Renderer] 数据处理失败:', err.message);
         }
       };
@@ -440,8 +447,8 @@ const app = Vue.createApp({
         result = await ipcRenderer.invoke('audio-stop');
         this.log('[Renderer] 录音保存结果:', result);
       } catch (err) {
-        if(!this.isTipStop)  this.floatballtip(0, '音频数据处理失败 '+ err.message);
-        this.log('[Renderer] 停止失败:', err.message);
+        if(!this.isTipStop)  this.floatballtip(99, '音频数据处理失败 ');
+        this.log('[Renderer] 音频数据处理失败:', err.message);
         result.message = err.message;
       } finally {
         //如果是tip暂停的，则不进行后续调用接口操作
@@ -556,8 +563,19 @@ const app = Vue.createApp({
 
     //将结果回传给Tip 进行提示   1 正常消息    0 错误提示
     floatballtip(type, message) {
-      if(type==0){
+      if(type == 0 || type== 99){
         this.isruning = false
+      }
+      //99 代表录音启动失败
+      if(type == 99){
+        type = 0;
+        //延时跳转到手动输入
+        setTimeout(() => {
+          ipcRenderer.send('message-from-renderer', {
+            target: 'tip', // 指定目标窗口
+            data: { type: 6, message: '录音故障，显示输入框' }
+          });
+        }, 2000);
       }
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
@@ -578,27 +596,27 @@ const app = Vue.createApp({
     async handlestopRecordAfter(result) {
       try {
         if (!result.success) {
-          this.floatballtip(0, "语音录入故障 " + result.message);
+          this.floatballtip(99, "语音输入故障 ");
           return;
         }
         const normalizedPath = path.normalize(result.path);
         const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
         fs.unlinkSync(normalizedPath) // 删除文件
         if (!uploadres || uploadres.code != 200) {
-          this.floatballtip(0, "语音识别故障 " + uploadres?.data?.message);
+          this.floatballtip(99, "语音识别故障 " + (uploadres?.data?.message ? uploadres?.data?.message : ""));
           return;
         }
         result.message = uploadres.data.result;
         //如果出现为空，说明没有说话，进行提示
         if (result.message.trim() == '' || result.message.trim() == "") {
-          this.floatballtip(0, "未检测到声音 ");
+          this.floatballtip(99, "未检测到声音 ");
           return;
         }
         this.floatballtip(1, result.message);
         await this.ExeHNC_TTI(result.message);
       } catch (error) {
+        this.floatballtip(99, "语音交互异常 ");
         this.log("语音交互异常 ", error.message);
-        this.floatballtip(0, "语音交互异常 " + error.message);
       } finally {
         //等所有的接口处理完成之后，在进行录音资源释放
         this.cleanup();
@@ -613,15 +631,15 @@ const app = Vue.createApp({
         if (res && res.code == 200) {
           if (res.data.command_list && res.data.command_list.length > 0) {
             //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
-            //await this.FaultDiagnosis(message);
-            if(res.data.command_list[0].app_id=="fault_diagnosis"){
-              await this.FaultDiagnosis(message);
-            }
-            //需要处理的指令集合
-            else {
-              this.commandList = res.data.command_list;
-              this.docommand();
-            }
+            await this.FaultDiagnosis(message);
+            // if(res.data.command_list[0].app_id=="fault_diagnosis"){
+            //   await this.FaultDiagnosis(message);
+            // }
+            // //需要处理的指令集合
+            // else {
+            //   this.commandList = res.data.command_list;
+            //   this.docommand();
+            // }
           } else {
             this.floatballtip(0, "未能识别到指令，请重试");
           }
