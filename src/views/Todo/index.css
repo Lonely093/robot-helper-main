@@ -96,6 +96,7 @@ body {
 }
 
 .messages {
+  width: 480px;
   position: absolute;
   /* 改为相对父容器定位 */
   bottom: 50px;
@@ -150,13 +151,13 @@ body {
 /* 用户消息样式 */
 .message.user .message-content {
   background: #d3f261;
-  border-radius: 8px 8px 0 8px;
+  border-radius: 8px 8px 8px 8px;
 }
 
 /* 机器人消息样式 */
 .message.bot .message-content {
   background: #f5f7fa;
-  border-radius: 8px 8px 8px 0;
+  border-radius: 8px 8px 8px 8px;
 }
 
 /* 动画效果 */
