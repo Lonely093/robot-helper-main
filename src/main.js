@@ -266,22 +266,22 @@ ipcMain.on('ballWindowMove', (e, data) => {
 
   suspensionWinPosition = data;
   if (pages.tipWin) {
-    let tipWinX = data.x - 205;
+    let tipWinX = data.x - 305;
     let tipWinY = data.y;
     if (data.closestEdge == "left") {
-      tipWinX = data.x + 85;
+      tipWinX = data.x + 65;
     } else if (data.closestEdge == "right") {
-      tipWinX = data.x - 205;
+      tipWinX = data.x - 305;
     }
     if (tipWinX < 0) {
       tipWinX = 0
-    } else if (tipWinX > display.workArea.width - 200) {
-      tipWinX = display.workArea.width - 200
+    } else if (tipWinX > display.workArea.width - 300) {
+      tipWinX = display.workArea.width - 300
     }
     if (tipWinY < 0) {
       tipWinY = 0
-    } else if (tipWinY > display.workArea.height - 80) {
-      tipWinY = display.workArea.height - 80
+    } else if (tipWinY > display.workArea.height - 60) {
+      tipWinY = display.workArea.height - 60
     }
     pages.tipWin.setBounds({ x: tipWinX, y: tipWinY })
   }

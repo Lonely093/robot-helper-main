@@ -64,7 +64,7 @@ div {
 .input-container {
   position: absolute;
   /* 改为相对父容器定位 */
-  bottom: 25px;
+  top:15px;
   left: 5px;
   right: 5px;
   /* 横向排列 */
@@ -88,7 +88,7 @@ div {
       #003366
       /* 最终蓝色 */
     );
-  width: 80px;
+  width: 150px;
   border-radius: 4px;
   outline: none;
   font-size: 12px;
@@ -113,3 +113,4 @@ input::-webkit-input-placeholder {
 .send-button:hover {
   background: #0056b3;
 }
+

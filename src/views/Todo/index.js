@@ -14,6 +14,7 @@ const app = Vue.createApp({
   data: () => {
     return {
       userInput: '',
+      placeholdertext:"有问题尽管问我...",
       // dfmessage: "当前是故障诊断页面，您有相关问题可以进行咨询",
       messages: [
         {
@@ -140,6 +141,9 @@ const app = Vue.createApp({
 
     });
 
+    //页面启动，默认清空录音记录
+    ipcRenderer.invoke('audio-clear');
+
   },
   created() {
     // 创建全局事件桥接
@@ -183,7 +187,7 @@ const app = Vue.createApp({
         } catch (err) {
           this.log('[Renderer] 麦克风访问被拒绝:', err.message);
           if (err.message == "Requested device not found") {
-            this.sendErrorMessage( "未检测到麦克风设备");
+            this.sendErrorMessage( "无法启用语音，请试试手动输入吧");
           }
           return;
         }
@@ -196,12 +200,13 @@ const app = Vue.createApp({
         this.mediaRecorder = new MediaRecorder(this.mediaStream);
         this.setupDataHandler();
         this.isRecording = true;
+        this.placeholdertext = "倾听中...";
         this.startMonitoring();
         if(this.maxDuration > 2){
           setTimeout(() => this.stopRecording(), this.maxDuration * 1000);
         }
       } catch (err) {
-        this.sendErrorMessage( "启动麦克风失败 "+err.message);
+        this.sendErrorMessage("无法启用语音，请试试手动输入吧");
         this.log('启动麦克风失败:', err.message);
       }
     },
@@ -221,7 +226,7 @@ const app = Vue.createApp({
           ipcRenderer.send('audio-chunk', buffer);
         } catch (err) {
           this.log('[Renderer] 音频数据处理失败:', err.message);
-          this.sendErrorMessage( "音频数据处理失败 " + err.message);
+          this.sendErrorMessage("无法启用语音，请试试手动输入吧");
         }
       };
 
@@ -277,7 +282,7 @@ const app = Vue.createApp({
         result = await ipcRenderer.invoke('audio-stop');
         this.log('[Renderer] 录音保存结果:', result);
       } catch (err) {
-        this.sendErrorMessage( "音频数据处理失败 " + err.message);
+        this.sendErrorMessage("无法启用语音，请试试手动输入吧");
         this.log('[Renderer] 停止失败:', err.message);
         result.message = err.message;
       } finally {
@@ -300,25 +305,26 @@ const app = Vue.createApp({
 
       this.isRecording = false;
       this.silenceCount = 0;
+      this.placeholdertext = "有问题尽管问我...";
       this.log('[Renderer] 资源已清理');
     },
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
     async handlestopRecordAfter(result) {
       if (!result.success ) {
-        this.sendErrorMessage( "语音输入故障 " + result.message);
+        this.sendErrorMessage("无法启用语音，请试试手动输入吧");
       } else {
         const normalizedPath = path.normalize(result.path);
         const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
         fs.unlinkSync(normalizedPath) // 删除文件
         if (!uploadres || uploadres.code != 200) {
-          this.sendErrorMessage("语音识别故障 " + uploadres?.data?.message);
+          this.sendErrorMessage("无法启用语音，请试试手动输入吧");
         } else {
           this.userInput = uploadres.data.result;
           if (this.userInput.trim() !== '') {
             this.sendMessage();
           }else{
-            this.sendErrorMessage( "未检测到声音");
+            this.sendErrorMessage("未检测到声音");
           }
         }
       }
@@ -407,6 +413,7 @@ const app = Vue.createApp({
     sendErrorMessage(message){
       this.messages.push({ text: message, type: 'bot' ,commandlist:[]})
       this.scrollToBottom();
+      this.placeholdertext = "有问题尽管问我...";
     }
   }
 })
