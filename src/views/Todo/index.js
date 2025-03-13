@@ -278,8 +278,18 @@ const app = Vue.createApp({
         this.log('[Renderer] 停止失败:', err.message);
         result.message = err.message;
       } finally {
-        this.handlestopRecordAfter(result);
-        this.isStopRecording = false;
+        //如果是用户暂停的，则不进行后续调用接口操作
+        if (!this.isUserStop) {
+            await this.handlestopRecordAfter(result);
+        } else {
+          if(result.path)
+          {
+            const normalizedPath = path.normalize(result.path);
+            fs.unlinkSync(normalizedPath) // 删除文件
+          }
+          this.cleanup();
+        }
+        this.isUserStop = false;
       }
     },
     cleanup() {
@@ -296,6 +306,7 @@ const app = Vue.createApp({
       }
 
       this.isRecording = false;
+      this.isStopRecording = false;
       this.silenceCount = 0;
       this.placeholdertext = "有问题尽管问我...";
       this.log('[Renderer] 资源已清理');
@@ -322,6 +333,12 @@ const app = Vue.createApp({
       }
       //等所有的接口处理完成之后，在进行录音资源释放
       this.cleanup();
+    },
+
+    //鼠标按下输入框，暂停录音并不做后续处理
+    async handleMouseDown(e) {
+      this.isUserStop = true;
+      await this.stopRecording();
     },
 
     // ***********************麦克风录音结束 ***************//

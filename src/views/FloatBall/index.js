@@ -395,15 +395,15 @@ const app = Vue.createApp({
         if (res && res.code == 200) {
           if (res.data.command_list && res.data.command_list.length > 0) {
             //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
-            await this.FaultDiagnosis(message);
-            // if(res.data.command_list[0].app_id=="fault_diagnosis"){
-            //   await this.FaultDiagnosis(message);
-            // }
-            // //需要处理的指令集合
-            // else {
-            //   this.commandList = res.data.command_list;
-            //   this.docommand();
-            // }
+            //await this.FaultDiagnosis(message);
+            if(res.data.command_list[0].app_id=="fault_diagnosis"){
+              await this.FaultDiagnosis(message);
+            }
+            //需要处理的指令集合
+            else {
+              this.commandList = res.data.command_list;
+              this.docommand();
+            }
           } else {
             this.floatballtip(0, "未能识别到指令，请重试");
           }

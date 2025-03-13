@@ -44,7 +44,7 @@ const app = Vue.createApp({
       silenceCount: 0,
       animationFrameId: null,
       maxDuration : parseInt(configManager.maxDuration),
-      isTipStop : false,
+      isUserStop : false,
       placeholdertext:"有问题尽管问我...",
       isruning : false,
     }
@@ -143,7 +143,7 @@ const app = Vue.createApp({
 
     //鼠标按下输入框，暂停录音并不做后续处理
     async handleMouseDown(e) {
-      this.isTipStop=true;
+      this.isUserStop=true;
       await this.stopRecording();
     },
     
@@ -280,11 +280,9 @@ const app = Vue.createApp({
         this.log('[Renderer] 音频数据处理失败:', err.message);
         result.message = err.message;
       } finally {
-        //如果是tip暂停的，则不进行后续调用接口操作
-        if (!this.isTipStop) {
-            this.handlestopRecordAfter(result).then(res => {
-            this.isStopRecording = false;
-          });
+        //如果是用户暂停的，则不进行后续调用接口操作
+        if (!this.isUserStop) {
+            await this.handlestopRecordAfter(result);
         } else {
           if(result.path)
           {
@@ -293,7 +291,7 @@ const app = Vue.createApp({
           }
           this.cleanup();
         }
-        this.isTipStop = false;
+        this.isUserStop = false;
       }
     },
 
