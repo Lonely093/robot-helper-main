@@ -10,12 +10,18 @@
 <body>
   <div id="app">
     <div class="tip-root" @mouseleave="hanleMouseLeave" @mouseenter.native="hanleMouseEnter">
-      <img v-show="!showtext && !showinput" src="../../assets/vedio.gif" @click="changeInput" width="200" height="80">
+      <!-- <img v-show="!showtext && !showinput" src="../../assets/vedio.gif" @click="changeInput" width="250" height="40">
       <p v-show="showtext && !showinput" class="content">{{tipText}}</p>
-      <!-- 输入框 -->
       <div v-show="showinput" class="input-container">
         <input v-model="userInput" placeholder="输入消息..." @keyup.enter="sendMessage" class="input-field"></input>
         <button @click="sendMessage" class="send-button">发送</button>
+      </div> -->
+      <div class="input-container">
+        <input v-model="userInput" :placeholder="placeholdertext" @mousedown="handleMouseDown"  @keyup.enter="sendMessage" class="input-field">
+        </input>
+        <button  @click="sendMessage"   class="send-button">发送</button>
+        <button  v-show="!isRecording" @click="toggleRecording" @click="toggleRecording" class="send-button">语音</button>
+        <img v-show="isRecording " src="../../assets/vedio.gif" @click="toggleRecording" width="44" height="28">
       </div>
     </div>
   </div>

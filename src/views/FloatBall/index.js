@@ -7,9 +7,7 @@ const draggableElement = ref(null);
 
 const mqttClient = require("../../utils/mqtt")
 const stateStore = require("../../utils/localStorage");
-const path = require('path');
-const fs = require('fs');
-const configManager = require("../../utils/configManager");
+
 
 applyConfig()
 let biasX = 0
@@ -42,7 +40,6 @@ function calcS() {
  * - runingcmd: 当前执行的指令
  * 
  * @methods
- * - toggleRecording(): 开始/停止录音
  * - connectmqtt(): 连接MQTT服务
  * - docommand(): 执行指令
  * - FaultDiagnosis(): 故障诊断
@@ -61,24 +58,12 @@ const app = Vue.createApp({
       opacity: 0.5,
       mainColor: '',
       subColor: '',
-      isStopRecording: false,
-      isRecording: false,
-      mediaStream: null,
-      audioContext: null,
-      analyser: null,
-      silenceCount: 0,
-      animationFrameId: null,
       finalTranscript: "",
       commandList: [],
       runingcmd: null,
       checkTimeoutId: null,
-      closetipTimeoutId:null,
       reverse: false,
-      isTipStop: false,
       isruning: false,
-      lastruningtime:new Date(),
-      IsMouseLeave:false,
-      maxDuration : parseInt(configManager.maxDuration)
     }
   },
   async mounted() {
@@ -118,7 +103,6 @@ const app = Vue.createApp({
       }
       //暂停录音且不进行后续处理
       if (data.type == 3) {    
-        this.isTipStop = true;
         this.stopRecording();
         this.isruning = false
       }
@@ -126,11 +110,6 @@ const app = Vue.createApp({
       if (data.type == 4) {  
         this.isruning = true
         this.ExeHNC_TTI(data.message);
-      }
-      //取消tip关闭定时器
-      if(data.type==5) 
-      {
-        if(this.closetipTimeoutId) clearTimeout(this.closetipTimeoutId);
       }
     });
 
@@ -313,181 +292,6 @@ const app = Vue.createApp({
       }
     },
 
-    // ***********************麦克风录音 ***************//
-    async toggleRecording() {
-      
-      //在1秒间隔内点击 则不触发事件
-      const diff = Math.abs(new Date() - this.lastruningtime);
-      if(diff  < 1000)   return;
-      this.lastruningtime = new Date();
-
-      console.log("this.isruning",this.isruning);
-      console.log("this.isRecording",this.isRecording);
-      console.log("this.isStopRecording",this.isStopRecording);
-
-      //防止重复点击
-      if (this.isruning) {
-        //只允许停止
-        if (this.isRecording) {
-          await this.stopRecording();
-        }
-        return;
-      };
-      this.isruning = true
-      if (this.isRecording) {
-        await this.stopRecording();
-      } else {
-        await this.startRecording();
-      }
-    },
-    async startRecording() {
-      //需要多重判断  是否正在录音 ，是否正在执行指令
-      if (this.isRecording || this.isStopRecording  || this.commandList.length > 0 || this.runingcmd != null ) {
-        return;
-      }
-      try {
-        // 初始化音频流
-        try {
-          this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          this.log('[Renderer] 已获得麦克风权限');
-        } catch (err) {
-          if (err.message == "Requested device not found") {
-            this.floatballtip(99, "未检测到麦克风设备");
-          }
-          this.log('[Renderer] 麦克风访问被拒绝:', err.message);
-          return;
-        }
-        // 初始化音频分析
-        this.setupAudioAnalysis();
-        // 通知主进程开始录音
-        const { path } = await ipcRenderer.invoke('audio-start');
-        this.log(`[Renderer] 录音文件路径: ${path}`);
-        // 创建媒体录音器
-        this.mediaRecorder = new MediaRecorder(this.mediaStream);
-        this.setupDataHandler();
-        this.isRecording = true;
-        this.startMonitoring();
-        this.floatballtip(3, '');//通知tip改为录音图标
-        if(this.maxDuration > 2){
-          setTimeout(() => this.stopRecording(), this.maxDuration * 1000);
-        }
-      } catch (err) {
-        this.floatballtip(99, '启动麦克风失败 ');
-        this.log('启动麦克风失败:', err.message);
-      }
-    },
-    setupAudioAnalysis() {
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-
-      this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = 2048;
-      source.connect(this.analyser);
-      //this.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
-    },
-    setupDataHandler() {
-      this.mediaRecorder.ondataavailable = async (e) => {
-        try {
-          const buffer = await e.data.arrayBuffer();
-          ipcRenderer.send('audio-chunk', buffer);
-        } catch (err) {
-          this.floatballtip(99, '音频数据处理失败 ');
-          this.log('[Renderer] 数据处理失败:', err.message);
-        }
-      };
-      this.mediaRecorder.start(500); // 每1秒收集数据
-      //this.log('[Renderer] 媒体录音器已启动');
-    },
-    startMonitoring() {
-      const checkStatus = () => {
-        if (!this.isRecording) return;
-
-        // 分析音量
-        const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-        this.analyser.getByteFrequencyData(dataArray);
-        const volume = Math.max(...dataArray) / 255;
-
-        // 静音检测
-        this.checkSilence(volume);
-
-        this.animationFrameId = requestAnimationFrame(checkStatus);
-      };
-      checkStatus();
-    },
-    checkSilence(volume) {
-      if (this.isStopRecording) return;
-      const SILENCE_THRESHOLD = 0.7; //可调整的静音阈值 最大值为1  
-      //this.log(volume);
-      //此处为超过1s检测到的麦克风电流小于0.6则停止录音
-      if (volume < SILENCE_THRESHOLD) {
-        this.silenceCount += 1 / 60;
-        if (this.silenceCount >= 2) {
-          this.log('[Renderer] 检测到持续静音，自动停止');
-          this.stopRecording();
-        }
-      } else {
-        this.silenceCount = 0;
-      }
-    },
-    async stopRecording() {
-      if (!this.isRecording) return;
-      if (this.isStopRecording) return;
-      var result = {
-        success: false,
-        message: ""
-      }
-      try {
-        this.isRecording = false;
-        this.isStopRecording = true;
-        // 停止媒体录音器
-        if (this.mediaRecorder?.state === 'recording') {
-          this.mediaRecorder.stop();
-        }
-        // 通知主进程停止 保存录音文件并上传接口，返回结果
-        result = await ipcRenderer.invoke('audio-stop');
-        this.log('[Renderer] 录音保存结果:', result);
-      } catch (err) {
-        if(!this.isTipStop)  this.floatballtip(99, '音频数据处理失败 ');
-        this.log('[Renderer] 音频数据处理失败:', err.message);
-        result.message = err.message;
-      } finally {
-        //如果是tip暂停的，则不进行后续调用接口操作
-        if (!this.isTipStop) {
-            this.handlestopRecordAfter(result).then(res => {
-            this.isStopRecording = false;
-          });
-        } else {
-          if(result.path)
-          {
-            const normalizedPath = path.normalize(result.path);
-            fs.unlinkSync(normalizedPath) // 删除文件
-          }
-          this.cleanup();
-        }
-        this.isTipStop = false;
-      }
-    },
-    cleanup() {
-      // 清理资源
-      if (this.animationFrameId) {
-        cancelAnimationFrame(this.animationFrameId);
-      }
-      if (this.mediaStream) {
-        this.mediaStream.getTracks().forEach(track => track.stop());
-      }
-      if (this.audioContext) {
-        this.audioContext.close();
-        this.audioContext = null;
-      }
-
-      this.isRecording = false;
-      this.isStopRecording = false;
-      this.silenceCount = 0;
-      this.log('[Renderer] 资源已清理');
-    },
-
-    // ***********************麦克风录音结束 ***************//
-
     //*************************** MQTT **********************//
     async connectmqtt() {
       try {
@@ -563,19 +367,8 @@ const app = Vue.createApp({
 
     //将结果回传给Tip 进行提示   1 正常消息    0 错误提示
     floatballtip(type, message) {
-      if(type == 0 || type== 99){
+      if(type == 0){
         this.isruning = false
-      }
-      //99 代表录音启动失败
-      if(type == 99){
-        type = 0;
-        //延时跳转到手动输入
-        setTimeout(() => {
-          ipcRenderer.send('message-from-renderer', {
-            target: 'tip', // 指定目标窗口
-            data: { type: 6, message: '录音故障，显示输入框' }
-          });
-        }, 2000);
       }
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
@@ -592,36 +385,7 @@ const app = Vue.createApp({
       });
     },
 
-    //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
-    async handlestopRecordAfter(result) {
-      try {
-        if (!result.success) {
-          this.floatballtip(99, "语音输入故障 ");
-          return;
-        }
-        const normalizedPath = path.normalize(result.path);
-        const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
-        fs.unlinkSync(normalizedPath) // 删除文件
-        if (!uploadres || uploadres.code != 200) {
-          this.floatballtip(99, "语音识别故障 " + (uploadres?.data?.message ? uploadres?.data?.message : ""));
-          return;
-        }
-        result.message = uploadres.data.result;
-        //如果出现为空，说明没有说话，进行提示
-        if (result.message.trim() == '' || result.message.trim() == "") {
-          this.floatballtip(99, "未检测到声音 ");
-          return;
-        }
-        this.floatballtip(1, result.message);
-        await this.ExeHNC_TTI(result.message);
-      } catch (error) {
-        this.floatballtip(99, "语音交互异常 ");
-        this.log("语音交互异常 ", error.message);
-      } finally {
-        //等所有的接口处理完成之后，在进行录音资源释放
-        this.cleanup();
-      }
-    },
+   
 
     //执行指令交互
     async ExeHNC_TTI(message) {
@@ -808,7 +572,7 @@ const app = Vue.createApp({
     setTimeoutSend(target,message){
       setTimeout(() => {
         ipcRenderer.send('message-from-renderer', {
-          target: target, // 指定目标窗口
+          target: target, //指定目标窗口
           data: { type: 0, message }
         });
         this.isruning = false;
@@ -837,14 +601,9 @@ const app = Vue.createApp({
 
     /****************** HTTP接口处理结束 ****************/
 
-    // showMore() {
-    //   this.isNotMore = false
-    //   // ipcRenderer.send('setFloatIgnoreMouse', false)
-    // },
     hanleMouseEnter() {
-      this.IsMouseLeave=false;
       this.opacity = 0.8;
-      if(this.closetipTimeoutId) clearTimeout(this.closetipTimeoutId);
+
       //通知tip 鼠标在悬浮窗上
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
@@ -853,23 +612,14 @@ const app = Vue.createApp({
     },
 
     hanleMouseLeave() {
-      this.IsMouseLeave=true;
       this.opacity = 0.3;
-      //设置定时器 超过几秒隐藏tip框
-      if(this.closetipTimeoutId) clearTimeout(this.closetipTimeoutId);
-      //限定条件  提示框处于消息显示，且没有录音，且没有文本输入
-      //console.log("11111",this.isRecording ,this.isStopRecording,this.isTipStop);
-      if(!this.isRecording && !this.isStopRecording){
-        this.closetipTimeoutId = setTimeout(() => {
-          this.closeTip();
-        },  parseInt(configManager.pagehidetime) * 1000)  
-      }else{
-        //通知tip 鼠标离开了悬浮窗
-        ipcRenderer.send('message-from-renderer', {
-          target: 'tip', // 指定目标窗口
-          data: { type: 5}
-        });
-      }
+
+      //通知tip 鼠标离开了悬浮窗
+      ipcRenderer.send('message-from-renderer', {
+        target: 'tip', // 指定目标窗口
+        data: { type: 5}
+      });
+      
     },
     closeTip() {
       ipcRenderer.send("close-tip");
@@ -925,16 +675,11 @@ const app = Vue.createApp({
 
       await this.snapToEdge();
       if (calcS() && e.button == 0) {
+        this.closeTodo();
         ipcRenderer.send("openTip", "open")
       }
       if (calcS() && e.button == 1) {
         ipcRenderer.send("showTodo", "open")
-      }
-      // 如果不是拖动而是点击，就开始录音
-      //this.log("calcS()",calcS());
-      if (calcS()) {
-        this.closeTodo();
-        await this.toggleRecording();
       }
     },
 
@@ -953,8 +698,6 @@ const app = Vue.createApp({
 
     //   this.log("isNotMore changed to:", newValue);
     // }
-
-
   },
   computed: {
     progress: function () {

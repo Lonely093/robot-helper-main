@@ -114,33 +114,33 @@ const createTipWindow = (data) => {
   // console.log("suspensionWinPositionsuspensionWinPosition",data)
   let display = data.display;
   //const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 280, top: 100 }
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 270, top: screen.getPrimaryDisplay().workAreaSize.height - 140 }
-  let tipWinX = data.x - 205;
+  //const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 270, top: screen.getPrimaryDisplay().workAreaSize.height - 140 }
+  let tipWinX = data.x - 305;
   let tipWinY = data.y;
   // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"111111111")
   if (data.closestEdge == "left") {
-    tipWinX = data.x + 85;
+    tipWinX = data.x + 65;
   } else if (data.closestEdge == "right") {
-    tipWinX = data.x - 205;
+    tipWinX = data.x - 305;
   }
   // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"222222222222222")
   if (tipWinX < 0) {
     tipWinX = 0
-  } else if (tipWinX > display.workArea.width - 200) {
-    tipWinX = display.workArea.width - 200
+  } else if (tipWinX > display.workArea.width - 300) {
+    tipWinX = display.workArea.width - 300
   }
   if (tipWinY < 0) {
     tipWinY = 0
-  } else if (tipWinY > display.workArea.height - 80) {
-    tipWinY = display.workArea.height - 80
+  } else if (tipWinY > display.workArea.height - 60) {
+    tipWinY = display.workArea.height - 60
   }
 
   const win = new BrowserWindow({
     skipTaskbar: true, // 新增这行关闭任务栏显示
-    width: 200,
-    minWidth: 200,
+    width: 300,
+    minWidth: 300,
     resizable: false,
-    height: 80,
+    height: 60,
     x: tipWinX,
     y: tipWinY,
     frame: false,

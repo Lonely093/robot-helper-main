@@ -76,6 +76,7 @@ class AudioRecorder {
     ipcMain.handle('audio-start', this.handleStart.bind(this));
     ipcMain.on('audio-chunk', this.handleChunk.bind(this));
     ipcMain.handle('audio-stop', this.handleStop.bind(this));
+    ipcMain.handle('audio-clear', this.cleanup.bind(this));
 
     console.log('[Recorder] IPC事件注册成功');
   }
@@ -85,6 +86,7 @@ class AudioRecorder {
       ipcMain.removeHandler('audio-start');
       ipcMain.removeHandler('audio-stop');
       ipcMain.removeAllListeners('audio-chunk');
+      ipcMain.removeAllListeners('audio-clear');
     } catch (err) {
       console.error('[Recorder] 清理IPC失败:', err.message);
     }
@@ -357,7 +359,6 @@ class AudioRecorder {
         console.log('清理失败:', err.message);
       }
     }
-
     this.writer = null;
     this.isRecording = false;
     this.filePath = '';
