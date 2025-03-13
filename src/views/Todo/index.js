@@ -98,12 +98,20 @@ const app = Vue.createApp({
       silenceCount: 0,
       animationFrameId: null,
       isruning: false,
-      maxDuration : parseInt(configManager.maxDuration)
+      maxDuration : parseInt(configManager.maxDuration),
+      reverse: false,
     }
   },
 
   mounted() {
-
+    ipcRenderer.on("todo-reverse", (e, data) => {
+      console.log(data)
+      if(data == "left"){
+        this,this.reverse = true;
+      }else{
+        this.reverse = false;
+      }
+    })
     //悬浮窗传递过来的消息
     ipcRenderer.on('message-to-renderer', (event, data) => {
       //this.log('收到消息:', data);

@@ -289,6 +289,8 @@ ipcMain.on('ballWindowMove', (e, data) => {
 
 
   if (pages.todoWin) {
+    pages.todoWin.send('todo-reverse', data.closestEdge);
+
     let todoWinX = data.x - 505;
     let todoWinY = data.y - 350;
     if (data.closestEdge == "left") {

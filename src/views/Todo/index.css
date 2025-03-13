@@ -136,6 +136,14 @@ body {
   align-self: flex-start;
 }
 
+.message.reverse.user {
+  align-self: flex-start;
+}
+
+.message.reverse.bot {
+  align-self: flex-end;
+}
+
 .message-content {
   padding: 4px 6px;
   border-radius: 2px;
@@ -149,15 +157,26 @@ body {
 
 
 /* 用户消息样式 */
+.message.reverse.user .message-content {
+  background: #d3f261;
+  border-radius: 8px 8px 8px 0px;
+}
+
+/* 机器人消息样式 */
+.message.reverse.bot .message-content {
+  background: #f5f7fa;
+  border-radius: 8px 8px 0px 8px;
+}
+
 .message.user .message-content {
   background: #d3f261;
-  border-radius: 8px 8px 8px 8px;
+  border-radius: 8px 8px 0px 8px;
 }
 
 /* 机器人消息样式 */
 .message.bot .message-content {
   background: #f5f7fa;
-  border-radius: 8px 8px 8px 8px;
+  border-radius: 8px 8px 8px 0px;
 }
 
 /* 动画效果 */
