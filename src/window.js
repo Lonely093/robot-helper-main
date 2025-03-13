@@ -119,7 +119,7 @@ const createTipWindow = (data) => {
   let tipWinY = data.y;
   // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"111111111")
   if (data.closestEdge == "left") {
-    tipWinX = data.x + 65;
+    tipWinX = data.x + 50;
   } else if (data.closestEdge == "right") {
     tipWinX = data.x - 305;
   }
@@ -131,8 +131,8 @@ const createTipWindow = (data) => {
   }
   if (tipWinY < 0) {
     tipWinY = 0
-  } else if (tipWinY > display.workArea.height - 60) {
-    tipWinY = display.workArea.height - 60
+  } else if (tipWinY > display.workArea.height - 45) {
+    tipWinY = display.workArea.height - 45
   }
 
   const win = new BrowserWindow({
@@ -140,7 +140,7 @@ const createTipWindow = (data) => {
     width: 300,
     minWidth: 300,
     resizable: false,
-    height: 60,
+    height: 45,
     x: tipWinX,
     y: tipWinY,
     frame: false,
@@ -160,11 +160,11 @@ const createTipWindow = (data) => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Tip/index.html'));
-  //win.webContents.openDevTools({ mode: 'detach' })
+  win.webContents.openDevTools({ mode: 'detach' })
   return win
 }
 const createConfigWindow = () => {
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 360, top: screen.getPrimaryDisplay().workAreaSize.height - 840 }
+  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 345, top: screen.getPrimaryDisplay().workAreaSize.height - 840 }
   const win = new BrowserWindow({
     skipTaskbar: true, // 新增这行关闭任务栏显示
     width: 300,

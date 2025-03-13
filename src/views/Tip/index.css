@@ -26,7 +26,6 @@ div {
     );
   width: 100vw;
   height: 100vh;
-  padding: 8px;
   border-radius: 10px;
   /* 圆角大小 */
   overflow: hidden;
@@ -61,10 +60,31 @@ div {
 }
 
 
+.canvas-container {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 10px;  /* 控制圆角大小 */
+  overflow: hidden;     /* 关键：裁剪超出圆角区域的内容 */
+}
+
+.visualizer {
+  background: transparent !important; /* 透明背景 */
+}
+
+/* 添加冲浪视图专用样式 */
+.surfer-wave {
+  background: linear-gradient(180deg, #001a33 0%, #000d1a 100%);
+}
+
+.surfer-particle {
+  filter: drop-shadow(0 0 2px rgba(0, 255, 136, 0.5));
+}
+
+
 .input-container {
   position: absolute;
   /* 改为相对父容器定位 */
-  top:15px;
+  top:10px;
   left: 5px;
   right: 5px;
   /* 横向排列 */

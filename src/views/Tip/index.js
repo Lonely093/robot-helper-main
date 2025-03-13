@@ -47,10 +47,14 @@ const app = Vue.createApp({
       isUserStop : false,
       placeholdertext:"有问题尽管问我...",
       isruning : false,
+      isFirst : true,
+      canvasCtx : null,
+      dataArray : null,
+      canvsanimationFrameId : null,
     }
   },
 
-  mounted() {
+  async  mounted() {
 
     ipcRenderer.on('message-to-renderer', (event, data) => {
       //鼠标在机器人上
@@ -76,12 +80,19 @@ const app = Vue.createApp({
 
     //页面启动，默认清空录音记录
     ipcRenderer.invoke('audio-clear');
-    //再启动录音
-    this.startRecording();
 
+      //初始化画布
+      this.initCanvas();
+
+    //再启动录音
+    await this.startRecording();
+  
+    this.isFirst = false;
   },
   beforeUnmount() {
     if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
+    if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId);
+    if(this.canvsanimationFrameId)  cancelAnimationFrame(this.canvsanimationFrameId);
   },
   methods: {
 
@@ -89,6 +100,38 @@ const app = Vue.createApp({
     log(msg, ctx) {
       ipcRenderer.invoke('app-log', { msg: 'tip--' + msg, ctx });
     },
+
+    // 初始化画布
+    initCanvas() {
+      const canvas = this.$refs.waveCanvas
+      const container = canvas.parentElement
+      
+      // 高清屏适配
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = 300 * dpr
+      canvas.height = 45 * dpr
+      canvas.style.width = canvas.width + 'px'
+      canvas.style.height = canvas.height + 'px'
+
+      this.canvasCtx = canvas.getContext('2d')
+      this.canvasCtx.scale(dpr, dpr)
+
+      this.createClipPath()
+    },
+    // 创建圆形裁剪区域
+    createClipPath() {
+      const canvas = this.$refs.waveCanvas
+      const rect = canvas.getBoundingClientRect()
+      this.canvasCtx.beginPath()
+      this.canvasCtx.moveTo(20, 0)
+      this.canvasCtx.arcTo(rect.width, 0, rect.width, rect.height, 20)
+      this.canvasCtx.arcTo(rect.width, rect.height, 0, rect.height, 20)
+      this.canvasCtx.arcTo(0, rect.height, 0, 0, 20)
+      this.canvasCtx.arcTo(0, 0, rect.width, 0, 20)
+      this.canvasCtx.closePath()
+      this.canvasCtx.clip()
+    },
+
 
     changeInput() {
       this.showinput = true;
@@ -141,8 +184,8 @@ const app = Vue.createApp({
       this.startTipCloseTimer();
     },
 
-    //鼠标按下输入框，暂停录音并不做后续处理
-    async handleMouseDown(e) {
+    //暂停录音并不做后续处理
+    async userStopRecording() {
       this.isUserStop=true;
       await this.stopRecording();
     },
@@ -211,9 +254,94 @@ const app = Vue.createApp({
 
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 2048;
+
+      const bufferLength = this.analyser.frequencyBinCount
+      this.dataArray = new Uint8Array(bufferLength)
+
       source.connect(this.analyser);
-      //this.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
+
+      //启动绘制循环
+      this.draw()
     },
+
+    // 绘制音浪
+    draw() {
+      if (!this.analyser) return
+      
+      const canvas = this.$refs.waveCanvas
+      const WIDTH = canvas.width / (window.devicePixelRatio || 1)
+      const HEIGHT = canvas.height / (window.devicePixelRatio || 1)
+      
+      // 获取频率数据
+      this.analyser.getByteFrequencyData(this.dataArray)
+      
+      // 使用透明背景替代原来的半透明黑色
+      this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT)
+      
+      this.drawBars(WIDTH,HEIGHT);
+      
+      // 循环绘制
+      this.canvsanimationFrameId = requestAnimationFrame(this.draw)
+    },
+
+     /* 1. 基础柱状图 */
+    drawBars(width, height) {
+      const barWidth = (width / this.dataArray.length) * 25
+      let x = 0
+
+      for (let i = 0; i < this.dataArray.length; i++) {
+        const barHeight = (this.dataArray[i] / 255) * height
+        const gradient = this.canvasCtx.createLinearGradient(0, height - barHeight, 0, height)
+        gradient.addColorStop(0, '#00ff88')
+        gradient.addColorStop(1, '#0066ff')
+        
+        this.canvasCtx.fillStyle = gradient
+        this.canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight)
+        x += barWidth + 2
+      }
+    },
+
+    // 波浪线模式
+    drawWave(width, height) {
+      const ctx = this.canvasCtx
+      const lineWidth = 2
+      const baseline = height * 0.8 // 基线位置
+      
+      ctx.beginPath()
+      ctx.moveTo(0, baseline)
+
+      // 生成平滑曲线路径
+      this.dataArray.forEach((value, i) => {
+        const x = (i / this.dataArray.length) * width
+        const amplitude = (value / 255) * (height * 0.6) // 振幅范围
+        const y = baseline - amplitude
+        
+        // 使用二次贝塞尔曲线平滑连接
+        if (i > 0) {
+          const prevX = ((i - 1) / this.dataArray.length) * width
+          const controlX = (prevX + x) / 2
+          ctx.quadraticCurveTo(controlX, y, x, y)
+        }
+      })
+
+      // 样式配置
+      ctx.strokeStyle = '#00ff88'
+      ctx.lineWidth = lineWidth
+      ctx.lineCap = 'round'
+      ctx.stroke()
+
+      // 添加渐变填充（可选）
+      const gradient = ctx.createLinearGradient(0, 0, 0, height)
+      gradient.addColorStop(0, 'rgba(0, 255, 136, 0.2)')
+      gradient.addColorStop(1, 'rgba(0, 102, 255, 0.1)')
+      
+      ctx.fillStyle = gradient
+      ctx.lineTo(width, height)
+      ctx.lineTo(0, height)
+      ctx.closePath()
+      ctx.fill()
+    },
+
     setupDataHandler() {
       this.mediaRecorder.ondataavailable = async (e) => {
         try {
@@ -332,6 +460,10 @@ const app = Vue.createApp({
       if (this.animationFrameId) {
         cancelAnimationFrame(this.animationFrameId);
       }
+      if (this.canvsanimationFrameId) {
+        cancelAnimationFrame(this.canvsanimationFrameId);
+      }
+      
       if (this.mediaStream) {
         this.mediaStream.getTracks().forEach(track => track.stop());
       }

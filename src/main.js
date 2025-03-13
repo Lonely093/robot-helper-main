@@ -269,7 +269,7 @@ ipcMain.on('ballWindowMove', (e, data) => {
     let tipWinX = data.x - 305;
     let tipWinY = data.y;
     if (data.closestEdge == "left") {
-      tipWinX = data.x + 65;
+      tipWinX = data.x + 50;
     } else if (data.closestEdge == "right") {
       tipWinX = data.x - 305;
     }
@@ -280,8 +280,8 @@ ipcMain.on('ballWindowMove', (e, data) => {
     }
     if (tipWinY < 0) {
       tipWinY = 0
-    } else if (tipWinY > display.workArea.height - 60) {
-      tipWinY = display.workArea.height - 60
+    } else if (tipWinY > display.workArea.height - 45) {
+      tipWinY = display.workArea.height - 45
     }
     pages.tipWin.setBounds({ x: tipWinX, y: tipWinY })
   }
