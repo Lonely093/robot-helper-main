@@ -32,7 +32,7 @@ body {
   right: 0px;
   bottom: 0px;
   background: linear-gradient(to bottom, #FFEA75, #05E6FF);
-  border-radius: 11px;
+  border-radius: 5px;
   z-index: 0; 
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box,
