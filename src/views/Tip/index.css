@@ -13,17 +13,7 @@ div {
 }
 
 .tip-root {
-  background: linear-gradient(to right,
-      /* 渐变方向：从上到下 */
-      #000000,
-      /* 起始黑色 */
-      #1a1a1a 25%,
-      /* 中间过渡色 */
-      #003366 75%,
-      /* 蓝黑色过渡 */
-      #0000ff
-      /* 最终蓝色 */
-    );
+  background: rgba(26, 40, 40, 1);
   width: 100vw;
   height: 100vh;
   border-radius: 10px;
@@ -82,9 +72,10 @@ div {
 
 
 .input-container {
+  height: 30px;
   position: absolute;
   /* 改为相对父容器定位 */
-  top:10px;
+  top:8px;
   left: 5px;
   right: 5px;
   /* 横向排列 */
@@ -97,17 +88,7 @@ div {
   /* 输入框占据剩余空间 */
   color: #fff;
   border: 1px solid rgba(50, 53, 54, 0.9);
-  background: linear-gradient(to right,
-      /* 渐变方向：从上到下 */
-      #000000,
-      /* 起始黑色 */
-      #1a1a1a 25%,
-      /* 中间过渡色 */
-      #004c97 75%,
-      /* 蓝黑色过渡 */
-      #003366
-      /* 最终蓝色 */
-    );
+  background: #303d3d;
   width: 150px;
   border-radius: 4px;
   outline: none;
@@ -120,7 +101,7 @@ input::-webkit-input-placeholder {
 
 .send-button {
   padding: 5px 10px;
-  background: rgba(21, 92, 224, 0.9);
+  background: #303d3d;
   color: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 4px;
@@ -131,6 +112,11 @@ input::-webkit-input-placeholder {
 }
 
 .send-button:hover {
-  background: #0056b3;
+  background: rgb(73, 94, 94);
 }
 
+.btn-icon {
+  width: 100%;
+  /* 继承按钮尺寸 */
+  height: 100%;
+}
