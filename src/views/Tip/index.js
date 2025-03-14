@@ -291,7 +291,7 @@ const app = Vue.createApp({
 
      /* 1. 基础柱状图 */
     drawBars(width, height) {
-      const barWidth = (width / this.dataArray.length) * 25
+      const barWidth = (width / this.dataArray.length) * 15
       let x = 0
 
       for (let i = 0; i < this.dataArray.length; i++) {
