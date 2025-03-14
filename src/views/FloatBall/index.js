@@ -680,6 +680,7 @@ const app = Vue.createApp({
       moveS[0] = e.screenX - biasX
       moveS[1] = e.screenY - biasY
       document.addEventListener('mousemove', this.throttledMoveHandler)
+      document.addEventListener('mouseup', this.handleMouseUp)
 
     },
 
