@@ -353,11 +353,11 @@ const app = Vue.createApp({
         } else {
           //指令执行失败
           if (this.runingcmd.type == 1) {
-            this.floatballtip(0, "指令执行失败 " + msg);
+            this.floatballtip(0, "抱歉未识别到正确的指令，请重新输入");
             this.commandList = [];
           }
           if (this.runingcmd.type == 2) {
-            this.floatballtodo(0, "指令执行失败 " + msg);
+            this.floatballtodo(0, "抱歉未识别到正确的指令，请重新输入");
           }
           this.runingcmd = null;
         }
@@ -452,11 +452,11 @@ const app = Vue.createApp({
         if (res && res.code == "200") {
           this.floatballtodo(1, res.data.msg, res.data.command_list);
         } else {
-          this.floatballtodo(0, "故障诊断错误:" + res.data.msg);
+          this.floatballtodo(0, "抱歉未识别到正确的指令，请重新输入");
         }
       } catch (error) {
         this.log("hnc_fd 异常:", error.message);
-        this.floatballtodo(0, "故障诊断异常:" + error.message);
+        this.floatballtodo(0, "抱歉未识别到正确的指令，请重新输入");
       }
     },
 

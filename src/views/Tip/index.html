@@ -18,17 +18,17 @@
       </div> -->
 
       <div  v-show="isRecording || isStopRecording || isFirst">
-        <canvas ref="waveCanvas" class="visualizer " @click="userStopRecording"></canvas>
+        <canvas ref="waveCanvas" class="visualizer " ></canvas>
       </div>
 
       <div class="input-container" v-show="!isRecording && !isStopRecording && !isFirst">
-        <input v-model="userInput" :placeholder="placeholdertext" @keyup.enter="sendMessage" class="input-field">
+        <input v-model="userInput" :placeholder="placeholdertext" @keyup.enter="sendMessage" @click="handleMouseDown"  class="input-field">
         </input>
 
         <button @click="sendMessage" v-show="!isruning" class="send-button">
           <img src="../../assets/send.svg" alt="发送" class="btn-icon">
         </button>
-        <button v-show="!isRecording && !isStopRecording" @click="toggleRecording" @click="toggleRecording"
+        <button v-show="!isRecording && !isStopRecording && !isruning" @click="toggleRecording" @click="toggleRecording"
           class="send-button">
           <img v-show="isCanRecording" src="../../assets/voice.svg" alt="语音" class="btn-icon">
           <img v-show="!isCanRecording" src="../../assets/unvoice.svg" alt="语音" class="btn-icon">

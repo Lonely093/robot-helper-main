@@ -90,7 +90,7 @@ const app = Vue.createApp({
       //     "command": "503015"
       //   }
       // ],
-
+      autoSendMessageId: null,
       isCanRecording: true,
       deviceCheckTimer: true,
       isStopRecording: false,
@@ -176,6 +176,7 @@ const app = Vue.createApp({
   },
   beforeUnmount() {
     if(this.deviceCheckTimer)  clearTimeout(this.deviceCheckTimer)
+    if(this.autoSendMessageId)  clearTimeout(this.autoSendMessageId)
     if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId)
     if(this.canvsanimationFrameId)  cancelAnimationFrame(this.canvsanimationFrameId)
   },
@@ -190,11 +191,15 @@ const app = Vue.createApp({
       ipcRenderer.invoke('app-log', { msg: 'todo--' + msg, ctx });
     },
 
+    async  handleMouseDown(e) {
+      if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
+    },
 
     //暂停录音并不做后续处理
     async userStopRecording() {
       this.isUserStop=true;
       await this.stopRecording();
+      this.isUserStop=false;
     },
 
     // ***********************麦克风录音 ***************//
@@ -437,7 +442,6 @@ const app = Vue.createApp({
           }
           this.cleanup();
         }
-        this.isUserStop = false;
       }
     },
     cleanup() {
@@ -476,7 +480,9 @@ const app = Vue.createApp({
         } else {
           this.userInput = uploadres.data.result;
           if (this.userInput.trim() !== '') {
-            this.sendMessage();
+            this.autoSendMessageId= setTimeout(() => {
+              this.sendMessage();
+            }, 2000);
           }else{
             this.sendErrorMessage("没太听清您的声音，请重试");
           }
@@ -484,12 +490,6 @@ const app = Vue.createApp({
       }
       //等所有的接口处理完成之后，在进行录音资源释放
       this.cleanup();
-    },
-
-    //鼠标按下输入框，暂停录音并不做后续处理
-    async handleMouseDown(e) {
-      this.isUserStop = true;
-      await this.stopRecording();
     },
 
     // ***********************麦克风录音结束 ***************//
