@@ -38,7 +38,7 @@
         <button @click="sendMessage" v-show="!isruning" class="send-button">
           <img src="../../assets/send.svg" alt="发送" class="btn-icon">
         </button>
-        <button v-show="!isRecording" @click="toggleRecording" class="send-button">
+        <button v-show="!isRecording && !isruning" @click="toggleRecording" class="send-button">
           <img v-show="isCanRecording" src="../../assets/voice.svg" alt="语音" class="btn-icon">
           <img v-show="!isCanRecording" src="../../assets/unvoice.svg" alt="语音" class="btn-icon">
         </button>
