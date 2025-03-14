@@ -29,11 +29,16 @@
 
       <!-- 输入框 -->
       <div class="input-container">
-        <input v-model="userInput" :placeholder="placeholdertext" @mousedown="handleMouseDown" @keyup.enter="sendMessage" class="input-field">
+        <input v-model="userInput" :placeholder="placeholdertext" @mousedown="handleMouseDown"
+          @keyup.enter="sendMessage" class="input-field">
         </input>
-        <button @click="sendMessage" class="send-button">发送</button>
-        <button v-show="!isRecording" @click="toggleRecording" class="send-button">语音</button>
-        <img v-show="isRecording "  @click="toggleRecording" src="../../assets/vedio.gif" width="44" height="28">
+        <button @click="sendMessage" class="send-button">
+          <img src="../../assets/send.svg" alt="发送" class="btn-icon">
+        </button>
+        <button v-show="!isRecording" @click="toggleRecording" class="send-button">
+          <img src="../../assets/voice.svg" alt="语音" class="btn-icon">
+        </button>
+        <img v-show="isRecording " @click="toggleRecording" src="../../assets/vedio.gif" width="44" height="28">
       </div>
     </div>
 
