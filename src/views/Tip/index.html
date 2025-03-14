@@ -22,7 +22,7 @@
       </div>
 
       <div class="input-container" v-show="!isRecording && !isStopRecording && !isFirst">
-        <input v-model="userInput" :placeholder="placeholdertext" @keyup.enter="sendMessage" class="input-field">
+        <input v-model="userInput" :placeholder="placeholdertext" @keyup.enter="sendMessage" @click="handleMouseDown"  class="input-field">
         </input>
 
         <button @click="sendMessage" v-show="!isruning" class="send-button">

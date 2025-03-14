@@ -90,7 +90,7 @@ const app = Vue.createApp({
       //     "command": "503015"
       //   }
       // ],
-
+      autoSendMessageId: null,
       isCanRecording: true,
       deviceCheckTimer: true,
       isStopRecording: false,
@@ -176,6 +176,7 @@ const app = Vue.createApp({
   },
   beforeUnmount() {
     if(this.deviceCheckTimer)  clearTimeout(this.deviceCheckTimer)
+    if(this.autoSendMessageId)  clearTimeout(this.autoSendMessageId)
     if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId)
     if(this.canvsanimationFrameId)  cancelAnimationFrame(this.canvsanimationFrameId)
   },
@@ -188,6 +189,10 @@ const app = Vue.createApp({
     //发送日志记录
     log(msg, ctx) {
       ipcRenderer.invoke('app-log', { msg: 'todo--' + msg, ctx });
+    },
+
+    async  handleMouseDown(e) {
+      if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
     },
 
     //暂停录音并不做后续处理
@@ -475,7 +480,9 @@ const app = Vue.createApp({
         } else {
           this.userInput = uploadres.data.result;
           if (this.userInput.trim() !== '') {
-            this.sendMessage();
+            this.autoSendMessageId= setTimeout(() => {
+              this.sendMessage();
+            }, 2000);
           }else{
             this.sendErrorMessage("没太听清您的声音，请重试");
           }

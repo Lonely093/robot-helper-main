@@ -243,7 +243,7 @@ class MqttClient {
   }
 
   // 发布消息
-  publish(topic, message, options = { qos: 1, retain: false }) {
+  publish(topic, message, options = this.setoptions) {
     if (this.isConnected) {
       this._realPublish(topic, message, options)
     } else {

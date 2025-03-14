@@ -30,7 +30,7 @@ const app = Vue.createApp({
       IsMouseLeave:true,
       isMouseOnFloatBall:true,
       tipCloseTimeoutId: null,
-
+      autoSendMessageId: null,
       lastruningtime:new Date(),
       isCanRecording: false,
       deviceCheckTimer: null,
@@ -103,6 +103,7 @@ const app = Vue.createApp({
   },
   beforeUnmount() {
     if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
+    if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
     if(this.deviceCheckTimer)  clearTimeout(this.deviceCheckTimer)
     if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId)
     if(this.canvsanimationFrameId)  cancelAnimationFrame(this.canvsanimationFrameId)
@@ -124,7 +125,9 @@ const app = Vue.createApp({
         data: { type: 3 , message : "暂停录音" }
       });
     },
-
+    async  handleMouseDown(e) {
+      if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
+    },
     sendMessage() {
       if (this.userInput.trim() !== '') {
         this.isruning=true;
@@ -542,7 +545,7 @@ const app = Vue.createApp({
     async handlestopRecordAfter(result) {
       try {
         if (!result.success) {
-          this.RecordingErrorMessage(99, "语音输入故障 ");
+          this.RecordingErrorMessage(99, "语音输入故障");
           return;
         }
         const normalizedPath = path.normalize(result.path);
@@ -560,7 +563,10 @@ const app = Vue.createApp({
         }
         //发送消息给悬浮窗处理
         this.userInput=result.message;
-        this.sendMessage();
+        //两秒钟后自动发送，若两秒钟内点击输入框则停止发送
+        this.autoSendMessageId= setTimeout(() => {
+          this.sendMessage();
+        }, 2000);
       } catch (error) {
         this.RecordingErrorMessage(99, "语音交互异常 ");
         this.log("语音交互异常 ", error.message);

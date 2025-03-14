@@ -32,7 +32,7 @@
         <canvas ref="waveCanvas" class="visualizer" @click="userStopRecording"></canvas>
       </div>
       <div class="input-container" v-show="!isRecording && !isStopRecording" >
-        <input v-model="userInput" :placeholder="placeholdertext"
+        <input v-model="userInput" :placeholder="placeholdertext" @click="handleMouseDown"
           @keyup.enter="sendMessage" class="input-field">
         </input>
         <button @click="sendMessage" v-show="!isruning" class="send-button">
