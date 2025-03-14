@@ -6,7 +6,6 @@ const path = require('path');
 const fs = require('fs');
 const configManager = require("../../utils/configManager");
 
-
 let currConfig = {}
 /**
  * Vue应用组件 - 提示框
@@ -27,10 +26,7 @@ const app = Vue.createApp({
 
   data() {
     return {
-      showtext: false,
-      showinput: false,
       userInput: "",
-      tipText: '请问你需要什么帮助？',
       IsMouseLeave:true,
       isMouseOnFloatBall:true,
       tipCloseTimeoutId: null,
@@ -44,6 +40,8 @@ const app = Vue.createApp({
       silenceCount: 0,
       animationFrameId: null,
       maxDuration : parseInt(configManager.maxDuration),
+      silenceHold : parseInt(configManager.silenceHold),
+      silenceStop : parseInt(configManager.silenceStop),
       isUserStop : false,
       placeholdertext:"有问题尽管问我...",
       isruning : false,
@@ -51,8 +49,6 @@ const app = Vue.createApp({
       canvasCtx : null,
       dataArray : null,
       canvsanimationFrameId : null,
-      phase: 0,      // 相位控制波动动画
-      channels: 3    // 波浪线数量
     }
   },
 
@@ -86,8 +82,8 @@ const app = Vue.createApp({
     //页面启动，默认清空录音记录
     ipcRenderer.invoke('audio-clear');
 
-      //初始化画布
-      this.initCanvas();
+    //初始化画布
+    this.initCanvas();
 
     //再启动录音
     await this.startRecording();
@@ -128,15 +124,14 @@ const app = Vue.createApp({
       const canvas = this.$refs.waveCanvas
       const rect = canvas.getBoundingClientRect()
       this.canvasCtx.beginPath()
-      this.canvasCtx.moveTo(20, 0)
-      this.canvasCtx.arcTo(rect.width, 0, rect.width, rect.height, 20)
-      this.canvasCtx.arcTo(rect.width, rect.height, 0, rect.height, 20)
-      this.canvasCtx.arcTo(0, rect.height, 0, 0, 20)
-      this.canvasCtx.arcTo(0, 0, rect.width, 0, 20)
+      this.canvasCtx.moveTo(10, 0)
+      this.canvasCtx.arcTo(rect.width, 0, rect.width, rect.height, 10)
+      this.canvasCtx.arcTo(rect.width, rect.height, 0, rect.height, 10)
+      this.canvasCtx.arcTo(0, rect.height, 0, 0, 10)
+      this.canvasCtx.arcTo(0, 0, rect.width, 0, 10)
       this.canvasCtx.closePath()
       this.canvasCtx.clip()
     },
-
 
     changeInput() {
       this.showinput = true;
@@ -151,6 +146,7 @@ const app = Vue.createApp({
 
     sendMessage() {
       if (this.userInput.trim() !== '') {
+        this.isruning=true;
         //同时将消息发送至悬浮窗
         ipcRenderer.send('message-from-renderer', {
           target: 'floatball', // 指定目标窗口
@@ -159,7 +155,6 @@ const app = Vue.createApp({
             message: this.userInput
           }
         });
-        this.isruning=true;
       }
     },
 
@@ -268,15 +263,14 @@ const app = Vue.createApp({
       const canvas = this.$refs.waveCanvas
       const WIDTH = canvas.width / (window.devicePixelRatio || 1)
       const HEIGHT = canvas.height / (window.devicePixelRatio || 1)
-      
-      // 获取频率数据
-      this.analyser.getByteFrequencyData(this.dataArray)
-      
       // 使用透明背景替代原来的半透明黑色
       this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT)
-      
+      // 获取频率数据
+      this.analyser.getByteFrequencyData(this.dataArray)
       this.drawBars(WIDTH,HEIGHT);
-      this.phase += 0.03
+
+      //this.drawFrequencyBars(this.canvasCtx,canvas);
+
       // 循环绘制
       this.canvsanimationFrameId = requestAnimationFrame(this.draw)
     },
@@ -289,8 +283,8 @@ const app = Vue.createApp({
       for (let i = 0; i < this.dataArray.length; i++) {
         const barHeight = (this.dataArray[i] / 255) * height
         const gradient = this.canvasCtx.createLinearGradient(0, height - barHeight, 0, height)
-        gradient.addColorStop(0, '#00ff88')
-        gradient.addColorStop(1, '#0066ff')
+        gradient.addColorStop(0, '#13cccf')
+        gradient.addColorStop(1, '#13cccf')
         
         this.canvasCtx.fillStyle = gradient
         this.canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight)
@@ -339,39 +333,84 @@ const app = Vue.createApp({
       ctx.fill()
     },
 
-    drawWaveform() {
-      const { width, height } = this.canvasCtx.canvas
-      const channelHeight = height / this.channels
-      
-      // 创建多轨波形
-      for(let ch = 0; ch < this.channels; ch++) {
-        this.canvasCtx.beginPath()
-        
-        // 配置轨道样式
-        const gradient = this.canvasCtx.createLinearGradient(0, 0, width, 0)
-        gradient.addColorStop(0, `hsl(${240 + ch * 30}, 80%, 60%)`) // 蓝紫色系
-        gradient.addColorStop(1, `hsl(${270 + ch * 15}, 80%, 60%)`)
-        
-        this.canvasCtx.strokeStyle = gradient
-        this.canvasCtx.lineWidth = 2
-        this.canvasCtx.lineJoin = 'round'
+    // 创建渐变颜色
+    createWaveGradient (ctx, width) {
+      const gradient = ctx.createLinearGradient(0, 0, width, 0);
+      gradient.addColorStop(0, '#00fff7');   // 底部青蓝色
+      gradient.addColorStop(1, '#00ffaa');   // 顶部亮青色
+      return gradient;
+    },
+  
+    // 绘制频谱
+    drawFrequencyBars(ctx,canvas) {
+      this.analyser.getByteTimeDomainData(this.dataArray)
+      // 绘制基准线
+      ctx.setLineDash([5,5]);
+      ctx.beginPath();
+      ctx.strokeStyle = '#13CCCF';
+      ctx.moveTo(0, canvas.height / 2);
+      ctx.lineTo(canvas.width, canvas.height/2);
+      ctx.stroke();
 
-        // 生成波形路径
-        for(let i = 0; i < width; i++) {
-          const dataIndex = Math.floor((i / width) * this.dataArray.length)
-          const amplitude = (this.dataArray[dataIndex] / 128 - 1) // 转换为-1~1范围
-          
-          // 多轨相位偏移
-          const phaseOffset = ch * Math.PI / 3
-          const y = channelHeight * (ch + 0.5) + 
-                    amplitude * channelHeight * 0.4 * 
-                    Math.sin(i * 0.05 + this.phase + phaseOffset)
-          
-          if(i === 0) this.canvasCtx.moveTo(i, y)
-          else this.canvasCtx.lineTo(i, y)
-        }
-        this.canvasCtx.stroke()
+      // 波形参数
+      const barWidth = 5;
+      const barSpacing = 5;
+      const maxAmplitude = canvas.height * 5;
+
+      for (let i = 0; i < this.dataArray.length; i++) {
+        const amplitude = (this.dataArray[i] - 128) / 128 * maxAmplitude;
+        const xPos = i * (barWidth + barSpacing);
+
+        // 立体柱体绘制
+        ctx.fillStyle = '#13CCCF';
+        ctx.fillRect(
+          xPos,
+          canvas.height / 2 - amplitude,  // 上部柱体
+          barWidth,
+          amplitude                     // 柱体高度
+        );
+        ctx.fillRect(
+          xPos,
+          canvas.height/2,              // 下部柱体
+          barWidth,
+          amplitude
+        );
       }
+
+      // // 绘制中心基准线
+      // ctx.beginPath();
+      // ctx.strokeStyle = '#ddd';
+      // ctx.setLineDash([5, 5]);
+      // ctx.moveTo(0, canvas.height/2);
+      // ctx.lineTo(canvas.width, canvas.height/2);
+      // ctx.stroke();
+
+      // // 绘制动态波形
+      // const barWidth = 3;
+      // const maxHeight = canvas.height/2 - 10;
+      
+      // for (let i = 0; i < this.dataArray.length; i++) {
+      //   const amplitude = (this.dataArray[i] - 128) / 128 * maxHeight;
+      //   const x = i * (barWidth + 1);
+        
+      //   // 上侧波形
+      //   ctx.fillStyle = '#009cff';
+      //   ctx.fillRect(
+      //     x, 
+      //     canvas.height/2 - amplitude - barWidth,  // 上侧起点
+      //     barWidth, 
+      //     barWidth
+      //   );
+        
+      //   // 下侧波形
+      //   ctx.fillRect(
+      //     x,
+      //     canvas.height/2 + amplitude,  // 下侧起点
+      //     barWidth,
+      //     barWidth
+      //   );
+      // }
+
     },
 
     setupDataHandler() {
@@ -404,12 +443,10 @@ const app = Vue.createApp({
     },
     checkSilence(volume) {
       if (this.isStopRecording) return;
-      const SILENCE_THRESHOLD = 0.7; //可调整的静音阈值 最大值为1  
-      //this.log(volume);
       //此处为超过1s检测到的麦克风电流小于0.6则停止录音
-      if (volume < SILENCE_THRESHOLD) {
+      if (volume * 100 < this.silenceHold) {
         this.silenceCount += 1 / 60;
-        if (this.silenceCount >= 2) {
+        if (this.silenceCount >= this.silenceStop) {
           this.log('[Renderer] 检测到持续静音，自动停止');
           this.stopRecording();
         }
@@ -515,9 +552,7 @@ const app = Vue.createApp({
 
   },
   watch: {
-    tipText(newVal) {
-      //this.startTipCloseTimer() // 值变化时重置倒计时
-    }
+    
   }
 })
 app.mount("#app")

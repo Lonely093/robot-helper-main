@@ -442,26 +442,18 @@ const app = Vue.createApp({
       this.showTodo();
       this.closeTip();
       //存在偶发消息丢失  目前采用 延时300ms 发送
+      this.floatballtodo(3, message);
       try {
         //res = await apis.hnc_fd(result.message);
         const res = await ipcRenderer.invoke('hnc_fd', message);
         if (res && res.code == "200") {
-          setTimeout(() => {
-            this.floatballtodo(3, message);
-            this.floatballtodo(1, res.data.msg, res.data.command_list);
-          }, 300);
+          this.floatballtodo(1, res.data.msg, res.data.command_list);
         } else {
-          setTimeout(() => {
-            this.floatballtodo(3, message);
-            this.floatballtodo(0, "故障诊断错误:" + res.data.msg);
-          }, 300);
+          this.floatballtodo(0, "故障诊断错误:" + res.data.msg);
         }
       } catch (error) {
         this.log("hnc_fd 异常:", error.message);
-        setTimeout(() => {
-          this.floatballtodo(3, message);
-          this.floatballtodo(0, "故障诊断异常:" + error.message);
-        }, 300);
+        this.floatballtodo(0, "故障诊断异常:" + error.message);
       }
     },
 
@@ -497,7 +489,7 @@ const app = Vue.createApp({
           timestamp: Date.now()
         }
         this.log("推送MQTT指令：", sendcmd);
-        mqttClient.publish('Command/Action/' + cmd.app_id, sendcmd)
+        mqttClient.publish('Command/Action', sendcmd)
 
         //模拟返回MQTT
         // setTimeout(() => {

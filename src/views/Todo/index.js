@@ -98,8 +98,11 @@ const app = Vue.createApp({
       analyser: null,
       silenceCount: 0,
       animationFrameId: null,
+      lastruningtime: null,
       isruning: false,
       maxDuration : parseInt(configManager.maxDuration),
+      silenceHold : parseInt(configManager.silenceHold),
+      silenceStop : parseInt(configManager.silenceStop),
       reverse: false,
     }
   },
@@ -125,8 +128,10 @@ const app = Vue.createApp({
       if (data.type == 3) {
         messageType = "user";
       } else if (data.type == 0) {
+        this.isruning = false;
         botMessage = data.message;
       } else if (data.type == 1) {
+        this.isruning = false;
         const separator = "</think>\n\n";
         const separatorIndex = data.message.indexOf(separator);
         if (separatorIndex !== -1) {
@@ -163,9 +168,10 @@ const app = Vue.createApp({
     // ***********************麦克风录音 ***************//
     async toggleRecording() {
 
-      //防止重复点击
-      if (this.isruning) return;
-      this.isruning = true
+      //在1秒间隔内点击 则不触发事件
+      const diff = Math.abs(new Date() - this.lastruningtime);
+      if(diff  < 1000)   return;
+      this.lastruningtime = new Date();
 
       if (this.isRecording) {
         await this.stopRecording();
@@ -173,9 +179,6 @@ const app = Vue.createApp({
         await this.startRecording();
       }
 
-      setTimeout(() => {
-        this.isruning = false
-      }, 1000)
     },
     async startRecording() {
       if (this.isRecording || this.isStopRecording)  return;
@@ -200,6 +203,7 @@ const app = Vue.createApp({
         this.mediaRecorder = new MediaRecorder(this.mediaStream);
         this.setupDataHandler();
         this.isRecording = true;
+        this.userInput="";
         this.placeholdertext = "倾听中...";
         this.startMonitoring();
         if(this.maxDuration > 2){
@@ -251,12 +255,9 @@ const app = Vue.createApp({
     },
     checkSilence(volume) {
       if (this.isStopRecording) return;
-      const SILENCE_THRESHOLD = 0.7; //可调整的静音阈值 最大值为1  
-      //this.log(volume);
-      //此处为超过2s检测到的麦克风电流小于0.7则停止录音
-      if (volume < SILENCE_THRESHOLD) {
+      if (volume * 100 < this.silenceHold) {
         this.silenceCount += 1 / 60;
-        if (this.silenceCount >= 2) {
+        if (this.silenceCount >= this.silenceStop) {
           this.log('[Renderer] 检测到持续静音，自动停止');
           this.stopRecording();
         }
@@ -408,15 +409,13 @@ const app = Vue.createApp({
     },
     sendMessage() {
       if (this.userInput.trim() !== '') {
-        // this.messages.push({ text: this.userInput, type: 'user', commandlist: [] })
-        // this.scrollToBottom()
-
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
         ipcRenderer.send('message-from-renderer', {
           target: 'floatball', // 指定目标窗口
           data: { type: 1, message: this.userInput }
         });
         this.userInput = ''
+        this.isruning = true;
       }
     },
     scrollToBottom() {
