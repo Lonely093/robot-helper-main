@@ -63,7 +63,9 @@ const app = Vue.createApp({
       runingcmd: null,
       checkTimeoutId: null,
       reverse: false,
-      isruning: false,
+      IsMouseLeave: true,
+      IsTipClose: true,
+      IsTodoClose: true,
     }
   },
   async mounted() {
@@ -74,7 +76,6 @@ const app = Vue.createApp({
     this.subColor = storage.subColor
     this.opacity = storage.opacity
     ipcRenderer.on("update", (e, data) => {
-      //this.log(data)
       this.count = data
     })
     ipcRenderer.on("config", (e, data) => {
@@ -91,25 +92,45 @@ const app = Vue.createApp({
     window.addEventListener('app-launch', this.handleAppLaunchResult);
     window.addEventListener('app-message', this.handleAppMessage);
 
-    //监听其他页面传来的消息    1 根据文本请求故障诊断     2 执行 commd指令    3  暂停录音    4 根据文本请求指令交互    5 取消tip关闭定时器
+    //监听其他页面传来的消息    
     ipcRenderer.on('message-to-renderer',  (event, data) => {
-      if (data.type == 1)  //根据文字请求故障诊断
+      //根据文字请求故障诊断  todo
+      if (data.type == 1) 
       {
         this.FaultDiagnosis(data.message);
       }
-      if (data.type == 2)  //根据指令直接执行
+      //根据指令直接执行  todo
+      if (data.type == 2)  
       {
         this.fddocommand(data.command);
       }
-      //暂停录音且不进行后续处理
-      if (data.type == 3) {    
-        this.stopRecording();
-        this.isruning = false
-      }
-      //根据文本请求指令交互
+      //根据文本请求指令交互  tip
       if (data.type == 4) {  
-        this.isruning = true
         this.ExeHNC_TTI(data.message);
+      }
+      //接受Tip传过来的关闭页面消息
+      if (data.type == 11) {    
+        this.IsTipClose = true;
+        if(this.IsTodoClose && this.IsMouseLeave){
+          this.opacity = 0.3;
+        }
+      }
+      //接受Tip传过来的打开页面消息
+      if (data.type == 12) {    
+        this.IsTipClose = false;
+        this.opacity = 0.8;
+      }
+      //接受todo传过来的关闭页面消息
+      if (data.type == 21) {    
+        this.IsTodoClose = true;
+        if(this.IsTipClose && this.IsMouseLeave){
+          this.opacity = 0.3;
+        }
+      }
+      //接受todo传过来的打开页面消息
+      if (data.type == 22) {    
+        this.IsTodoClose = false;
+        this.opacity = 0.8;
       }
     });
 
@@ -280,7 +301,10 @@ const app = Vue.createApp({
         } else if (workArea.y + workArea.height - (screenY + rect.height) < 0) {
           newY = workArea.y + workArea.height - rect.top - rect.height;
         }
-        this.opacity = 0.3;
+        
+        if(this.IsTodoClose && this.IsTipClose){
+          this.opacity = 0.3;
+        }
         // this.isNotMore = true;
         //this.log("set-win-position", {newX, newY})
         // 更新窗口位置
@@ -318,12 +342,10 @@ const app = Vue.createApp({
             } else {
               //指令全部处理完成  关闭tip
               this.closeTip();
-              this.isruning=false;
             }
           } else {
             //故障诊断指令执行成功，关闭故障诊断
             //this.closeTodo();
-            this.isruning=false;
           }
         } else {
           //指令执行失败
@@ -367,9 +389,6 @@ const app = Vue.createApp({
 
     //将结果回传给Tip 进行提示   1 正常消息    0 错误提示
     floatballtip(type, message) {
-      if(type == 0){
-        this.isruning = false
-      }
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
         data: { type: type, message: message }
@@ -384,8 +403,6 @@ const app = Vue.createApp({
         data: { type: type, message: message, commandlist }
       });
     },
-
-   
 
     //执行指令交互
     async ExeHNC_TTI(message) {
@@ -405,25 +422,25 @@ const app = Vue.createApp({
               this.docommand();
             }
           } else {
-            this.floatballtip(0, "未能识别到指令，请重试");
+            this.floatballtip(0, "没太明白您的意思,请重试...");
           }
         }
         else if (res?.code == 1001 || res?.code == 1002) {
           //故障码 1001   APP不存在
           //故障码 1002   指令不存在
-          this.floatballtip(0, "APP或者指令不存在");
+          this.floatballtip(0, "不理解的APP指令,请重试...");
         } else {
-          this.floatballtip(0, "指令交互故障" + res?.message);
+          this.floatballtip(0, "没太明白您的意思,请重试...");
         }
       } catch (error) {
-        this.floatballtip(0, "指令交互异常 " + error.message);
+        this.floatballtip(0, "没太明白您的意思,请重试...");
       }
     },
 
     //故障诊断接口
     async FaultDiagnosis(message) {
-      this.closeTip();
       this.showTodo();
+      this.closeTip();
       //存在偶发消息丢失  目前采用 延时300ms 发送
       try {
         //res = await apis.hnc_fd(result.message);
@@ -445,8 +462,6 @@ const app = Vue.createApp({
           this.floatballtodo(3, message);
           this.floatballtodo(0, "故障诊断异常:" + error.message);
         }, 300);
-      }finally{
-        this.isruning=false;
       }
     },
 
@@ -575,7 +590,6 @@ const app = Vue.createApp({
           target: target, //指定目标窗口
           data: { type: 0, message }
         });
-        this.isruning = false;
       }, 2000);
       this.commandList = [];
     },
@@ -594,7 +608,6 @@ const app = Vue.createApp({
           }
           this.runingcmd = null;
           this.commandList = [];
-          this.isruning = false;
         }
       }, 3000);
     },
@@ -602,6 +615,7 @@ const app = Vue.createApp({
     /****************** HTTP接口处理结束 ****************/
 
     hanleMouseEnter() {
+      this.IsMouseLeave = false;
       this.opacity = 0.8;
 
       //通知tip 鼠标在悬浮窗上
@@ -612,32 +626,36 @@ const app = Vue.createApp({
     },
 
     hanleMouseLeave() {
-      this.opacity = 0.3;
-
+      this.IsMouseLeave = true;
+      if(this.IsTipClose && this.IsTodoClose)
+      {
+        this.opacity = 0.3;
+      }
       //通知tip 鼠标离开了悬浮窗
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
         data: { type: 5}
       });
-      
+    },
+    showTip() {
+      if (this.IsTipClose)
+        ipcRenderer.send("showTip", "show")
     },
     closeTip() {
+      if (!this.IsTipClose)
       ipcRenderer.send("close-tip");
     },
+    showTodo() {
+      if (this.IsTodoClose)
+        ipcRenderer.send("showTodo", "show")
+    },
     closeTodo() {
+      if (!this.IsTodoClose)
       ipcRenderer.send("close-todo");
     },
     showEssay(e) {
       if (calcS())
         ipcRenderer.send("showEssay", "show")
-    },
-    showTodo() {
-      if (calcS())
-        ipcRenderer.send("showTodo", "show")
-    },
-    showTip() {
-      if (calcS())
-        ipcRenderer.send("showTip", "show")
     },
     showSimTodo() {
       if (calcS())
@@ -676,10 +694,10 @@ const app = Vue.createApp({
       await this.snapToEdge();
       if (calcS() && e.button == 0) {
         this.closeTodo();
-        ipcRenderer.send("openTip", "open")
+        this.showTip();
       }
       if (calcS() && e.button == 1) {
-        ipcRenderer.send("showTodo", "open")
+        this.showTodo();
       }
     },
 

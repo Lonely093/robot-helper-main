@@ -51,6 +51,8 @@ const app = Vue.createApp({
       canvasCtx : null,
       dataArray : null,
       canvsanimationFrameId : null,
+      phase: 0,      // 相位控制波动动画
+      channels: 3    // 波浪线数量
     }
   },
 
@@ -65,6 +67,9 @@ const app = Vue.createApp({
       //鼠标离开了机器人
       else if(data.type == 5){ 
         this.isMouseOnFloatBall = false;
+        if(this.IsMouseLeave && !this.isRecording && !this.isStopRecording){
+          this.startTipCloseTimer();
+        }
       }
       //显示文字
       else {  
@@ -168,14 +173,6 @@ const app = Vue.createApp({
     hanleMouseEnter() {
       this.IsMouseLeave=false;
       if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
-      //通知floatball取消关闭定时器
-      ipcRenderer.send('message-from-renderer', {
-        target: 'floatball', // 指定目标窗口
-        data: {
-          type: 5,
-          message:"鼠标悬浮在tip上"
-        }
-      });
     },
 
     hanleMouseLeave() {
@@ -279,7 +276,7 @@ const app = Vue.createApp({
       this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT)
       
       this.drawBars(WIDTH,HEIGHT);
-      
+      this.phase += 0.03
       // 循环绘制
       this.canvsanimationFrameId = requestAnimationFrame(this.draw)
     },
@@ -340,6 +337,41 @@ const app = Vue.createApp({
       ctx.lineTo(0, height)
       ctx.closePath()
       ctx.fill()
+    },
+
+    drawWaveform() {
+      const { width, height } = this.canvasCtx.canvas
+      const channelHeight = height / this.channels
+      
+      // 创建多轨波形
+      for(let ch = 0; ch < this.channels; ch++) {
+        this.canvasCtx.beginPath()
+        
+        // 配置轨道样式
+        const gradient = this.canvasCtx.createLinearGradient(0, 0, width, 0)
+        gradient.addColorStop(0, `hsl(${240 + ch * 30}, 80%, 60%)`) // 蓝紫色系
+        gradient.addColorStop(1, `hsl(${270 + ch * 15}, 80%, 60%)`)
+        
+        this.canvasCtx.strokeStyle = gradient
+        this.canvasCtx.lineWidth = 2
+        this.canvasCtx.lineJoin = 'round'
+
+        // 生成波形路径
+        for(let i = 0; i < width; i++) {
+          const dataIndex = Math.floor((i / width) * this.dataArray.length)
+          const amplitude = (this.dataArray[dataIndex] / 128 - 1) // 转换为-1~1范围
+          
+          // 多轨相位偏移
+          const phaseOffset = ch * Math.PI / 3
+          const y = channelHeight * (ch + 0.5) + 
+                    amplitude * channelHeight * 0.4 * 
+                    Math.sin(i * 0.05 + this.phase + phaseOffset)
+          
+          if(i === 0) this.canvasCtx.moveTo(i, y)
+          else this.canvasCtx.lineTo(i, y)
+        }
+        this.canvasCtx.stroke()
+      }
     },
 
     setupDataHandler() {
@@ -440,7 +472,7 @@ const app = Vue.createApp({
         result.message = uploadres.data.result;
         //如果出现为空，说明没有说话，进行提示
         if (result.message.trim() == '' || result.message.trim() == "") {
-          this.RecordingErrorMessage(99, "未检测到声音 ");
+          this.RecordingErrorMessage(99, "没太听清您的声音，请重试... ");
           return;
         }
         //发送消息给悬浮窗处理

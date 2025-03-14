@@ -119,7 +119,7 @@ const createTipWindow = (data) => {
   let tipWinY = data.y;
   // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"111111111")
   if (data.closestEdge == "left") {
-    tipWinX = data.x + 50;
+    tipWinX = data.x + 85;
   } else if (data.closestEdge == "right") {
     tipWinX = data.x - 305;
   }

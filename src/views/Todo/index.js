@@ -108,7 +108,7 @@ const app = Vue.createApp({
     ipcRenderer.on("todo-reverse", (e, data) => {
       console.log(data)
       if(data == "left"){
-        this,this.reverse = true;
+        this.reverse = true;
       }else{
         this.reverse = false;
       }
@@ -335,7 +335,7 @@ const app = Vue.createApp({
           if (this.userInput.trim() !== '') {
             this.sendMessage();
           }else{
-            this.sendErrorMessage("未检测到声音");
+            this.sendErrorMessage("没太听清您的声音，请重试...");
           }
         }
       }

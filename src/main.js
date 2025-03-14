@@ -225,25 +225,22 @@ ipcMain.on('showEssay', (e, data) => {
 ipcMain.on('showTodo', (e, data) => {
   if (pages.todoWin == null) {
     pages.todoWin = createTodoWindow(suspensionWinPosition)
+    pages.todoWin.send('todo-reverse', closestEdge)
     pages.todoWin.on('close', (e, data) => {
       pages.todoWin = null
     })
+    pages.suspensionWin.webContents.send('message-to-renderer', { type : 22 });
   }
 })
 
 ipcMain.on('close-todo', (event) => {
-  if (pages.todoWin) pages.todoWin.close();
+  if (pages.todoWin) 
+  {
+    pages.todoWin.close();
+    pages.suspensionWin.webContents.send('message-to-renderer', { type : 21 });
+  }
 });
 
-ipcMain.on('openTip', (e, data) => {
-  console.log("openTipopenTipopenTipopenTipopenTip", suspensionWinPosition);
-  if (!pages.tipWin) {
-    pages.tipWin = createTipWindow(suspensionWinPosition)
-  }
-  pages.tipWin.on('close', (e, data) => {
-    pages.tipWin = null
-  })
-})
 
 
 ipcMain.on('showTip', (e, data) => {
@@ -252,13 +249,21 @@ ipcMain.on('showTip', (e, data) => {
     pages.tipWin.on('close', (e, data) => {
       pages.tipWin = null
     })
+    pages.suspensionWin.webContents.send('message-to-renderer', { type : 12 });
   }
 })
 
 ipcMain.on('close-tip', (event) => {
-  if (pages.tipWin) pages.tipWin.close();
+  if (pages.tipWin) 
+  {
+    pages.tipWin.close();
+    pages.suspensionWin.webContents.send('message-to-renderer', { type : 11 });
+  }
 });
 
+
+
+let closestEdge ="right";
 ipcMain.on('ballWindowMove', (e, data) => {
   pages.suspensionWin.setBounds({ x: data.x, y: data.y, width: suspensionConfig.width, height: suspensionConfig.height })
   // let display =screen.getPrimaryDisplay();
@@ -268,8 +273,9 @@ ipcMain.on('ballWindowMove', (e, data) => {
   if (pages.tipWin) {
     let tipWinX = data.x - 305;
     let tipWinY = data.y;
+    closestEdge=data.closestEdge;
     if (data.closestEdge == "left") {
-      tipWinX = data.x + 50;
+      tipWinX = data.x + 85;
     } else if (data.closestEdge == "right") {
       tipWinX = data.x - 305;
     }
