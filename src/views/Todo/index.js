@@ -91,10 +91,10 @@ const app = Vue.createApp({
       //   }
       // ],
 
-      isCanRecording: false,
+      isCanRecording: true,
       deviceCheckTimer: true,
       isStopRecording: false,
-      isRecording: false,
+      isRecording: true,
       mediaStream: null,
       audioContext: null,
       analyser: null,
@@ -106,6 +106,10 @@ const app = Vue.createApp({
       silenceHold : parseInt(configManager.silenceHold),
       silenceStop : parseInt(configManager.silenceStop),
       reverse: false,
+      canvasCtx : null,
+      dataArray : null,
+      canvsanimationFrameId : null,
+      isUserStop : false,
     }
   },
 
@@ -160,6 +164,11 @@ const app = Vue.createApp({
     this.checkMicrophoneState();
     this.deviceCheckTimer = setInterval(() => this.checkMicrophoneState(), 5000);
 
+    //初始化画布
+    this.initCanvas();
+
+    this.isRecording=false;
+
   },
   created() {
     // 创建全局事件桥接
@@ -168,6 +177,7 @@ const app = Vue.createApp({
   beforeUnmount() {
     if(this.deviceCheckTimer)  clearTimeout(this.deviceCheckTimer)
     if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId)
+    if(this.canvsanimationFrameId)  cancelAnimationFrame(this.canvsanimationFrameId)
   },
   unmounted() {
     // 清理全局事件
@@ -178,6 +188,13 @@ const app = Vue.createApp({
     //发送日志记录
     log(msg, ctx) {
       ipcRenderer.invoke('app-log', { msg: 'todo--' + msg, ctx });
+    },
+
+
+    //暂停录音并不做后续处理
+    async userStopRecording() {
+      this.isUserStop=true;
+      await this.stopRecording();
     },
 
     // ***********************麦克风录音 ***************//
@@ -266,9 +283,85 @@ const app = Vue.createApp({
 
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 2048;
+      const bufferLength = this.analyser.frequencyBinCount
+      this.dataArray = new Uint8Array(bufferLength)
+
       source.connect(this.analyser);
-      this.log('[Renderer] 音频上下文采样率:', this.audioContext.sampleRate);
+
+      //启动绘制循环
+      this.draw()
     },
+
+    // 绘制音浪
+    draw() {
+      if (!this.analyser) return
+     
+      const canvas = this.$refs.waveCanvas
+      const WIDTH = canvas.width / (window.devicePixelRatio || 1)
+      const HEIGHT = canvas.height / (window.devicePixelRatio || 1)
+      // 使用透明背景替代原来的半透明黑色
+      this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT)
+      // 获取频率数据
+      this.analyser.getByteFrequencyData(this.dataArray)
+      console.log("dataArray",this.dataArray);
+      this.drawBars(WIDTH,HEIGHT);
+
+      //this.drawFrequencyBars(this.canvasCtx,canvas);
+
+      // 循环绘制
+      this.canvsanimationFrameId = requestAnimationFrame(this.draw)
+    },
+
+     /* 1. 基础柱状图 */
+    drawBars(width, height) {
+      const barWidth = (width / this.dataArray.length) * 15
+      let x = 0
+      for (let i = 0; i < this.dataArray.length; i++) {
+        const barHeight = (this.dataArray[i] / 255) * height
+        const gradient = this.canvasCtx.createLinearGradient(0, height - barHeight, 0, height)
+        gradient.addColorStop(0, '#13cccf')
+        gradient.addColorStop(1, '#13cccf')
+        
+        this.canvasCtx.fillStyle = gradient
+        this.canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight)
+        x += barWidth + 2
+      }
+    },
+
+    // 初始化画布
+    initCanvas() {
+      const canvas = this.$refs.waveCanvas
+      // 高清屏适配
+      const dpr = window.devicePixelRatio || 1
+      const rect = canvas.getBoundingClientRect()
+      canvas.width = rect.width * dpr
+      canvas.height = rect.height * dpr
+
+      canvas.width = 480 * dpr
+      canvas.height = 40 * dpr
+      canvas.style.width = canvas.width + 'px'
+      canvas.style.height = canvas.height + 'px'
+
+      this.canvasCtx = canvas.getContext('2d')
+      this.canvasCtx.scale(dpr, dpr)
+
+      this.createClipPath()
+
+    },
+    // 创建圆形裁剪区域
+    createClipPath() {
+      const canvas = this.$refs.waveCanvas
+      const rect = canvas.getBoundingClientRect()
+      this.canvasCtx.beginPath()
+      this.canvasCtx.moveTo(5, 0)
+      this.canvasCtx.arcTo(rect.width, 0, rect.width, rect.height, 5)
+      this.canvasCtx.arcTo(rect.width, rect.height, 0, rect.height, 5)
+      this.canvasCtx.arcTo(0, rect.height, 0, 0, 5)
+      this.canvasCtx.arcTo(0, 0, rect.width, 0, 5)
+      this.canvasCtx.closePath()
+      this.canvasCtx.clip()
+    },
+
     setupDataHandler() {
       this.mediaRecorder.ondataavailable = async (e) => {
         try {

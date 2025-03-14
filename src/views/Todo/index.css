@@ -17,8 +17,7 @@ body {
   /* 确保容器高度占满整个视口 */
   background-color: rgba(26, 40, 40, 1);
   /* 黑色，透明度80% */
-  border-radius: 10px;
-  overflow: hidden;
+  border-radius: 5px;
   box-shadow: 0 0 20px rgba(26, 40, 40, 0);
 
 }
@@ -42,6 +41,19 @@ body {
   box-shadow: 0 -2px 10px rgba(26, 40, 40, 1);
   /* 可选：顶部阴影分隔线 */
 }
+
+.input-voice{
+  position: absolute;
+  /* 改为相对父容器定位 */
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+}
+
+.visualizer {
+  background: transparent !important; /* 透明背景 */
+}
+
 
 .input-field {
   flex: 1;
