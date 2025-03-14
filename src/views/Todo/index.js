@@ -190,11 +190,11 @@ const app = Vue.createApp({
       ipcRenderer.invoke('app-log', { msg: 'todo--' + msg, ctx });
     },
 
-
     //暂停录音并不做后续处理
     async userStopRecording() {
       this.isUserStop=true;
       await this.stopRecording();
+      this.isUserStop=false;
     },
 
     // ***********************麦克风录音 ***************//
@@ -437,7 +437,6 @@ const app = Vue.createApp({
           }
           this.cleanup();
         }
-        this.isUserStop = false;
       }
     },
     cleanup() {
@@ -484,12 +483,6 @@ const app = Vue.createApp({
       }
       //等所有的接口处理完成之后，在进行录音资源释放
       this.cleanup();
-    },
-
-    //鼠标按下输入框，暂停录音并不做后续处理
-    async handleMouseDown(e) {
-      this.isUserStop = true;
-      await this.stopRecording();
     },
 
     // ***********************麦克风录音结束 ***************//

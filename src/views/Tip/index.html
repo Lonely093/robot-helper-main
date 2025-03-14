@@ -18,7 +18,7 @@
       </div> -->
 
       <div  v-show="isRecording || isStopRecording || isFirst">
-        <canvas ref="waveCanvas" class="visualizer " @click="userStopRecording"></canvas>
+        <canvas ref="waveCanvas" class="visualizer " ></canvas>
       </div>
 
       <div class="input-container" v-show="!isRecording && !isStopRecording && !isFirst">

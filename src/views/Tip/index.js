@@ -161,8 +161,9 @@ const app = Vue.createApp({
 
     //暂停录音并不做后续处理
     async userStopRecording() {
-      this.isUserStop=true;
+      this.isUserStop = true;
       await this.stopRecording();
+      this.isUserStop = false;
     },
     
     // ***********************麦克风录音 ***************//
@@ -517,6 +518,7 @@ const app = Vue.createApp({
         // 通知主进程停止 保存录音文件并上传接口，返回结果
         result = await ipcRenderer.invoke('audio-stop');
         this.log('[Renderer] 录音保存结果:', result);
+        this.log('[Renderer] this.isUserStop:', this.isUserStop);
       } catch (err) {
         this.RecordingErrorMessage(99, '音频数据处理失败 ');
         this.log('[Renderer] 音频数据处理失败:', err.message);
@@ -533,7 +535,6 @@ const app = Vue.createApp({
           }
           this.cleanup();
         }
-        this.isUserStop = false;
       }
     },
 
