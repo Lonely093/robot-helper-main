@@ -17,7 +17,7 @@
         <button @click="sendMessage" class="send-button">发送</button>
       </div> -->
 
-      <div v-show="isRecording || isStopRecording || isFirst">
+      <div  v-show="isRecording || isStopRecording || isFirst">
         <canvas ref="waveCanvas" class="visualizer " @click="userStopRecording"></canvas>
       </div>
 
@@ -30,7 +30,8 @@
         </button>
         <button v-show="!isRecording && !isStopRecording" @click="toggleRecording" @click="toggleRecording"
           class="send-button">
-          <img src="../../assets/voice.svg" alt="语音" class="btn-icon">
+          <img v-show="isCanRecording" src="../../assets/voice.svg" alt="语音" class="btn-icon">
+          <img v-show="!isCanRecording" src="../../assets/unvoice.svg" alt="语音" class="btn-icon">
         </button>
         <img v-show="isRecording || isStopRecording" src="../../assets/vedio.gif" @click="toggleRecording" width="44"
           height="28">
