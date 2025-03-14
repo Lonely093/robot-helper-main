@@ -91,6 +91,8 @@ const app = Vue.createApp({
       //   }
       // ],
 
+      isCanRecording: false,
+      deviceCheckTimer: true,
       isStopRecording: false,
       isRecording: false,
       mediaStream: null,
@@ -149,10 +151,23 @@ const app = Vue.createApp({
     //页面启动，默认清空录音记录
     ipcRenderer.invoke('audio-clear');
 
+    // 初始化设备变化监听
+    navigator.mediaDevices.addEventListener('devicechange', 
+      () => this.checkMicrophoneState()
+    );
+
+    //检测录音设备  是否支持录音
+    this.checkMicrophoneState();
+    this.deviceCheckTimer = setInterval(() => this.checkMicrophoneState(), 5000);
+
   },
   created() {
     // 创建全局事件桥接
     window.commandClickHandler = this.handleCommandClick;
+  },
+  beforeUnmount() {
+    if(this.deviceCheckTimer)  clearTimeout(this.deviceCheckTimer)
+    if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId)
   },
   unmounted() {
     // 清理全局事件
@@ -166,6 +181,37 @@ const app = Vue.createApp({
     },
 
     // ***********************麦克风录音 ***************//
+
+    // 核心检测方法
+    async checkMicrophoneState() {
+      try {
+        // 1. 检查权限状态
+        const permissionStatus = await navigator.permissions.query({ 
+          name: 'microphone' 
+        });
+        // 2. 枚举音频设备
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(   d => d.kind === 'audioinput' );
+        
+        // 3. 组合状态判断
+        const state = {
+          hasPermission: permissionStatus.state === 'granted',
+          hasDevice: audioInputs.length > 0,
+          isDeviceReady: audioInputs.some(d => d.label) // 有标签表示已授权
+        };
+
+        // 4. 状态变化处理
+        if(state.hasDevice && state.hasDevice && state.isDeviceReady){
+          this.isCanRecording = true;
+        }else{
+          this.isCanRecording = false;
+        }
+      } catch (error) {
+        this.isCanRecording = false;
+        this.log('检测失败:', error.message);
+      }
+    },
+
     async toggleRecording() {
 
       //在1秒间隔内点击 则不触发事件
@@ -181,7 +227,7 @@ const app = Vue.createApp({
 
     },
     async startRecording() {
-      if (this.isRecording || this.isStopRecording)  return;
+      if (this.isRecording || this.isStopRecording || !this.isCanRecording)  return;
       try {
         // 初始化音频流
         try {

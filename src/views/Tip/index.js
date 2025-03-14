@@ -32,6 +32,8 @@ const app = Vue.createApp({
       tipCloseTimeoutId: null,
 
       lastruningtime:new Date(),
+      isCanRecording: false,
+      deviceCheckTimer: null,
       isStopRecording: false,
       isRecording: false,
       mediaStream: null,
@@ -85,6 +87,15 @@ const app = Vue.createApp({
     //初始化画布
     this.initCanvas();
 
+    // 初始化设备变化监听
+    navigator.mediaDevices.addEventListener('devicechange', 
+      () => this.checkMicrophoneState()
+    );
+
+    //检测录音设备  是否支持录音
+    await this.checkMicrophoneState();
+    this.deviceCheckTimer = setInterval(() => this.checkMicrophoneState(), 5000);
+
     //再启动录音
     await this.startRecording();
   
@@ -92,45 +103,15 @@ const app = Vue.createApp({
   },
   beforeUnmount() {
     if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
-    if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId);
-    if(this.canvsanimationFrameId)  cancelAnimationFrame(this.canvsanimationFrameId);
+    if(this.deviceCheckTimer)  clearTimeout(this.deviceCheckTimer)
+    if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId)
+    if(this.canvsanimationFrameId)  cancelAnimationFrame(this.canvsanimationFrameId)
   },
   methods: {
 
     //发送日志记录
     log(msg, ctx) {
       ipcRenderer.invoke('app-log', { msg: 'tip--' + msg, ctx });
-    },
-
-    // 初始化画布
-    initCanvas() {
-      const canvas = this.$refs.waveCanvas
-      const container = canvas.parentElement
-      
-      // 高清屏适配
-      const dpr = window.devicePixelRatio || 1
-      canvas.width = 300 * dpr
-      canvas.height = 45 * dpr
-      canvas.style.width = canvas.width + 'px'
-      canvas.style.height = canvas.height + 'px'
-
-      this.canvasCtx = canvas.getContext('2d')
-      this.canvasCtx.scale(dpr, dpr)
-
-      this.createClipPath()
-    },
-    // 创建圆形裁剪区域
-    createClipPath() {
-      const canvas = this.$refs.waveCanvas
-      const rect = canvas.getBoundingClientRect()
-      this.canvasCtx.beginPath()
-      this.canvasCtx.moveTo(10, 0)
-      this.canvasCtx.arcTo(rect.width, 0, rect.width, rect.height, 10)
-      this.canvasCtx.arcTo(rect.width, rect.height, 0, rect.height, 10)
-      this.canvasCtx.arcTo(0, rect.height, 0, 0, 10)
-      this.canvasCtx.arcTo(0, 0, rect.width, 0, 10)
-      this.canvasCtx.closePath()
-      this.canvasCtx.clip()
     },
 
     changeInput() {
@@ -173,7 +154,9 @@ const app = Vue.createApp({
     hanleMouseLeave() {
       this.IsMouseLeave=true;
       if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
-      this.startTipCloseTimer();
+      if(!this.isRecording && !this.isStopRecording && !this.isruning){
+        this.startTipCloseTimer();
+      }
     },
 
     //暂停录音并不做后续处理
@@ -183,6 +166,36 @@ const app = Vue.createApp({
     },
     
     // ***********************麦克风录音 ***************//
+
+    // 核心检测方法
+    async checkMicrophoneState() {
+      try {
+        // 1. 检查权限状态
+        const permissionStatus = await navigator.permissions.query({ 
+          name: 'microphone' 
+        });
+        // 2. 枚举音频设备
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(   d => d.kind === 'audioinput' );
+        
+        // 3. 组合状态判断
+        const state = {
+          hasPermission: permissionStatus.state === 'granted',
+          hasDevice: audioInputs.length > 0,
+          isDeviceReady: audioInputs.some(d => d.label) // 有标签表示已授权
+        };
+
+        // 4. 状态变化处理
+        if(state.hasDevice && state.hasDevice && state.isDeviceReady){
+          this.isCanRecording = true;
+        }else{
+          this.isCanRecording = false;
+        }
+      } catch (error) {
+        this.isCanRecording = false;
+        this.log('检测失败:', error.message);
+      }
+    },
 
     //录音消息
     RecordingErrorMessage(type,message){
@@ -204,6 +217,7 @@ const app = Vue.createApp({
     },
 
     async startRecording() {
+      if(!this.isCanRecording) return;
       //是否正在录音
       if (this.isRecording || this.isStopRecording) {
         return;
@@ -411,6 +425,37 @@ const app = Vue.createApp({
       //   );
       // }
 
+    },
+
+    // 初始化画布
+    initCanvas() {
+      const canvas = this.$refs.waveCanvas
+      const container = canvas.parentElement
+      
+      // 高清屏适配
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = 300 * dpr
+      canvas.height = 45 * dpr
+      canvas.style.width = canvas.width + 'px'
+      canvas.style.height = canvas.height + 'px'
+
+      this.canvasCtx = canvas.getContext('2d')
+      this.canvasCtx.scale(dpr, dpr)
+
+      this.createClipPath()
+    },
+    // 创建圆形裁剪区域
+    createClipPath() {
+      const canvas = this.$refs.waveCanvas
+      const rect = canvas.getBoundingClientRect()
+      this.canvasCtx.beginPath()
+      this.canvasCtx.moveTo(10, 0)
+      this.canvasCtx.arcTo(rect.width, 0, rect.width, rect.height, 10)
+      this.canvasCtx.arcTo(rect.width, rect.height, 0, rect.height, 10)
+      this.canvasCtx.arcTo(0, rect.height, 0, 0, 10)
+      this.canvasCtx.arcTo(0, 0, rect.width, 0, 10)
+      this.canvasCtx.closePath()
+      this.canvasCtx.clip()
     },
 
     setupDataHandler() {

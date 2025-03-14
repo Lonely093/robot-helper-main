@@ -340,12 +340,15 @@ const app = Vue.createApp({
             if (this.commandList.length > 0) {
               this.docommand();
             } else {
-              //指令全部处理完成  关闭tip
-              this.closeTip();
+              //指令全部处理完成  关闭tip  改为指令成功通知
+              //this.closeTip();
+              var app = stateStore.getApp(runingcmd.cmd.app_id);
+              this.floatballtip(1, "好的，已为您打开" + app.name+"页面");
             }
           } else {
             //故障诊断指令执行成功，关闭故障诊断
             //this.closeTodo();
+            this.runingcmd = null;
           }
         } else {
           //指令执行失败
@@ -357,8 +360,8 @@ const app = Vue.createApp({
             this.floatballtodo(0, "指令执行失败 " + msg);
           }
           this.runingcmd = null;
-          if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         }
+        if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
       }
     },
 
