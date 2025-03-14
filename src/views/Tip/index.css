@@ -24,6 +24,23 @@ div {
   /* 可选阴影 */
 }
 
+/* 渐变边框 */
+.tip-root::before {
+  content: '';
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background: linear-gradient(to bottom, #FFEA75, #05E6FF);
+  border-radius: 5px;
+  z-index: 0;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: source-out;
+  padding: 1px;
+}
 
 .content {
   color: white;
@@ -50,14 +67,15 @@ div {
 }
 
 .visualizer {
-  background: transparent !important; /* 透明背景 */
+  background: transparent !important;
+  /* 透明背景 */
 }
 
 .input-container {
   height: 30px;
   position: absolute;
   /* 改为相对父容器定位 */
-  top:8px;
+  top: 8px;
   left: 5px;
   right: 5px;
   /* 横向排列 */

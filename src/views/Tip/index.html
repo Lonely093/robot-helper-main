@@ -9,7 +9,7 @@
 
 <body>
   <div id="app">
-    <div class="tip-root" @mouseleave="hanleMouseLeave" @mouseenter.native="hanleMouseEnter">
+    <div class="tip-root" @mouseleave="hanleMouseLeave" @mouseenter.native="hanleMouseEnter"  @click="userStopRecording">
       <!-- <img v-show="!showtext && !showinput" src="../../assets/vedio.gif" @click="changeInput" width="250" height="40">
       <p v-show="showtext && !showinput" class="content">{{tipText}}</p>
       <div v-show="showinput" class="input-container">
