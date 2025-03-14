@@ -32,7 +32,7 @@
         <input v-model="userInput" :placeholder="placeholdertext" @mousedown="handleMouseDown"
           @keyup.enter="sendMessage" class="input-field">
         </input>
-        <button @click="sendMessage" class="send-button">
+        <button @click="sendMessage" v-show="!isruning" class="send-button">
           <img src="../../assets/send.svg" alt="发送" class="btn-icon">
         </button>
         <button v-show="!isRecording" @click="toggleRecording" class="send-button">

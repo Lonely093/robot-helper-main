@@ -24,7 +24,7 @@
       <div class="input-container" v-show="!isRecording && !isStopRecording && !isFirst">
         <input v-model="userInput" :placeholder="placeholdertext" @keyup.enter="sendMessage" class="input-field">
         </input>
-        <button @click="sendMessage" class="send-button">
+        <button @click="sendMessage"  v-show="!isruning" class="send-button">
           <img src="../../assets/send.svg" alt="发送" class="btn-icon">
         </button>
         <button v-show="!isRecording && !isStopRecording" @click="toggleRecording" @click="toggleRecording"

@@ -12,8 +12,10 @@ const DEFAULT_CONFIG = {
     username: '',
     password: '',
   },
-  pagehidetime : 5,        //配置鼠标离开窗口后 自动隐藏的时间 单位秒
+  pagehidetime : 5,       //配置鼠标离开窗口后 自动隐藏的时间 单位秒
   maxDuration : 30,       //配置最大录音时长(小于3不生效，不限制时长) 单位秒
+  silenceHold : 65,        //配置静音阈值10-100   
+  silenceStop : 2,        //配置主动停止录音时长，默认2s
   about:{
     appname:"语音助手APP",
     version : "1.0.0",

@@ -91,6 +91,8 @@ const app = Vue.createApp({
       //   }
       // ],
 
+      isCanRecording: false,
+      deviceCheckTimer: true,
       isStopRecording: false,
       isRecording: false,
       mediaStream: null,
@@ -98,8 +100,11 @@ const app = Vue.createApp({
       analyser: null,
       silenceCount: 0,
       animationFrameId: null,
+      lastruningtime: null,
       isruning: false,
       maxDuration : parseInt(configManager.maxDuration),
+      silenceHold : parseInt(configManager.silenceHold),
+      silenceStop : parseInt(configManager.silenceStop),
       reverse: false,
     }
   },
@@ -125,8 +130,10 @@ const app = Vue.createApp({
       if (data.type == 3) {
         messageType = "user";
       } else if (data.type == 0) {
+        this.isruning = false;
         botMessage = data.message;
       } else if (data.type == 1) {
+        this.isruning = false;
         const separator = "</think>\n\n";
         const separatorIndex = data.message.indexOf(separator);
         if (separatorIndex !== -1) {
@@ -144,10 +151,23 @@ const app = Vue.createApp({
     //页面启动，默认清空录音记录
     ipcRenderer.invoke('audio-clear');
 
+    // 初始化设备变化监听
+    navigator.mediaDevices.addEventListener('devicechange', 
+      () => this.checkMicrophoneState()
+    );
+
+    //检测录音设备  是否支持录音
+    this.checkMicrophoneState();
+    this.deviceCheckTimer = setInterval(() => this.checkMicrophoneState(), 5000);
+
   },
   created() {
     // 创建全局事件桥接
     window.commandClickHandler = this.handleCommandClick;
+  },
+  beforeUnmount() {
+    if(this.deviceCheckTimer)  clearTimeout(this.deviceCheckTimer)
+    if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId)
   },
   unmounted() {
     // 清理全局事件
@@ -161,11 +181,43 @@ const app = Vue.createApp({
     },
 
     // ***********************麦克风录音 ***************//
+
+    // 核心检测方法
+    async checkMicrophoneState() {
+      try {
+        // 1. 检查权限状态
+        const permissionStatus = await navigator.permissions.query({ 
+          name: 'microphone' 
+        });
+        // 2. 枚举音频设备
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(   d => d.kind === 'audioinput' );
+        
+        // 3. 组合状态判断
+        const state = {
+          hasPermission: permissionStatus.state === 'granted',
+          hasDevice: audioInputs.length > 0,
+          isDeviceReady: audioInputs.some(d => d.label) // 有标签表示已授权
+        };
+
+        // 4. 状态变化处理
+        if(state.hasDevice && state.hasDevice && state.isDeviceReady){
+          this.isCanRecording = true;
+        }else{
+          this.isCanRecording = false;
+        }
+      } catch (error) {
+        this.isCanRecording = false;
+        this.log('检测失败:', error.message);
+      }
+    },
+
     async toggleRecording() {
 
-      //防止重复点击
-      if (this.isruning) return;
-      this.isruning = true
+      //在1秒间隔内点击 则不触发事件
+      const diff = Math.abs(new Date() - this.lastruningtime);
+      if(diff  < 1000)   return;
+      this.lastruningtime = new Date();
 
       if (this.isRecording) {
         await this.stopRecording();
@@ -173,12 +225,9 @@ const app = Vue.createApp({
         await this.startRecording();
       }
 
-      setTimeout(() => {
-        this.isruning = false
-      }, 1000)
     },
     async startRecording() {
-      if (this.isRecording || this.isStopRecording)  return;
+      if (this.isRecording || this.isStopRecording || !this.isCanRecording)  return;
       try {
         // 初始化音频流
         try {
@@ -200,6 +249,7 @@ const app = Vue.createApp({
         this.mediaRecorder = new MediaRecorder(this.mediaStream);
         this.setupDataHandler();
         this.isRecording = true;
+        this.userInput="";
         this.placeholdertext = "倾听中...";
         this.startMonitoring();
         if(this.maxDuration > 2){
@@ -251,12 +301,9 @@ const app = Vue.createApp({
     },
     checkSilence(volume) {
       if (this.isStopRecording) return;
-      const SILENCE_THRESHOLD = 0.7; //可调整的静音阈值 最大值为1  
-      //this.log(volume);
-      //此处为超过2s检测到的麦克风电流小于0.7则停止录音
-      if (volume < SILENCE_THRESHOLD) {
+      if (volume * 100 < this.silenceHold) {
         this.silenceCount += 1 / 60;
-        if (this.silenceCount >= 2) {
+        if (this.silenceCount >= this.silenceStop) {
           this.log('[Renderer] 检测到持续静音，自动停止');
           this.stopRecording();
         }
@@ -408,15 +455,13 @@ const app = Vue.createApp({
     },
     sendMessage() {
       if (this.userInput.trim() !== '') {
-        // this.messages.push({ text: this.userInput, type: 'user', commandlist: [] })
-        // this.scrollToBottom()
-
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
         ipcRenderer.send('message-from-renderer', {
           target: 'floatball', // 指定目标窗口
           data: { type: 1, message: this.userInput }
         });
         this.userInput = ''
+        this.isruning = true;
       }
     },
     scrollToBottom() {
