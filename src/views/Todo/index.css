@@ -20,7 +20,26 @@ body {
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 0 20px rgba(26, 40, 40, 0);
+  box-sizing: border-box;  /* 防止尺寸计算溢出 */
+  padding: 2px;
+}
 
+/* 渐变边框 */
+.chatbot-container::before {
+  content: '';
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background: linear-gradient(to bottom, #FFEA75, #05E6FF);
+  border-radius: 11px;
+  z-index: 0; 
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: source-out;
+  padding: 1px;
 }
 
 .input-container {
@@ -76,6 +95,7 @@ body {
   height: 25px;
   background: rgba(26, 40, 40, 1);
   position: relative;
+  border-radius: 11px;
 }
 
 .close-btn {
