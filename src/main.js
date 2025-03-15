@@ -314,8 +314,8 @@ ipcMain.on('ballWindowMove', (e, data) => {
     }
     if (todoWinY < 0) {
       todoWinY = 0
-    } else if (todoWinY > display.workArea.height - 500) {
-      todoWinY = display.workArea.height - 500
+    } else if (todoWinY > display.workArea.height - 450) {
+      todoWinY = display.workArea.height - 450
     }
     pages.todoWin.setBounds({ x: todoWinX, y: todoWinY })
   }
