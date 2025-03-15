@@ -467,7 +467,7 @@ const app = Vue.createApp({
       if (!this.commandList || this.commandList.length <= 0)  return;
       const cmd = this.commandList[0];
       if(!this.checkMqttState("tip",cmd)) return;
-      
+
       //每次执行一个指令，等待指令完成之后继续执行下一个指令
       var app = stateStore.getApp(cmd.app_id);
       this.runingcmd = { type: 1, cmd };
@@ -557,7 +557,7 @@ const app = Vue.createApp({
       //首先检查MQTT
       if(!mqttClient.GetConnected())
       {
-        this.setTimeoutSend(target,"打开故障诊断，MQTT服务未连接如何处理？");
+        this.setTimeoutSend(target,"MQTT服务未连接");
         return false;
       }
       //判断APP注册消息
