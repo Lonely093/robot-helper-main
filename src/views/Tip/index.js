@@ -23,7 +23,12 @@ let currConfig = {}
  * @emits close-tip - 发送关闭提示框事件到主进程
  */
 const app = Vue.createApp({
-
+  // created() {
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   console.log("urlParams.get('reverse')",urlParams.get('reverse'));
+  //   this.reverse = urlParams.get('reverse') === 'true';
+  //   console.log("urlParams.get('reverse')222222222",this.reverse);
+  // },
   data() {
     return {
       reverse: false,
@@ -59,7 +64,6 @@ const app = Vue.createApp({
 
   async  mounted() {
     ipcRenderer.on("tip-reverse", (e, data) => {
-      console.log(data)
       if(data == "left"){
         this.reverse = true;
       }else{
