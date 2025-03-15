@@ -26,6 +26,7 @@ const app = Vue.createApp({
 
   data() {
     return {
+      reverse: false,
       dfmessage: "你好，我是智能语音助手",
       topmessage: "你好，我是智能语音助手",
       userInput: "",
@@ -57,7 +58,14 @@ const app = Vue.createApp({
   },
 
   async  mounted() {
-
+    ipcRenderer.on("tip-reverse", (e, data) => {
+      console.log(data)
+      if(data == "left"){
+        this.reverse = true;
+      }else{
+        this.reverse = false;
+      }
+    })
     ipcRenderer.on('message-to-renderer', (event, data) => {
       //鼠标在机器人上
       if(data.type == 4){ 

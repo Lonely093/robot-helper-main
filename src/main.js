@@ -246,6 +246,7 @@ ipcMain.on('close-todo', (event) => {
 ipcMain.on('showTip', (e, data) => {
   if (pages.tipWin == null) {
     pages.tipWin = createTipWindow(suspensionWinPosition)
+    pages.tipWin.send('tip-reverse', closestEdge)
     pages.tipWin.on('close', (e, data) => {
       pages.tipWin = null
     })
@@ -271,6 +272,7 @@ ipcMain.on('ballWindowMove', (e, data) => {
 
   suspensionWinPosition = data;
   if (pages.tipWin) {
+    pages.tipWin.send('tip-reverse', closestEdge)
     let tipWinX = data.x - 305;
     let tipWinY = data.y;
     closestEdge=data.closestEdge;

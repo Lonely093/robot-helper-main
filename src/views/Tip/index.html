@@ -10,7 +10,7 @@
 <body>
   <div id="app">
 
-    <div class="tip-root" @mouseleave="hanleMouseLeave" @mouseenter.native="hanleMouseEnter" @click="userStopRecording">
+    <div class="tip-root" :class="{'reverse': reverse}" @mouseleave="hanleMouseLeave" @mouseenter.native="hanleMouseEnter" @click="userStopRecording">
       <div class="tip-inner">
         <!-- <img v-show="!showtext && !showinput" src="../../assets/vedio.gif" @click="changeInput" width="250" height="40">
       <p v-show="showtext && !showinput" class="content">{{tipText}}</p>
