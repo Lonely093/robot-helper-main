@@ -425,18 +425,18 @@ const app = Vue.createApp({
               this.docommand();
             }
           } else {
-            this.floatballtip(0, "没太明白您的意思,请重试...");
+            this.floatballtip(0, "抱歉未识别到正确指令");
           }
         }
         else if (res?.code == 1001 || res?.code == 1002) {
           //故障码 1001   APP不存在
           //故障码 1002   指令不存在
-          this.floatballtip(0, "不理解的APP指令,请重试...");
+          this.floatballtip(0, "抱歉未识别到正确指令");
         } else {
-          this.floatballtip(0, "没太明白您的意思,请重试...");
+          this.floatballtip(0, "抱歉未识别到正确指令");
         }
       } catch (error) {
-        this.floatballtip(0, "没太明白您的意思,请重试...");
+        this.floatballtip(0, "抱歉未识别到正确指令");
       }
     },
 
@@ -444,20 +444,22 @@ const app = Vue.createApp({
     async FaultDiagnosis(message) {
       this.showTodo();
       this.closeTip();
-      //存在偶发消息丢失  目前采用 延时300ms 发送
-      this.floatballtodo(3, message);
-      try {
-        //res = await apis.hnc_fd(result.message);
-        const res = await ipcRenderer.invoke('hnc_fd', message);
-        if (res && res.code == "200") {
-          this.floatballtodo(1, res.data.msg, res.data.command_list);
-        } else {
+      //存在偶发消息丢失  目前采用 延时100ms 发送
+      setTimeout(async () => {
+        this.floatballtodo(3, message);
+        try {
+          //res = await apis.hnc_fd(result.message);
+          const res = await ipcRenderer.invoke('hnc_fd', message);
+          if (res && res.code == "200") {
+              this.floatballtodo(1, res.data.msg, res.data.command_list);
+          } else {
+              this.floatballtodo(0, "抱歉未识别到正确的指令，请重新输入");
+          }
+        } catch (error) {
+          this.log("hnc_fd 异常:", error.message);
           this.floatballtodo(0, "抱歉未识别到正确的指令，请重新输入");
         }
-      } catch (error) {
-        this.log("hnc_fd 异常:", error.message);
-        this.floatballtodo(0, "抱歉未识别到正确的指令，请重新输入");
-      }
+      }, 100);
     },
 
     //直接处理指令
@@ -465,6 +467,7 @@ const app = Vue.createApp({
       if (!this.commandList || this.commandList.length <= 0)  return;
       const cmd = this.commandList[0];
       if(!this.checkMqttState("tip",cmd)) return;
+
       //每次执行一个指令，等待指令完成之后继续执行下一个指令
       var app = stateStore.getApp(cmd.app_id);
       this.runingcmd = { type: 1, cmd };
@@ -531,7 +534,7 @@ const app = Vue.createApp({
       }
       //直接发送指令 
       else { 
-        mqttClient.publish('Command/Action/' + cmd.app_id, {
+        mqttClient.publish('Command/Action', {
           app_id: cmd.app_id,
           command: cmd.command,
           timestamp: Date.now()
@@ -554,7 +557,7 @@ const app = Vue.createApp({
       //首先检查MQTT
       if(!mqttClient.GetConnected())
       {
-        this.setTimeoutSend(target,"打开故障诊断，MQTT服务未连接如何处理？");
+        this.setTimeoutSend(target,"MQTT服务未连接");
         return false;
       }
       //判断APP注册消息
