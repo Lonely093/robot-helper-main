@@ -286,8 +286,8 @@ ipcMain.on('ballWindowMove', (e, data) => {
     }
     if (tipWinY < 0) {
       tipWinY = 0
-    } else if (tipWinY > display.workArea.height - 45) {
-      tipWinY = display.workArea.height - 45
+    } else if (tipWinY > display.workArea.height - 70) {
+      tipWinY = display.workArea.height - 70
     }
     pages.tipWin.setBounds({ x: tipWinX, y: tipWinY })
   }

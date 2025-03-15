@@ -66,21 +66,45 @@ div {
   /* 最佳可读宽度 */
 }
 
+.input-vedio{
+  position: absolute;
+  /* 改为相对父容器定位 */
+  bottom: 5px;
+  left: 5px;
+  right: 5px;
+}
+
 .visualizer {
   background: transparent !important;
   /* 透明背景 */
+}
+
+.input-message{
+  position: absolute;
+  /* 改为相对父容器定位 */
+  top: 8px;
+  left: 5px;
+  right: 5px;
+  color: white;
+  font-size: 12px;
+  margin: 0;
+  white-space: normal;
+  /* 覆盖可能的 nowrap 设置 */
+  word-wrap: break-word;
+  /* 允许单词内换行 (旧浏览器) */
+  overflow-wrap: break-word;
 }
 
 .input-container {
   height: 30px;
   position: absolute;
   /* 改为相对父容器定位 */
-  top: 8px;
+  bottom: 8px;
   left: 5px;
   right: 5px;
   /* 横向排列 */
   display: flex;
-  gap: 10px;
+  gap: 5px;
 }
 
 .input-field {

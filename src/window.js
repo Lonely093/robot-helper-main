@@ -131,8 +131,8 @@ const createTipWindow = (data) => {
   }
   if (tipWinY < 0) {
     tipWinY = 0
-  } else if (tipWinY > display.workArea.height - 45) {
-    tipWinY = display.workArea.height - 45
+  } else if (tipWinY > display.workArea.height - 70) {
+    tipWinY = display.workArea.height - 70
   }
 
   const win = new BrowserWindow({
@@ -140,7 +140,7 @@ const createTipWindow = (data) => {
     width: 300,
     minWidth: 300,
     resizable: false,
-    height: 45,
+    height: 70,
     x: tipWinX,
     y: tipWinY,
     frame: false,
@@ -160,7 +160,7 @@ const createTipWindow = (data) => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Tip/index.html'));
-  // win.webContents.openDevTools({ mode: 'detach' })
+  //win.webContents.openDevTools({ mode: 'detach' })
   return win
 }
 const createConfigWindow = () => {

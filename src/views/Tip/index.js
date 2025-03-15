@@ -26,13 +26,15 @@ const app = Vue.createApp({
 
   data() {
     return {
+      dfmessage: "你好，我是智能语音助手",
+      topmessage: "你好，我是智能语音助手",
       userInput: "",
       IsMouseLeave:true,
       isMouseOnFloatBall:true,
       tipCloseTimeoutId: null,
       autoSendMessageId: null,
       lastruningtime:new Date(),
-      isCanRecording: false,
+      isCanRecording: true,
       deviceCheckTimer: null,
       isStopRecording: false,
       isRecording: false,
@@ -45,7 +47,7 @@ const app = Vue.createApp({
       silenceHold : parseInt(configManager.silenceHold),
       silenceStop : parseInt(configManager.silenceStop),
       isUserStop : false,
-      placeholdertext:"有问题尽管问我...",
+      placeholdertext:"",
       isruning : false,
       isFirst : true,
       canvasCtx : null,
@@ -72,7 +74,8 @@ const app = Vue.createApp({
       //显示文字
       else {  
         this.isruning = false;
-        this.userInput =data.message;
+        this.userInput = "";
+        this.topmessage = data.message;
         //值变化时，且鼠标不在悬浮窗则启动关闭
         if(this.IsMouseLeave && !this.isMouseOnFloatBall) 
         {
@@ -96,10 +99,12 @@ const app = Vue.createApp({
     await this.checkMicrophoneState();
     this.deviceCheckTimer = setInterval(() => this.checkMicrophoneState(), 5000);
 
-    //再启动录音
-    await this.startRecording();
-  
-    this.isFirst = false;
+    //间隔一秒启动录音
+    setTimeout( async() => {
+      await this.startRecording();
+      this.isFirst = false;
+    }, 1000);
+ 
   },
   beforeUnmount() {
     if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
@@ -129,8 +134,10 @@ const app = Vue.createApp({
       if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
     },
     sendMessage() {
+      if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
       if (this.userInput.trim() !== '') {
         this.isruning=true;
+        this.topmessage ="好的，正在为您执行";
         //同时将消息发送至悬浮窗
         ipcRenderer.send('message-from-renderer', {
           target: 'floatball', // 指定目标窗口
@@ -139,6 +146,7 @@ const app = Vue.createApp({
             message: this.userInput
           }
         });
+        this.userInput="";
       }
     },
 
@@ -213,6 +221,7 @@ const app = Vue.createApp({
       if(diff  < 1000)   return;
       this.lastruningtime = new Date();
 
+      if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
       if (this.isRecording) {
         await this.stopRecording();
       } else {
@@ -248,7 +257,6 @@ const app = Vue.createApp({
         this.setupDataHandler();
         this.isRecording = true;
         this.userInput="";
-        this.placeholdertext = "倾听中...";
         this.startMonitoring();
         if(this.maxDuration > 2){
           setTimeout(() => this.stopRecording(), this.maxDuration * 1000);
@@ -439,14 +447,14 @@ const app = Vue.createApp({
       // 高清屏适配
       const dpr = window.devicePixelRatio || 1
       canvas.width = 300 * dpr
-      canvas.height = 45 * dpr
+      canvas.height = 60 * dpr
       canvas.style.width = canvas.width + 'px'
       canvas.style.height = canvas.height + 'px'
 
       this.canvasCtx = canvas.getContext('2d')
       this.canvasCtx.scale(dpr, dpr)
 
-      this.createClipPath()
+      //this.createClipPath()
     },
     // 创建圆形裁剪区域
     createClipPath() {
@@ -596,7 +604,8 @@ const app = Vue.createApp({
       this.isRecording = false;
       this.isStopRecording = false;
       this.silenceCount = 0;
-      this.placeholdertext = "有问题尽管问我...";
+      this.placeholdertext = "";
+      this.topmessage = this.dfmessage;
       this.log('[Renderer] 资源已清理');
     },
 
