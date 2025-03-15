@@ -269,6 +269,7 @@ const app = Vue.createApp({
         this.setupDataHandler();
         this.isRecording = true;
         this.userInput="";
+        this.topmessage = this.dfmessage;
         this.startMonitoring();
         if(this.maxDuration > 2){
           setTimeout(() => this.stopRecording(), this.maxDuration * 1000);
@@ -578,7 +579,8 @@ const app = Vue.createApp({
         result.message = uploadres.data.result;
         //如果出现为空，说明没有说话，进行提示
         if (result.message.trim() == '' || result.message.trim() == "") {
-          this.RecordingErrorMessage(99, "没太听清您的声音，请重试... ");
+          this.RecordingErrorMessage(99, "没听清您的声音，请重试");
+          this.topmessage = "没听清您的声音，请重试";
           return;
         }
         //发送消息给悬浮窗处理
@@ -617,7 +619,6 @@ const app = Vue.createApp({
       this.isStopRecording = false;
       this.silenceCount = 0;
       this.placeholdertext = "";
-      this.topmessage = this.dfmessage;
       this.log('[Renderer] 资源已清理');
     },
 

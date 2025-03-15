@@ -340,10 +340,6 @@ class MqttClient {
     this.triggerCommandResultEvent(message.app_id, message.reply);
   }
 
-  GetConnected(){
-    return this.isConnected;
-  }
-
   AppMessage(topic, message) {
     this.triggerAppMessagetEvent(message.app_id, message.message);
   }
@@ -368,6 +364,23 @@ class MqttClient {
     });
     window.dispatchEvent(event);
   }
+
+  GetConnected(){
+    return this.isConnected;
+  }
+
+  CommandOpen(sendcmd){
+    this.publish('Command/Open', sendcmd)
+  }
+
+  CommandClose(sendcmd){
+    this.publish('Command/Close', sendcmd)
+  }
+
+  CommandAction(sendcmd){
+    this.publish('Command/Action', sendcmd)
+  }
+
 
 }
 

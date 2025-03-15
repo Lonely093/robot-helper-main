@@ -478,7 +478,7 @@ const app = Vue.createApp({
           timestamp: Date.now()
         }
         this.log("推送MQTT指令：", sendcmd);
-        mqttClient.publish('Command/Open', sendcmd)
+        mqttClient.CommandOpen(sendcmd)
 
         //模拟返回MQTT
         // setTimeout(() => {
@@ -495,7 +495,7 @@ const app = Vue.createApp({
           timestamp: Date.now()
         }
         this.log("推送MQTT指令：", sendcmd);
-        mqttClient.publish('Command/Action', sendcmd)
+        mqttClient.CommandAction(sendcmd)
 
         //模拟返回MQTT
         // setTimeout(() => {
@@ -518,10 +518,12 @@ const app = Vue.createApp({
       this.checkTimeout();
       //先启动
       if (app.state == "0") { 
-        mqttClient.publish('Command/Open', {
+        var sendcmd = {
           app_id: cmd.app_id,
           timestamp: Date.now()
-        })
+        }
+        this.log("推送MQTT指令：", sendcmd);
+        mqttClient.CommandOpen(sendcmd)
 
         //模拟返回MQTT
         // setTimeout(() => {
@@ -534,11 +536,13 @@ const app = Vue.createApp({
       }
       //直接发送指令 
       else { 
-        mqttClient.publish('Command/Action', {
+        var sendcmd = {
           app_id: cmd.app_id,
           command: cmd.command,
           timestamp: Date.now()
-        })
+        }
+        this.log("推送MQTT指令：", sendcmd);
+        mqttClient.CommandAction(sendcmd)
 
         //模拟返回MQTT
         // setTimeout(() => {
@@ -569,11 +573,11 @@ const app = Vue.createApp({
           return false;
         }else{
           if(!app.ai_interaction.action){
-            this.setTimeoutSend(target,"当前APP不支持启动");
+            this.setTimeoutSend(target,"当前APP["+app.name+"]不支持启动");
             return false;
           }
           if(!app.ai_interaction.exec){
-            this.setTimeoutSend(target,"当前APP不支持执行");
+            this.setTimeoutSend(target,"当前APP["+app.name+"]不支持指令执行");
             return false;
           }
         }

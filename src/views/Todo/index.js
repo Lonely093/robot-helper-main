@@ -484,7 +484,7 @@ const app = Vue.createApp({
               this.sendMessage();
             }, 2000);
           }else{
-            this.sendErrorMessage("没太听清您的声音，请重试");
+            this.sendErrorMessage("没听清您的声音，请重试");
           }
         }
       }
