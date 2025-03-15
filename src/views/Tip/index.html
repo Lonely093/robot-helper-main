@@ -19,9 +19,9 @@
         <button @click="sendMessage" class="send-button">发送</button>
       </div> -->
 
-        <divclass="input-message"  v-show="!isRecording && !isStopRecording">
+        <div class="input-message"  v-show="!isRecording && !isStopRecording">
         {{topmessage}} 
-      </div>
+        </div>
       <div  class="input-vedio" v-show="isRecording || isStopRecording || isFirst">
           <canvas ref="waveCanvas" class="visualizer "></canvas>
         </div>

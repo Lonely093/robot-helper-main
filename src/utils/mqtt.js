@@ -90,6 +90,8 @@ class MqttClient {
         clean: this.options.clean,
         connectTimeout: this.options.connectTimeout,
         reconnectPeriod: 0, // 禁用内置自动重连
+        protocolVersion: 3,         // MQTT 3.1 对应版本号 3
+        protocolId: 'MQIsdp'        // 3.1 的协议标识符（非必须，但某些 Broker 需要）
         //will: this._formatWillMessage() // 添加遗嘱消息
       })
       // 连接成功回调
