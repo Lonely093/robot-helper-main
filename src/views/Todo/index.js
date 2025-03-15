@@ -115,7 +115,7 @@ const app = Vue.createApp({
 
   mounted() {
     ipcRenderer.on("todo-reverse", (e, data) => {
-      console.log(data)
+      // console.log("todo-reversetodo-reversetodo-reversetodo-reverse",data)
       if(data == "left"){
         this.reverse = true;
       }else{

@@ -225,6 +225,7 @@ ipcMain.on('showEssay', (e, data) => {
 ipcMain.on('showTodo', (e, data) => {
   if (pages.todoWin == null) {
     pages.todoWin = createTodoWindow(suspensionWinPosition)
+    // console.log("ipcMain.on('showTodo', (e, data) => {",suspensionWinPosition.closestEdge)
     pages.todoWin.send('todo-reverse', suspensionWinPosition.closestEdge)
     pages.todoWin.on('close', (e, data) => {
       pages.todoWin = null
