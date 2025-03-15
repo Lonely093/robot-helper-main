@@ -5,7 +5,6 @@ const wav = require('waveheader');
 const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
 ffmpeg.setFfmpegPath(ffmpegPath)
-const FormData = require('form-data');
 
 class AudioRecorder {
   constructor() {

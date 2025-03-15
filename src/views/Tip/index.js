@@ -1,12 +1,9 @@
 const { ipcRenderer } = require("electron");
 const Vue = require('vue')
-const { formatterTime } = require("../../utils/date.js")
-const { getConfig, defaultConfig } = require("../../utils/store.js")
 const path = require('path');
 const fs = require('fs');
 const configManager = require("../../utils/configManager");
 
-let currConfig = {}
 /**
  * Vue应用组件 - 提示框
  * 
@@ -329,127 +326,6 @@ const app = Vue.createApp({
         this.canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight)
         x += barWidth + 2
       }
-    },
-
-    // 波浪线模式
-    drawWave(width, height) {
-      const ctx = this.canvasCtx
-      const lineWidth = 2
-      const baseline = height * 0.8 // 基线位置
-      
-      ctx.beginPath()
-      ctx.moveTo(0, baseline)
-
-      // 生成平滑曲线路径
-      this.dataArray.forEach((value, i) => {
-        const x = (i / this.dataArray.length) * width
-        const amplitude = (value / 255) * (height * 0.6) // 振幅范围
-        const y = baseline - amplitude
-        
-        // 使用二次贝塞尔曲线平滑连接
-        if (i > 0) {
-          const prevX = ((i - 1) / this.dataArray.length) * width
-          const controlX = (prevX + x) / 2
-          ctx.quadraticCurveTo(controlX, y, x, y)
-        }
-      })
-
-      // 样式配置
-      ctx.strokeStyle = '#00ff88'
-      ctx.lineWidth = lineWidth
-      ctx.lineCap = 'round'
-      ctx.stroke()
-
-      // 添加渐变填充（可选）
-      const gradient = ctx.createLinearGradient(0, 0, 0, height)
-      gradient.addColorStop(0, 'rgba(0, 255, 136, 0.2)')
-      gradient.addColorStop(1, 'rgba(0, 102, 255, 0.1)')
-      
-      ctx.fillStyle = gradient
-      ctx.lineTo(width, height)
-      ctx.lineTo(0, height)
-      ctx.closePath()
-      ctx.fill()
-    },
-
-    // 创建渐变颜色
-    createWaveGradient (ctx, width) {
-      const gradient = ctx.createLinearGradient(0, 0, width, 0);
-      gradient.addColorStop(0, '#00fff7');   // 底部青蓝色
-      gradient.addColorStop(1, '#00ffaa');   // 顶部亮青色
-      return gradient;
-    },
-  
-    // 绘制频谱
-    drawFrequencyBars(ctx,canvas) {
-      this.analyser.getByteTimeDomainData(this.dataArray)
-      // 绘制基准线
-      ctx.setLineDash([5,5]);
-      ctx.beginPath();
-      ctx.strokeStyle = '#13CCCF';
-      ctx.moveTo(0, canvas.height / 2);
-      ctx.lineTo(canvas.width, canvas.height/2);
-      ctx.stroke();
-
-      // 波形参数
-      const barWidth = 5;
-      const barSpacing = 5;
-      const maxAmplitude = canvas.height * 5;
-
-      for (let i = 0; i < this.dataArray.length; i++) {
-        const amplitude = (this.dataArray[i] - 128) / 128 * maxAmplitude;
-        const xPos = i * (barWidth + barSpacing);
-
-        // 立体柱体绘制
-        ctx.fillStyle = '#13CCCF';
-        ctx.fillRect(
-          xPos,
-          canvas.height / 2 - amplitude,  // 上部柱体
-          barWidth,
-          amplitude                     // 柱体高度
-        );
-        ctx.fillRect(
-          xPos,
-          canvas.height/2,              // 下部柱体
-          barWidth,
-          amplitude
-        );
-      }
-
-      // // 绘制中心基准线
-      // ctx.beginPath();
-      // ctx.strokeStyle = '#ddd';
-      // ctx.setLineDash([5, 5]);
-      // ctx.moveTo(0, canvas.height/2);
-      // ctx.lineTo(canvas.width, canvas.height/2);
-      // ctx.stroke();
-
-      // // 绘制动态波形
-      // const barWidth = 3;
-      // const maxHeight = canvas.height/2 - 10;
-      
-      // for (let i = 0; i < this.dataArray.length; i++) {
-      //   const amplitude = (this.dataArray[i] - 128) / 128 * maxHeight;
-      //   const x = i * (barWidth + 1);
-        
-      //   // 上侧波形
-      //   ctx.fillStyle = '#009cff';
-      //   ctx.fillRect(
-      //     x, 
-      //     canvas.height/2 - amplitude - barWidth,  // 上侧起点
-      //     barWidth, 
-      //     barWidth
-      //   );
-        
-      //   // 下侧波形
-      //   ctx.fillRect(
-      //     x,
-      //     canvas.height/2 + amplitude,  // 下侧起点
-      //     barWidth,
-      //     barWidth
-      //   );
-      // }
-
     },
 
     // 初始化画布

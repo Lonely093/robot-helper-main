@@ -358,46 +358,6 @@ ipcMain.on('setFloatIgnoreMouse', (e, data) => {
 
 // main.js
 
-ipcMain.on('todo', (e, data) => {
-  // console.log(data.name)
-  // if (data.name == "getAll") {
-  //   getAllTodo(data.status).then(res => {
-  //     e.returnValue = res
-  //   }, e => {
-  //     console.log(e)
-  //   })
-  // } else if (data.name == "change") {
-  //   changeTodoStatus(data.id, data.status)
-  //   getBallData().then(res => {
-  //     console.log(res)
-  //     pages.suspensionWin.webContents.send('update', res)
-  //   })
-  // } else if (data.name == "add") {
-  //   addTodo(data.content, data.end_time).then(
-  //     res => {
-  //       getBallData().then(res => {
-  //         console.log(res)
-  //         pages.suspensionWin.webContents.send('update', res)
-  //       })
-  //       e.returnValue = res
-  //     },
-  //     e => {
-  //       console.log(e)
-  //     }
-  //   )
-  // }
-})
-
-ipcMain.on('updateBall', (e, data) => {
-  // getBallData().then(res => {
-  //   pages.suspensionWin.webContents.send('update', res)
-  // })
-})
-
-ipcMain.on('updateConfig', (e, data) => {
-  pages.suspensionWin.webContents.send('config', data)
-})
-
 ipcMain.handle('get-win-content-bounds', (event) => {
   // 从发送请求的渲染进程获取对应的 BrowserWindow 实例
   const win = BrowserWindow.fromWebContents(event.sender);

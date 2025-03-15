@@ -1,15 +1,10 @@
 const { ipcRenderer } = require("electron");
 const Vue = require('vue')
 const throttle = require('lodash.throttle');
-const { defaultConfig, getConfig, applyConfig } = require("../../utils/store")
-const { ref } = require('vue')
-const draggableElement = ref(null);
-
 const mqttClient = require("../../utils/mqtt")
 const stateStore = require("../../utils/localStorage");
 
 
-applyConfig()
 let biasX = 0
 let biasY = 0
 const moveS = [0, 0, 0, 0]
@@ -17,7 +12,6 @@ function calcS() {
   const res = Math.pow(moveS[0] - moveS[2], 2) + Math.pow(moveS[1] - moveS[3], 2)
   return res < 5
 }
-
 
 
 /**
@@ -70,20 +64,8 @@ const app = Vue.createApp({
   },
   async mounted() {
 
+    //删除历史数据(APP注册)
     stateStore.clearAllApp();
-    const storage = getConfig()
-    this.mainColor = storage.mainColor
-    this.subColor = storage.subColor
-    this.opacity = storage.opacity
-    ipcRenderer.on("update", (e, data) => {
-      this.count = data
-    })
-    ipcRenderer.on("config", (e, data) => {
-      this.opacity = data.opacity
-      this.mainColor = data.mainColor
-      this.subColor = data.subColor
-    })
-    ipcRenderer.send("updateBall")
 
     this.connectmqtt();
 
@@ -151,6 +133,7 @@ const app = Vue.createApp({
   beforeUnmount() {
     this.throttledMoveHandler.cancel(); // 重要！销毁时取消节流
     mqttClient._safeDisconnect();  //安全断开MQTT连接
+    if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
   },
   methods: {
     initThrottledMove() {
@@ -425,18 +408,18 @@ const app = Vue.createApp({
               this.docommand();
             }
           } else {
-            this.floatballtip(0, "抱歉未识别到正确指令");
+            this.floatballtip(0, "抱歉未识别到正确指令,请重试");
           }
         }
         else if (res?.code == 1001 || res?.code == 1002) {
           //故障码 1001   APP不存在
           //故障码 1002   指令不存在
-          this.floatballtip(0, "抱歉未识别到正确指令");
+          this.floatballtip(0, "抱歉未识别到正确指令,请重试");
         } else {
-          this.floatballtip(0, "抱歉未识别到正确指令");
+          this.floatballtip(0, "抱歉未识别到正确指令,请重试");
         }
       } catch (error) {
-        this.floatballtip(0, "抱歉未识别到正确指令");
+        this.floatballtip(0, "抱歉未识别到正确指令,请重试");
       }
     },
 
@@ -655,18 +638,6 @@ const app = Vue.createApp({
       if (!this.IsTodoClose)
       ipcRenderer.send("close-todo");
     },
-    showEssay(e) {
-      if (calcS())
-        ipcRenderer.send("showEssay", "show")
-    },
-    showSimTodo() {
-      if (calcS())
-        ipcRenderer.send("showSimTodo", "show")
-    },
-    // hideMore() {
-    //   this.isNotMore = true
-    //   // ipcRenderer.send('setFloatIgnoreMouse', true)
-    // },
     handleMouseDown(e) {
       this.opacity = 1;
       if (e.button == 2) {

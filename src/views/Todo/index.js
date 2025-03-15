@@ -1,13 +1,9 @@
 const { ipcRenderer } = require("electron");
 const Vue = require('vue')
-
-const { formatterTime } = require("../../utils/date.js")
-const { applyConfig } = require("../../utils/store.js")
 const path = require('path');
 const fs = require('fs');
 const configManager = require("../../utils/configManager");
 
-applyConfig()
 
 const app = Vue.createApp({
 
@@ -56,40 +52,6 @@ const app = Vue.createApp({
         //   ],
         // }
       ],
-      // commandlist: [
-      //   {
-      //     "app_id": "(hmi_id)103005",
-      //     "command": "103005"
-      //   },
-      //   {
-      //     "app_id": "(hmi_id)103034",
-      //     "command": "103034"
-      //   },
-      //   {
-      //     "app_id": "(hmi_id)103048",
-      //     "command": "103048"
-      //   },
-      //   {
-      //     "app_id": "(hmi_id)103067",
-      //     "command": "103067"
-      //   },
-      //   {
-      //     "app_id": "(hmi_id)103517",
-      //     "command": "103517"
-      //   },
-      //   {
-      //     "app_id": "(hmi_id)103526",
-      //     "command": "103526"
-      //   },
-      //   {
-      //     "app_id": "(hmi_id)103587",
-      //     "command": "103587"
-      //   },
-      //   {
-      //     "app_id": "(hmi_id)503015",
-      //     "command": "503015"
-      //   }
-      // ],
       autoSendMessageId: null,
       isCanRecording: true,
       deviceCheckTimer: true,
@@ -350,7 +312,7 @@ const app = Vue.createApp({
       this.canvasCtx = canvas.getContext('2d')
       this.canvasCtx.scale(dpr, dpr)
 
-      this.createClipPath()
+      //this.createClipPath()
 
     },
     // 创建圆形裁剪区域
