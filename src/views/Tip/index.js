@@ -23,9 +23,15 @@ let currConfig = {}
  * @emits close-tip - 发送关闭提示框事件到主进程
  */
 const app = Vue.createApp({
-
+  // created() {
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   console.log("urlParams.get('reverse')",urlParams.get('reverse'));
+  //   this.reverse = urlParams.get('reverse') === 'true';
+  //   console.log("urlParams.get('reverse')222222222",this.reverse);
+  // },
   data() {
     return {
+      reverse: false,
       dfmessage: "你好，我是智能语音助手",
       topmessage: "你好，我是智能语音助手",
       userInput: "",
@@ -57,7 +63,13 @@ const app = Vue.createApp({
   },
 
   async  mounted() {
-
+    ipcRenderer.on("tip-reverse", (e, data) => {
+      if(data == "left"){
+        this.reverse = true;
+      }else{
+        this.reverse = false;
+      }
+    })
     ipcRenderer.on('message-to-renderer', (event, data) => {
       //鼠标在机器人上
       if(data.type == 4){ 

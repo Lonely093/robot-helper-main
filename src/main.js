@@ -225,7 +225,8 @@ ipcMain.on('showEssay', (e, data) => {
 ipcMain.on('showTodo', (e, data) => {
   if (pages.todoWin == null) {
     pages.todoWin = createTodoWindow(suspensionWinPosition)
-    pages.todoWin.send('todo-reverse', closestEdge)
+    // console.log("ipcMain.on('showTodo', (e, data) => {",suspensionWinPosition.closestEdge)
+    pages.todoWin.send('todo-reverse', suspensionWinPosition.closestEdge)
     pages.todoWin.on('close', (e, data) => {
       pages.todoWin = null
     })
@@ -246,6 +247,7 @@ ipcMain.on('close-todo', (event) => {
 ipcMain.on('showTip', (e, data) => {
   if (pages.tipWin == null) {
     pages.tipWin = createTipWindow(suspensionWinPosition)
+    pages.tipWin.send('tip-reverse', suspensionWinPosition.closestEdge)
     pages.tipWin.on('close', (e, data) => {
       pages.tipWin = null
     })
@@ -263,7 +265,7 @@ ipcMain.on('close-tip', (event) => {
 
 
 
-let closestEdge ="right";
+
 ipcMain.on('ballWindowMove', (e, data) => {
   pages.suspensionWin.setBounds({ x: data.x, y: data.y, width: suspensionConfig.width, height: suspensionConfig.height })
   // let display =screen.getPrimaryDisplay();
@@ -273,7 +275,8 @@ ipcMain.on('ballWindowMove', (e, data) => {
   if (pages.tipWin) {
     let tipWinX = data.x - 305;
     let tipWinY = data.y;
-    closestEdge=data.closestEdge;
+
+    pages.tipWin.send('tip-reverse', data.closestEdge)
     if (data.closestEdge == "left") {
       tipWinX = data.x + 85;
     } else if (data.closestEdge == "right") {

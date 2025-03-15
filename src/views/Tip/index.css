@@ -26,7 +26,20 @@ div {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
   /* 可选阴影 */
 }
-
+.tip-root.reverse {
+  position: relative; /* 添加定位上下文 */
+  margin-left: 15px; /* 为箭头留出空间 */
+  width: calc(100vw - 15px); /* 调整宽度保持原布局 */
+  background: rgba(26, 40, 40, 1);
+  /* width: 100vw; */
+  height: 100vh;
+  border-radius: 5px;
+  /* 圆角大小 */
+  /* overflow: hidden; */
+  /* 隐藏溢出内容 */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  /* 可选阴影 */
+}
 /* 渐变边框 */
 .tip-root::before {
   content: '';
@@ -57,6 +70,38 @@ div {
   clip-path: polygon(0 0, 0% 100%, 100% 50%);
   z-index: 1;
 }
+
+ .tip-root.reverse::before  {
+  content: '';
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background: linear-gradient(135deg, #FFEA75 0%, #05E6FF 100%);
+  border-radius: 5px;
+  z-index: 0;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: source-out;
+  padding: 1px;
+}
+
+.tip-root.reverse::after {
+  content: '';
+  position: absolute;
+  right: auto;  
+  left: -9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  background: rgba(26, 40, 40, 1);
+  clip-path: polygon(100% 0, 100% 100%, 0 50%);
+  z-index: 1;
+}
+
 .tip-inner::before {
   /* 箭头填充层 */
   content: '';
@@ -68,6 +113,20 @@ div {
   height: 12px;
   background: #05E6FF;/* 原背景色 */
   clip-path: polygon(0 0, 0% 100%, 100% 50%);
+  z-index: 1; /* 确保在边框层上方 */
+}
+
+.tip-root.reverse .tip-inner::before {
+  /* 箭头填充层 */
+  content: '';
+  position: absolute;
+  left: -11px; /* 原始位置 */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: #FFEA75;/* 原背景色 */
+  clip-path: polygon(100% 0, 100% 100%, 0 50%);
   z-index: 1; /* 确保在边框层上方 */
 }
 
