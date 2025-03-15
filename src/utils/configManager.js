@@ -7,12 +7,14 @@ const DEFAULT_CONFIG = {
     hnc_fd: 'http://172.20.11.80:9002/api/hnc_fd'
   },
   mqtt: {
-    brokerUrl: 'ws://127.0.0.1:8083/mqtt',
+    brokerUrl: 'mqtt://127.0.0.1:1883',
     clientId: 'AIRobot', //`robot-ai${Math.random().toString(16).substr(2, 8)}`,
     username: '',
     password: '',
+    protocolVersion: 4,  // 3.1 =	3   3.1.1  =  4   5.0 = 5
+    protocolId: "MQTT"   // 3.1 =MQIsdp    3.1.1 & 5.0 = MQTT 
   },
-  pagehidetime : 500,       //配置鼠标离开窗口后 自动隐藏的时间 单位秒
+  pagehidetime : 5,       //配置鼠标离开窗口后 自动隐藏的时间 单位秒
   maxDuration : 30,       //配置最大录音时长(小于3不生效，不限制时长) 单位秒
   silenceHold : 70,        //配置静音阈值10-100   
   silenceStop : 2,        //配置主动停止录音时长，默认2s

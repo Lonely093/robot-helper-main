@@ -90,7 +90,8 @@ class MqttClient {
         clean: this.options.clean,
         connectTimeout: this.options.connectTimeout,
         reconnectPeriod: 0, // 禁用内置自动重连
-        protocolVersion: 4,         // MQTT 3.1.1 对应版本号 4
+        protocolVersion: this.options.protocolVersion,         // MQTT 3.1.1 对应版本号 4
+        protocolId: this.options.protocolId
         //will: this._formatWillMessage() // 添加遗嘱消息
       })
       // 连接成功回调

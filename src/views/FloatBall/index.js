@@ -342,7 +342,7 @@ const app = Vue.createApp({
             } else {
               //指令全部处理完成  关闭tip  改为指令成功通知
               //this.closeTip();
-              var app = stateStore.getApp(runingcmd.cmd.app_id);
+              var app = stateStore.getApp(this.runingcmd.cmd.app_id);
               this.floatballtip(1, "好的，已为您打开" + app.name+"页面");
             }
           } else {
