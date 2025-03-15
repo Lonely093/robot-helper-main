@@ -112,25 +112,25 @@ const app = Vue.createApp({
       if (data.type == 11) {    
         this.IsTipClose = true;
         if(this.IsTodoClose && this.IsMouseLeave){
-          this.opacity = 0.3;
+          this.opacity = 0.5;
         }
       }
       //接受Tip传过来的打开页面消息
       if (data.type == 12) {    
         this.IsTipClose = false;
-        this.opacity = 0.8;
+        this.opacity = 1;
       }
       //接受todo传过来的关闭页面消息
       if (data.type == 21) {    
         this.IsTodoClose = true;
         if(this.IsTipClose && this.IsMouseLeave){
-          this.opacity = 0.3;
+          this.opacity = 0.5;
         }
       }
       //接受todo传过来的打开页面消息
       if (data.type == 22) {    
         this.IsTodoClose = false;
-        this.opacity = 0.8;
+        this.opacity = 1;
       }
     });
 
@@ -303,7 +303,7 @@ const app = Vue.createApp({
         }
         
         if(this.IsTodoClose && this.IsTipClose){
-          this.opacity = 0.3;
+          this.opacity = 0.5;
         }
         // this.isNotMore = true;
         //this.log("set-win-position", {newX, newY})
@@ -614,7 +614,7 @@ const app = Vue.createApp({
 
     hanleMouseEnter() {
       this.IsMouseLeave = false;
-      this.opacity = 0.8;
+      this.opacity = 1;
 
       //通知tip 鼠标在悬浮窗上
       ipcRenderer.send('message-from-renderer', {
@@ -627,7 +627,7 @@ const app = Vue.createApp({
       this.IsMouseLeave = true;
       if(this.IsTipClose && this.IsTodoClose)
       {
-        this.opacity = 0.3;
+        this.opacity = 0.5;
       }
       //通知tip 鼠标离开了悬浮窗
       ipcRenderer.send('message-from-renderer', {
@@ -664,7 +664,7 @@ const app = Vue.createApp({
     //   // ipcRenderer.send('setFloatIgnoreMouse', true)
     // },
     handleMouseDown(e) {
-      this.opacity = 0.8;
+      this.opacity = 1;
       if (e.button == 2) {
         // ipcRenderer.send('close-tip');
         // ipcRenderer.send("close-todo")

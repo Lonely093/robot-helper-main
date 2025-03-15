@@ -115,7 +115,7 @@ const app = Vue.createApp({
     setTimeout( async() => {
       await this.startRecording();
       this.isFirst = false;
-    }, 1000);
+    }, 800);
  
   },
   beforeUnmount() {
