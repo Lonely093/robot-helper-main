@@ -117,14 +117,14 @@ const createTipWindow = (data) => {
   //const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 270, top: screen.getPrimaryDisplay().workAreaSize.height - 140 }
   let tipWinX = data.x - 305;
   let tipWinY = data.y;
-  let reverse = false;
+  // let reverse = false;
   // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"111111111")
   if (data.closestEdge == "left") {
     tipWinX = data.x + 85;
-    reverse = true;
+    // reverse = true;
   } else if (data.closestEdge == "right") {
     tipWinX = data.x - 305;
-    reverse = false;
+    // reverse = false;
   }
   // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"222222222222222")
   if (tipWinX < 0) {
