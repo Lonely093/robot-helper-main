@@ -1,6 +1,6 @@
 const { app, Menu, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
-const { createSuspensionWindow, createEssayWindow, createTodoWindow, createTipWindow, createConfigWindow } = require("./window.js")
+const { createSuspensionWindow, createTodoWindow, createTipWindow } = require("./window.js")
 Menu.setApplicationMenu(null);
 const recorder = require('./utils/recorder');
 const readConfig = require('./utils/configManager');
@@ -8,7 +8,8 @@ const logger = require('./utils/logger');
 const axios = require("axios");
 const FormData = require('form-data');
 const fs = require('fs');
-let suspensionWinPosition = null;
+
+//请求URL地址
 const urlconfig = {
   hnc_stt: readConfig.http.hnc_stt,
   hnc_tti: readConfig.http.hnc_tti,
@@ -21,6 +22,20 @@ const suspensionConfig = {
   height: 80,
 }
 
+// 定义所有可能用到的页面
+const pages = {
+  suspensionWin: undefined,
+  essayWin: undefined,
+  todoWin: undefined,
+  configWin: undefined,
+  tipWin: undefined,
+}
+
+//悬浮窗位置
+let suspensionWinPosition = null;
+
+//右键菜单
+let suspensionMenu;
 
 // 单实例锁
 const gotTheLock = app.requestSingleInstanceLock()
@@ -42,25 +57,10 @@ ipcMain.handle('app-log', (event, { msg, ctx }) => {
   logger.info(msg, ctx);
 });
 
-// const suspensionConfig = {
-//   width: 200,
-//   height: 347,
-// }
-
-// 定义所有可能用到的页面
-const pages = {
-  suspensionWin: undefined,
-  essayWin: undefined,
-  todoWin: undefined,
-  configWin: undefined,
-  tipWin: undefined,
-}
-
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
-
 
 // 处理渲染进程发起的文件上传请求
 ipcMain.handle('hnc_stt', async (event, filePath) => {
@@ -102,7 +102,7 @@ ipcMain.handle('hnc_stt', async (event, filePath) => {
   }
 });
 
-// 处理渲染进程发起的文件上传请求
+// 处理渲染进程发起的指令交互请求
 ipcMain.handle('hnc_tti', async (event, info) => {
   try {
 
@@ -126,7 +126,7 @@ ipcMain.handle('hnc_tti', async (event, info) => {
   }
 });
 
-// 处理渲染进程发起的文件上传请求
+// 处理渲染进程发起的故障诊断请求
 ipcMain.handle('hnc_fd', async (event, info) => {
   try {
 
@@ -150,6 +150,7 @@ ipcMain.handle('hnc_fd', async (event, info) => {
   }
 });
 
+//窗口之间的消息交互
 ipcMain.on('message-from-renderer', (event, { target, data }) => {
 
   logger.info('窗口间消息推送', { target, data });
@@ -168,11 +169,6 @@ ipcMain.on('message-from-renderer', (event, { target, data }) => {
     targetWindow.webContents.send('message-to-renderer', data);
   }
 });
-
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 
 // 确保初始化顺序
 app.whenReady().then(() => {
@@ -205,23 +201,7 @@ app.on('activate', () => {
   }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
-
-// 主进程监听事件相关
-
-ipcMain.on('showEssay', (e, data) => {
-  if (pages.essayWin) {
-    // 如果已经打开了 就关闭重打开
-    pages.essayWin.close()
-    pages.essayWin = null
-  }
-  pages.essayWin = createEssayWindow()
-  pages.essayWin.on('close', (e, data) => {
-    pages.essayWin = null
-  })
-})
-
+//打开 故障诊断页面 监听
 ipcMain.on('showTodo', (e, data) => {
   if (pages.todoWin == null) {
     pages.todoWin = createTodoWindow(suspensionWinPosition)
@@ -234,6 +214,7 @@ ipcMain.on('showTodo', (e, data) => {
   }
 })
 
+//关闭 故障诊断页面 监听
 ipcMain.on('close-todo', (event) => {
   if (pages.todoWin) 
   {
@@ -242,8 +223,7 @@ ipcMain.on('close-todo', (event) => {
   }
 });
 
-
-
+//打开 提示框页面 监听
 ipcMain.on('showTip', (e, data) => {
   if (pages.tipWin == null) {
     pages.tipWin = createTipWindow(suspensionWinPosition)
@@ -255,6 +235,7 @@ ipcMain.on('showTip', (e, data) => {
   }
 })
 
+//关闭 提示框页面 监听
 ipcMain.on('close-tip', (event) => {
   if (pages.tipWin) 
   {
@@ -263,9 +244,7 @@ ipcMain.on('close-tip', (event) => {
   }
 });
 
-
-
-
+// 悬浮窗 窗口移动 监听
 ipcMain.on('ballWindowMove', (e, data) => {
   pages.suspensionWin.setBounds({ x: data.x, y: data.y, width: suspensionConfig.width, height: suspensionConfig.height })
   // let display =screen.getPrimaryDisplay();
@@ -295,8 +274,6 @@ ipcMain.on('ballWindowMove', (e, data) => {
     pages.tipWin.setBounds({ x: tipWinX, y: tipWinY })
   }
 
-
-
   if (pages.todoWin) {
     pages.todoWin.send('todo-reverse', data.closestEdge);
 
@@ -320,11 +297,9 @@ ipcMain.on('ballWindowMove', (e, data) => {
     pages.todoWin.setBounds({ x: todoWinX, y: todoWinY })
   }
 
-
 })
 
-let suspensionMenu
-let topFlag = true
+//右键 打开菜单 监听
 ipcMain.on('openMenu', (e) => {
   if (!suspensionMenu) {
     suspensionMenu = Menu.buildFromTemplate([
@@ -352,12 +327,6 @@ ipcMain.on('openMenu', (e) => {
   suspensionMenu.popup({});
 });
 
-ipcMain.on('setFloatIgnoreMouse', (e, data) => {
-  pages.suspensionWin.setIgnoreMouseEvents(data, { forward: true })
-})
-
-// main.js
-
 ipcMain.handle('get-win-content-bounds', (event) => {
   // 从发送请求的渲染进程获取对应的 BrowserWindow 实例
   const win = BrowserWindow.fromWebContents(event.sender);
@@ -365,6 +334,7 @@ ipcMain.handle('get-win-content-bounds', (event) => {
   // 返回窗口内容区域的边界信息（相对于屏幕）
   return win.getContentBounds();
 });
+
 ipcMain.handle('get-display-nearest-point', (event, point) => {
   // point 参数结构：{ x: number, y: number }
   return screen.getDisplayNearestPoint({
@@ -377,6 +347,7 @@ ipcMain.handle('get-primary-display', (event, point) => {
   // point 参数结构：{ x: number, y: number }
   return screen.getPrimaryDisplay();
 });
+
 ipcMain.on('set-win-position', (event, position) => {
   const win = BrowserWindow.fromWebContents(event.sender)
   // console.log("set-win-position", event, position)
@@ -387,6 +358,3 @@ ipcMain.on('set-win-position', (event, position) => {
     true // 启用动画
   )
 })
-ipcMain.on('todo-window-close', () => {
-  pages.todoWin.close();
-});

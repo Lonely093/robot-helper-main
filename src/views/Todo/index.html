@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>对话框</title>
+  <title>故障诊断</title>
   <link rel="stylesheet" href="index.css" />
 </head>
 
@@ -15,14 +15,8 @@
       </div>
 
       <div class="messages">
-        <!-- <div class="message bot" style="width: 475px;">
-          <div class="message-content" v-html="dfmessage"></div>
-        </div> -->
         <div v-for="(message, index) in messages" :key="index" class="message"
           :class="[ { 'reverse': reverse },message.type]">
-          <!-- <div class="message-content">
-            {{ message.text }}
-          </div> -->
           <div class="message-content" v-html="formatText(message)"></div>
         </div>
       </div>

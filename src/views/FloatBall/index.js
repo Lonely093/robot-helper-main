@@ -32,6 +32,10 @@ function calcS() {
  * - isRecording: 是否正在录音
  * - commandList: 待执行指令列表
  * - runingcmd: 当前执行的指令
+ * - checkTimeoutId: 检查指令执行超时定时器
+ * - IsMouseLeave: 鼠标是否离开
+ * - IsTipClose: 提示框页面是否关闭
+ * - IsTodoClose: 故障诊断页面是否关闭
  * 
  * @methods
  * - connectmqtt(): 连接MQTT服务
@@ -136,6 +140,7 @@ const app = Vue.createApp({
     if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
   },
   methods: {
+    
     initThrottledMove() {
       this.throttledMoveHandler = throttle(async (e) => {
         await this.handleMove(e);

@@ -106,7 +106,9 @@ const app = Vue.createApp({
           // 从分隔符结束的位置开始截取，直到字符串末尾
           const startIndex = separatorIndex + separator.length;
           botMessage = data.message.substring(startIndex);
-          commandlist = data.commandlist;
+          if(data.commandlist){
+            commandlist = data.commandlist;
+          }
         }
       }
       this.messages.push({ text: botMessage, type: messageType, commandlist: commandlist })
@@ -153,6 +155,7 @@ const app = Vue.createApp({
       ipcRenderer.invoke('app-log', { msg: 'todo--' + msg, ctx });
     },
 
+    //点击输入框  取消自动发送消息定时器
     async  handleMouseDown(e) {
       if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
     },
