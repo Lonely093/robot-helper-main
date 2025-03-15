@@ -108,12 +108,16 @@ const app = Vue.createApp({
     await this.checkMicrophoneState();
     this.deviceCheckTimer = setInterval(() => this.checkMicrophoneState(), 5000);
 
-    //间隔一秒启动录音
-    setTimeout( async() => {
-      await this.startRecording();
+    if(this.isCanRecording)
+    {
+      //间隔一秒启动录音
+      setTimeout( async() => {
+        await this.startRecording();
+        this.isFirst = false;
+      }, 800);
+    }else{
       this.isFirst = false;
-    }, 800);
- 
+    }
   },
   beforeUnmount() {
     if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
