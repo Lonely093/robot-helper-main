@@ -13,12 +13,15 @@ div {
 }
 
 .tip-root {
+  position: relative; /* 添加定位上下文 */
+  margin-right: 15px; /* 为箭头留出空间 */
+  width: calc(100vw - 15px); /* 调整宽度保持原布局 */
   background: rgba(26, 40, 40, 1);
-  width: 100vw;
+  /* width: 100vw; */
   height: 100vh;
   border-radius: 5px;
   /* 圆角大小 */
-  overflow: hidden;
+  /* overflow: hidden; */
   /* 隐藏溢出内容 */
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
   /* 可选阴影 */
@@ -41,6 +44,21 @@ div {
   -webkit-mask-composite: source-out;
   padding: 1px;
 }
+
+.tip-root::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(135deg, #FFEA75 0%, #05E6FF 100%);
+  clip-path: polygon(0 0, 0% 100%, 100% 50%);
+  z-index: 1;
+}
+
+
 
 .content {
   color: white;

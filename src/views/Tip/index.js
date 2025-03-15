@@ -446,8 +446,8 @@ const app = Vue.createApp({
       
       // 高清屏适配
       const dpr = window.devicePixelRatio || 1
-      canvas.width = 300 * dpr
-      canvas.height = 60 * dpr
+      canvas.width = 285 * dpr
+      canvas.height = 55 * dpr
       canvas.style.width = canvas.width + 'px'
       canvas.style.height = canvas.height + 'px'
 

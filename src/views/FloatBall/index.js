@@ -557,7 +557,7 @@ const app = Vue.createApp({
       //首先检查MQTT
       if(!mqttClient.GetConnected())
       {
-        this.setTimeoutSend(target,"MQTT服务未连接");
+        this.setTimeoutSend(target,"打开故障诊断，MQTT服务未连接如何处理？");
         return false;
       }
       //判断APP注册消息
