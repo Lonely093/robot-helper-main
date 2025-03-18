@@ -374,15 +374,18 @@ class MqttClient {
   }
 
   CommandOpen(sendcmd){
-    this.publish('Command/Open', sendcmd)
+    var msg="{app_id:"+sendcmd.app_id+",timestamp:"+sendcmd.timestamp+"}";
+    this.publish('Command/Open', msg)
   }
 
   CommandClose(sendcmd){
-    this.publish('Command/Close', sendcmd)
+    var msg="{app_id:"+sendcmd.app_id+",command:"+sendcmd.command+",timestamp:"+sendcmd.timestamp+"}";
+    this.publish('Command/Close', msg)
   }
 
   CommandAction(sendcmd){
-    this.publish('Command/Action', sendcmd)
+    var msg="{app_id:"+sendcmd.app_id+",timestamp:"+sendcmd.timestamp+"}";
+    this.publish('Command/Action', msg)
   }
 
 

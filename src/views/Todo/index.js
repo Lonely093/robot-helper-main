@@ -238,7 +238,9 @@ const app = Vue.createApp({
         this.isRecording = true;
         this.userInput="";
         this.placeholdertext = "倾听中...";
-        this.startMonitoring();
+        setTimeout(() => {
+          this.startMonitoring();
+        }, 2000);
         if(this.maxDuration > 2){
           setTimeout(() => this.stopRecording(), this.maxDuration * 1000);
         }
@@ -307,7 +309,7 @@ const app = Vue.createApp({
       canvas.width = rect.width * dpr
       canvas.height = rect.height * dpr
 
-      canvas.width = 480 * dpr
+      canvas.width = 680 * dpr
       canvas.height = 40 * dpr
       canvas.style.width = canvas.width + 'px'
       canvas.style.height = canvas.height + 'px'
@@ -447,7 +449,7 @@ const app = Vue.createApp({
           if (this.userInput.trim() !== '') {
             this.autoSendMessageId= setTimeout(() => {
               this.sendMessage();
-            }, 2000);
+            }, 1000);
           }else{
             this.sendErrorMessage("没听清您的声音，请重试");
           }

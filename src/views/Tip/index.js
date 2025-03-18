@@ -271,7 +271,9 @@ const app = Vue.createApp({
         this.isRecording = true;
         this.userInput="";
         this.topmessage = this.dfmessage;
-        this.startMonitoring();
+        setTimeout(() => {
+          this.startMonitoring();
+        }, 2000);
         if(this.maxDuration > 2){
           setTimeout(() => this.stopRecording(), this.maxDuration * 1000);
         }
@@ -393,7 +395,7 @@ const app = Vue.createApp({
     },
     checkSilence(volume) {
       if (this.isStopRecording) return;
-      //此处为超过1s检测到的麦克风电流小于0.6则停止录音
+      //麦克风电流小于 silenceHold 超过 silenceStop 秒则停止录音
       if (volume * 100 < this.silenceHold) {
         this.silenceCount += 1 / 60;
         if (this.silenceCount >= this.silenceStop) {
@@ -468,7 +470,7 @@ const app = Vue.createApp({
         //两秒钟后自动发送，若两秒钟内点击输入框则停止发送
         this.autoSendMessageId= setTimeout(() => {
           this.sendMessage();
-        }, 2000);
+        }, 1000);
       } catch (error) {
         this.RecordingErrorMessage(99, "无法启用语音，请试试手动输入吧");
         this.log("语音交互异常 ", error.message);

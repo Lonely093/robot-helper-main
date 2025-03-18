@@ -330,13 +330,13 @@ const app = Vue.createApp({
             } else {
               //指令全部处理完成  关闭tip  改为指令成功通知
               //this.closeTip();
-              var app = stateStore.getApp(this.runingcmd.cmd.app_id);
-              this.floatballtip(1, "好的，已为您打开" + app.name+"页面");
+              this.floatballtip(1, "好的，已为您执行成功");
             }
           } else {
             //故障诊断指令执行成功，关闭故障诊断
             //this.closeTodo();
             this.runingcmd = null;
+            this.floatballtodo(1, "好的，已为您执行成功");
           }
         } else {
           //指令执行失败
@@ -580,7 +580,7 @@ const app = Vue.createApp({
           target: target, //指定目标窗口
           data: { type: 0, message }
         });
-      }, 2000);
+      }, 1000);
       this.commandList = [];
     },
 
