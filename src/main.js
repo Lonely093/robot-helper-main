@@ -18,8 +18,8 @@ const urlconfig = {
 
 // 悬浮球的一些设置
 const suspensionConfig = {
-  width: 80,
-  height: 80,
+  width: 85,
+  height: 85,
 }
 
 // 定义所有可能用到的页面
@@ -42,7 +42,7 @@ const gotTheLock = app.requestSingleInstanceLock()
 if (!gotTheLock) {
   // 如果已经有实例运行，直接退出
   app.quit()
-} 
+}
 
 // 启动日志
 logger.info('应用程序启动', { version: app.getVersion() });
@@ -210,16 +210,15 @@ ipcMain.on('showTodo', (e, data) => {
     pages.todoWin.on('close', (e, data) => {
       pages.todoWin = null
     })
-    pages.suspensionWin.webContents.send('message-to-renderer', { type : 22 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 22 });
   }
 })
 
 //关闭 故障诊断页面 监听
 ipcMain.on('close-todo', (event) => {
-  if (pages.todoWin) 
-  {
+  if (pages.todoWin) {
     pages.todoWin.close();
-    pages.suspensionWin.webContents.send('message-to-renderer', { type : 21 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 21 });
   }
 });
 
@@ -231,16 +230,15 @@ ipcMain.on('showTip', (e, data) => {
     pages.tipWin.on('close', (e, data) => {
       pages.tipWin = null
     })
-    pages.suspensionWin.webContents.send('message-to-renderer', { type : 12 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 12 });
   }
 })
 
 //关闭 提示框页面 监听
 ipcMain.on('close-tip', (event) => {
-  if (pages.tipWin) 
-  {
+  if (pages.tipWin) {
     pages.tipWin.close();
-    pages.suspensionWin.webContents.send('message-to-renderer', { type : 11 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 11 });
   }
 });
 
@@ -252,14 +250,14 @@ ipcMain.on('ballWindowMove', (e, data) => {
 
   suspensionWinPosition = data;
   if (pages.tipWin) {
-    let tipWinX = data.x - 305;
-    let tipWinY = data.y;
+    let tipWinX = data.x - 300;
+    let tipWinY = data.y - 15;
 
     pages.tipWin.send('tip-reverse', data.closestEdge)
     if (data.closestEdge == "left") {
       tipWinX = data.x + 85;
     } else if (data.closestEdge == "right") {
-      tipWinX = data.x - 305;
+      tipWinX = data.x - 300;
     }
     if (tipWinX < 0) {
       tipWinX = 0
@@ -277,12 +275,12 @@ ipcMain.on('ballWindowMove', (e, data) => {
   if (pages.todoWin) {
     pages.todoWin.send('todo-reverse', data.closestEdge);
 
-    let todoWinX = data.x - 505;
-    let todoWinY = data.y - 350;
+    let todoWinX = data.x - 705;
+    let todoWinY = data.y - 430;
     if (data.closestEdge == "left") {
-      todoWinX = data.x + 85;
+      todoWinX = data.x + 95;
     } else if (data.closestEdge == "right") {
-      todoWinX = data.x - 505;
+      todoWinX = data.x - 705;
     }
     if (todoWinX < 0) {
       todoWinX = 0

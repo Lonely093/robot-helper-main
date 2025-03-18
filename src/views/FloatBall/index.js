@@ -53,7 +53,7 @@ const app = Vue.createApp({
     return {
       // isNotMore: true,
       count: [0, 0],
-      opacity: 0.5,
+      opacity: 0.7,
       mainColor: '',
       subColor: '',
       finalTranscript: "",
@@ -98,7 +98,7 @@ const app = Vue.createApp({
       if (data.type == 11) {    
         this.IsTipClose = true;
         if(this.IsTodoClose && this.IsMouseLeave){
-          this.opacity = 0.5;
+          this.opacity = 0.7;
         }
       }
       //接受Tip传过来的打开页面消息
@@ -110,7 +110,7 @@ const app = Vue.createApp({
       if (data.type == 21) {    
         this.IsTodoClose = true;
         if(this.IsTipClose && this.IsMouseLeave){
-          this.opacity = 0.5;
+          this.opacity = 0.7;
         }
       }
       //接受todo传过来的打开页面消息
@@ -291,7 +291,7 @@ const app = Vue.createApp({
         }
         
         if(this.IsTodoClose && this.IsTipClose){
-          this.opacity = 0.5;
+          this.opacity = 0.7;
         }
         // this.isNotMore = true;
         //this.log("set-win-position", {newX, newY})
@@ -619,7 +619,7 @@ const app = Vue.createApp({
       this.IsMouseLeave = true;
       if(this.IsTipClose && this.IsTodoClose)
       {
-        this.opacity = 0.5;
+        this.opacity = 0.7;
       }
       //通知tip 鼠标离开了悬浮窗
       ipcRenderer.send('message-from-renderer', {

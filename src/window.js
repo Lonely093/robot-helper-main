@@ -58,12 +58,12 @@ const createEssayWindow = () => {
 
 const createTodoWindow = (data) => {
   let display = data.display;
-  let todoWinX = data.x - 505;
-  let todoWinY = data.y - 350;
+  let todoWinX = data.x - 705;
+  let todoWinY = data.y - 430;
   if (data.closestEdge == "left") {
-    todoWinX = data.x + 85;
+    todoWinX = data.x + 95;
   } else if (data.closestEdge == "right") {
-    todoWinX = data.x - 505;
+    todoWinX = data.x - 705;
   }
   if (todoWinX < 0) {
     todoWinX = 0
@@ -72,16 +72,16 @@ const createTodoWindow = (data) => {
   }
   if (todoWinY < 0) {
     todoWinY = 0
-  } else if (todoWinY > display.workArea.height - 500) {
-    todoWinY = display.workArea.height - 500
+  } else if (todoWinY > display.workArea.height - 450) {
+    todoWinY = display.workArea.height - 450
   }
   const win = new BrowserWindow({
     skipTaskbar: true, // 新增这行关闭任务栏显示
     frame: false,
-    minWidth: 500,
-    minHeight: 400,
-    width: 500,
-    height: 400,
+    // minWidth: 600,
+    // minHeight: 500,
+    width: 700,
+    height: 450,
     resizable: false,
     x: todoWinX,
     y: todoWinY,
@@ -115,15 +115,15 @@ const createTipWindow = (data) => {
   let display = data.display;
   //const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 280, top: 100 }
   //const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 270, top: screen.getPrimaryDisplay().workAreaSize.height - 140 }
-  let tipWinX = data.x - 305;
-  let tipWinY = data.y;
+  let tipWinX = data.x - 300;
+  let tipWinY = data.y - 15;
   // let reverse = false;
   // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"111111111")
   if (data.closestEdge == "left") {
     tipWinX = data.x + 85;
     // reverse = true;
   } else if (data.closestEdge == "right") {
-    tipWinX = data.x - 305;
+    tipWinX = data.x - 300;
     // reverse = false;
   }
   // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"222222222222222")
