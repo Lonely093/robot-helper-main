@@ -40,6 +40,8 @@ const app = Vue.createApp({
       isCanRecording: true,
       deviceCheckTimer: null,
       isStopRecording: false,
+      isSpeacking: false,
+      recordingStartTime: 0,
       isRecording: false,
       mediaStream: null,
       audioContext: null,
@@ -271,9 +273,8 @@ const app = Vue.createApp({
         this.isRecording = true;
         this.userInput="";
         this.topmessage = this.dfmessage;
-        setTimeout(() => {
-          this.startMonitoring();
-        }, 2000);
+        this.recordingStartTime=new Date();
+        this.startMonitoring();
         if(this.maxDuration > 2){
           setTimeout(() => this.stopRecording(), this.maxDuration * 1000);
         }
@@ -375,12 +376,13 @@ const app = Vue.createApp({
           this.log('[Renderer] 数据处理失败:', err.message);
         }
       };
-      this.mediaRecorder.start(500); // 每0.5秒收集数据
+      this.mediaRecorder.start(200); // 每0.5秒收集数据
       //this.log('[Renderer] 媒体录音器已启动');
     },
     startMonitoring() {
       const checkStatus = () => {
         if (!this.isRecording) return;
+       
         // 分析音量
         const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
         this.analyser.getByteFrequencyData(dataArray);
@@ -395,6 +397,15 @@ const app = Vue.createApp({
     },
     checkSilence(volume) {
       if (this.isStopRecording) return;
+      if (!this.isSpeacking)
+      {
+        //两种情况判定为开始检测   1 检测到说话  2超过两秒钟
+        const diff = Math.abs(new Date() - this.recordingStartTime);
+        if(diff  >= 2000)  this.isSpeacking = true;
+        if(volume * 100 >= this.silenceHold)  this.isSpeacking = true;
+      }
+      if (!this.isSpeacking) return;
+
       //麦克风电流小于 silenceHold 超过 silenceStop 秒则停止录音
       if (volume * 100 < this.silenceHold) {
         this.silenceCount += 1 / 60;
@@ -501,6 +512,8 @@ const app = Vue.createApp({
       this.isStopRecording = false;
       this.silenceCount = 0;
       this.placeholdertext = "";
+      this.isSpeacking = false;
+      this.recordingStartTime = 0;
       this.log('[Renderer] 资源已清理');
     },
 
