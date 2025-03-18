@@ -321,7 +321,7 @@ const app = Vue.createApp({
       if (this.runingcmd != null && appId==this.runingcmd.cmd.app_id ) {
         //取消超时检测
         if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
-        if (msg == "ok") //指令执行完成
+        if (msg == "ok" || msg == "true" || msg == true) //指令执行完成
         {
           if (this.runingcmd.type == 1) {
             this.commandList = this.commandList.shift()

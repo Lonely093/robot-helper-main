@@ -290,6 +290,10 @@ class MqttClient {
       if (message.apps && message.apps.length > 0) {
         message.apps.forEach(app => {
           app.state = "0";//默认设置为未启动
+          if(app.app_id=="1"||app.app_id==1)
+          {
+            app.state = "1"; //HMI默认为启动
+          }
           stateStore.saveApp(app.app_id, app);
           //根据app是否支持启动，来订阅  启动/关闭/指令执行功能
           if (app.ai_interaction.action) {
