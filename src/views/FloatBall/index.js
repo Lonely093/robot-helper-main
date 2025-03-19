@@ -136,6 +136,7 @@ const app = Vue.createApp({
   },
   beforeUnmount() {
     this.throttledMoveHandler.cancel(); // 重要！销毁时取消节流
+    this.throttledTouchMoveHandler.cancel(); // 重要！销毁时取消节流
     mqttClient._safeDisconnect();  //安全断开MQTT连接
     if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
   },
@@ -144,6 +145,9 @@ const app = Vue.createApp({
     initThrottledMove() {
       this.throttledMoveHandler = throttle(async (e) => {
         await this.handleMove(e);
+      }, 3); // 60 FPS
+      this.throttledTouchMoveHandler = throttle(async (e) => {
+        await this.handleTouchMove(e);
       }, 3); // 60 FPS
     },
 
@@ -187,41 +191,63 @@ const app = Vue.createApp({
       ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY, closestEdge: closestEdge, display: display })
     },
 
+    async handleTouchMove(e) {
+      const touch = e.touches[0];
+      const rect = this.$refs.draggableElement.getBoundingClientRect();
+      const display = await ipcRenderer.invoke('get-primary-display');
+      const screenX = touch.screenX - biasX;
+      const workArea = display.workArea;
+      const edges = {
+        left: screenX - workArea.x,
+        right: workArea.x + workArea.width - (screenX + rect.width),
+
+      };
+
+      let minDist = Infinity;
+      let closestEdge = null;
+
+      Object.entries(edges).forEach(([edge, dist]) => {
+        if (dist < minDist) {
+          minDist = dist;
+          closestEdge = edge;
+        }
+      });
+      if (closestEdge == "left") {
+        this.reverse = true;
+      } else {
+        this.reverse = false;
+      }
+      ipcRenderer.send('ballWindowMove', { x: touch.screenX - biasX, y: touch.screenY - biasY, closestEdge: closestEdge, display: display })
+    },
+
     //发送日志记录
     log(msg, ctx) {
       ipcRenderer.invoke('app-log', { msg: 'floatball--' + msg, ctx });
     },
 
     async snapToEdge() {
-      //this.log("draggableElement.value", this.$refs)
       const rect = this.$refs.draggableElement.getBoundingClientRect();
-      //this.log("rect", rect)
       // 获取窗口内容区域边界信息
       const winBounds = await ipcRenderer.invoke('get-win-content-bounds');
 
       // 计算屏幕绝对坐标
       const screenX = winBounds.x + rect.left;
       const screenY = winBounds.y + rect.top;
-      //this.log("screenX,screenY", screenX, screenY)
+
       // 获取最近的显示器
       const display = await ipcRenderer.invoke('get-display-nearest-point', {
         x: screenX,
         y: screenY
       });
 
-      //this.log("winBounds", winBounds)
-      //this.log("display.workArea", display.workArea)
+
       // 吸附阈值（20px）
       const workArea = display.workArea;
       const SNAP_THRESHOLD = (display.workArea.width - workArea.x) / 2;
-      // this.log("screenX - workArea.x", screenX - workArea.x)
-      // this.log("workArea.x + workArea.width - (screenX + rect.width)", workArea.x + workArea.width - (screenX + rect.width))
       // 计算与各边的距离
       const edges = {
         left: screenX - workArea.x,
         right: workArea.x + workArea.width - (screenX + rect.width),
-        // top: screenY - workArea.y,
-        // bottom: workArea.y + workArea.height - (screenY + rect.height)
       };
       //this.log("edges", edges)
       // 找到最近边缘
@@ -235,23 +261,6 @@ const app = Vue.createApp({
         }
       });
 
-      // 如果没有正距离（可能组件完全超出屏幕），则找绝对值最小的
-      // if (closestEdge === null) {
-      //   minDist = Infinity;
-      //   Object.entries(edges).forEach(([edge, dist]) => {
-      //     const absDist = Math.abs(dist);
-      //     if (absDist < minDist) {
-      //       minDist = absDist;
-      //       closestEdge = edge;
-      //     }
-      //   });
-      // }
-
-      // this.log("minDist ", minDist)
-      // this.log("closestEdge ", closestEdge)
-      // this.log("SNAP_THRESHOLD", SNAP_THRESHOLD)
-      // 执行吸附
-      // this.log("minDist", minDist)
       if (minDist <= SNAP_THRESHOLD) {
         let newX = winBounds.x;
         let newY = winBounds.y;
@@ -266,19 +275,11 @@ const app = Vue.createApp({
             this.reverse = false;
             newX = workArea.x + workArea.width - rect.left - rect.width;
             break;
-          // case 'top':
-          //   newY = workArea.y - rect.top;
-          //   break;
-          // case 'bottom':
-          //   newY = workArea.y + workArea.height - rect.top - rect.height;
-          //   break;
+     
         }
-        // this.log("11111111111");
-        // this.log("111111111screenX - workArea.x ",screenX, workArea.x );
+
         if (screenX - workArea.x < 0) {
-          // this.log("222222");
           newX = workArea.x - rect.left;
-          // this.log(newX);
         } else if (workArea.x + workArea.width - (screenX + rect.width) < 0) {
           newX = workArea.x + workArea.width - rect.left - rect.width;
         }
@@ -293,8 +294,6 @@ const app = Vue.createApp({
         if(this.IsTodoClose && this.IsTipClose){
           this.opacity = 0.7;
         }
-        // this.isNotMore = true;
-        //this.log("set-win-position", {newX, newY})
         // 更新窗口位置
         ipcRenderer.send('set-win-position', {
           x: Math.round(newX),
@@ -662,14 +661,49 @@ const app = Vue.createApp({
 
     },
 
+    handleTouchStart(e) {
+      this.opacity = 1;
+      const touch = e.touches[0];
+      
+      // 记录初始偏移量
+      biasX = touch.clientX;
+      biasY = touch.clientY;
+      
+      // 记录初始位置用于点击判断
+      moveS[0] = touch.screenX;
+      moveS[1] = touch.screenY; 
+
+      document.addEventListener('touchmove', this.throttledTouchMoveHandler);
+      document.addEventListener('touchend', this.handleTouchEnd);
+      document.addEventListener('touchcancel', this.handleTouchEnd);
+      this.hanleMouseEnter();
+    },
+
+    async handleTouchEnd(e) {
+      // 刚离开屏幕的触点
+      const touch = e.changedTouches[0];
+      moveS[2] = touch.screenX - e.x;
+      moveS[3] = touch.screenY - e.y;
+      biasX = 0;
+      biasY = 0;
+      await this.snapToEdge();
+      if (calcS() ) {
+        this.closeTodo();
+        this.showTip();
+      }
+      document.removeEventListener('touchmove', this.throttledTouchMoveHandler);
+      document.removeEventListener('touchend', this.handleTouchEnd);
+      document.removeEventListener('touchcancel', this.handleTouchEnd);
+      this.hanleMouseLeave();
+    },
+
+
+
     async handleMouseUp(e) {
       moveS[2] = e.screenX - e.x
       moveS[3] = e.screenY - e.y
-
       biasX = 0
       biasY = 0
-      document.removeEventListener('mousemove', this.throttledMoveHandler)
-
       await this.snapToEdge();
       if (calcS() && e.button == 0) {
         this.closeTodo();
@@ -678,6 +712,8 @@ const app = Vue.createApp({
       if (calcS() && e.button == 1) {
         this.showTodo();
       }
+      document.removeEventListener('mousemove', this.throttledMoveHandler)
+      document.removeEventListener('mouseup', this.handleMouseUp)
     },
 
   },

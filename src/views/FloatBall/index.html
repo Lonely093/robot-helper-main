@@ -9,7 +9,7 @@
 
 <body>
   <div id="app">
-    <div class="warp" @mousedown="handleMouseDown" ref="draggableElement"
+    <div class="warp" @mousedown="handleMouseDown" @touchstart.passive="handleTouchStart" ref="draggableElement"
       :style="{opacity: opacity}">
 
       <div class="main-container">
