@@ -11,42 +11,49 @@ const app = Vue.createApp({
     return {
       userInput: '',
       placeholdertext:"有问题尽管问我...",
-      // dfmessage: "当前是故障诊断页面，您有相关问题可以进行咨询",
       messages: [
         // {
-        //   text: ' **参数配置不合理的原因及解决方案**  \n   - 参数配置不合理的原因包括：坐标轴参数103517“最高速度限制” 是否设置正确；坐标轴参数103587“电机额定转速” 是否设置正确；轴参数中的103005“电子齿轮比分母”、103067 “轴每转脉冲数”、设备接口参数中的503015“反馈位置循环脉冲数”数值设置不一致；系统超速的限值(每个周期的最大长度增量)是否正确计算；以及超速系数是否设置正确。  \n   - 对应的解决方案：检查上述参数是否设置正确，计算超速限值，确保参数配置正确，必要时进行调整。  \n\n2. **编码器反馈信号异常的原因及解决方案**  \n   - 编码器反馈信号异常的原因包括：驱动单元或电机参数（如103005“电子齿轮比分母”、103067 “轴每转脉冲数”）设置不正确；编码器线缆或反馈信号异常。  \n   - 对应的解决方案：更换驱动单元或电机，通过交换法逐一排查；检查编码器线缆，更换并测试。',
+        //   text: ' **参数配置不合理的原因及解决方案**  \n   - appopen     appclose  参数配置不合理的原因包括：坐标轴参数103517“最高速度限制” 是否设置正确；坐标轴参数103587“电机额定转速” 是否设置正确；轴参数中的103005“电子齿轮比分母”、103067 “轴每转脉冲数”、设备接口参数中的503015“反馈位置循环脉冲数”数值设置不一致；系统超速的限值(每个周期的最大长度增量)是否正确计算；以及超速系数是否设置正确。  \n   - 对应的解决方案：检查上述参数是否设置正确，计算超速限值，确保参数配置正确，必要时进行调整。  \n\n2. **编码器反馈信号异常的原因及解决方案**  \n   - 编码器反馈信号异常的原因包括：驱动单元或电机参数（如103005“电子齿轮比分母”、103067 “轴每转脉冲数”）设置不正确；编码器线缆或反馈信号异常。  \n   - 对应的解决方案：更换驱动单元或电机，通过交换法逐一排查；检查编码器线缆，更换并测试。',
         //   type: 'bot',
         //   commandlist: [
         //     {
-        //       "app_id": "(hmi_id)103005",
+        //       "app_id": "(hmi_uuid)",
+        //       "command": "appopen"
+        //     },
+        //     {
+        //       "app_id": "(hmi_uuid)",
+        //       "command": "appclose"
+        //     },
+        //     {
+        //       "app_id": "(hmi_uuid)",
         //       "command": "103005"
         //     },
         //     {
-        //       "app_id": "(hmi_id)103034",
+        //       "app_id": "(hmi_uuid)",
         //       "command": "103034"
         //     },
         //     {
-        //       "app_id": "(hmi_id)103048",
+        //       "app_id": "(hmi_uuid)",
         //       "command": "103048"
         //     },
         //     {
-        //       "app_id": "(hmi_id)103067",
+        //       "app_id": "(hmi_uuid)",
         //       "command": "103067"
         //     },
         //     {
-        //       "app_id": "(hmi_id)103517",
+        //       "app_id": "(hmi_uuid)",
         //       "command": "103517"
         //     },
         //     {
-        //       "app_id": "(hmi_id)103526",
+        //       "app_id": "(hmi_uuid)",
         //       "command": "103526"
         //     },
         //     {
-        //       "app_id": "(hmi_id)103587",
+        //       "app_id": "(hmi_uuid)",
         //       "command": "103587"
         //     },
         //     {
-        //       "app_id": "(hmi_id)503015",
+        //       "app_id": "(hmi_uuid)",
         //       "command": "503015"
         //     }
         //   ],
@@ -221,7 +228,7 @@ const app = Vue.createApp({
         // 初始化音频流
         try {
           this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          this.log('[Renderer] 已获得麦克风权限');
+          //this.log('[Renderer] 已获得麦克风权限');
         } catch (err) {
           this.log('[Renderer] 麦克风访问被拒绝:', err.message);
           if (err.message == "Requested device not found") {
@@ -347,7 +354,7 @@ const app = Vue.createApp({
       };
 
       this.mediaRecorder.start(200); // 每1秒收集数据
-      this.log('[Renderer] 媒体录音器已启动');
+      //this.log('[Renderer] 媒体录音器已启动');
     },
     startMonitoring() {
       const checkStatus = () => {
@@ -443,7 +450,7 @@ const app = Vue.createApp({
       this.isSpeacking = false;
       this.recordingStartTime = 0;
       this.placeholdertext = "有问题尽管问我...";
-      this.log('[Renderer] 资源已清理');
+      //this.log('[Renderer] 资源已清理');
     },
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
@@ -459,9 +466,9 @@ const app = Vue.createApp({
         } else {
           this.userInput = uploadres.data.result;
           if (this.userInput.trim() !== '') {
-            this.autoSendMessageId= setTimeout(() => {
+            //this.autoSendMessageId= setTimeout(() => {
               this.sendMessage();
-            }, 1000);
+            //}, 800);
           }else{
             this.sendErrorMessage("没听清您的声音，请重试");
           }
@@ -504,9 +511,10 @@ const app = Vue.createApp({
         });
     },
     handleCommandClick(appCommand, appId) {
-      this.log('选择执行指令:', appCommand, appId);
-      let resp = '选择执行指令:' + appCommand;
+      this.log('执行指令  ', appCommand, appId);
+      let resp = '执行指令 ' + appCommand;
       this.messages.push({ text: resp, type: 'user', commandlist: [] });
+      this.messages.push({ text: '好的，正在为您执行', type: 'bot', commandlist: [] });
       this.scrollToBottom();
 
       //同时将消息发送至悬浮窗，      2 表示执行指令

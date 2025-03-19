@@ -297,25 +297,38 @@ class MqttClient {
           stateStore.saveApp(app.app_id, app);
           //根据app是否支持启动，来订阅  启动/关闭/指令执行功能
           if (app.ai_interaction.action) {
-            this.subscribe("App/Launch/" + app.app_id, (topic, message) => {
-              this.AppLaunch(topic, message)
-            });
-            this.subscribe("App/Exit/" + app.app_id, (topic, message) => {
-              this.AppExit(topic, message)
-            });
-            this.subscribe("App/Message/" + app.app_id, (topic, message) => {
-              this.AppMessage(topic, message)
-            });
+            // this.subscribe("App/Launch/" + app.app_id, (topic, message) => {
+            //   this.AppLaunch(topic, message)
+            // });
+            // this.subscribe("App/Exit/" + app.app_id, (topic, message) => {
+            //   this.AppExit(topic, message)
+            // });
+            // this.subscribe("App/Message/" + app.app_id, (topic, message) => {
+            //   this.AppMessage(topic, message)
+            // });
           }
           //是否可执行指令
-          if (app.ai_interaction.exec) {
-            this.subscribe("App/Reply/" + app.app_id, (topic, message) => {
-              this.AppReply(topic, message)
-            });
-          }
+          // if (app.ai_interaction.exec) {
+          //   this.subscribe("App/Reply/" + app.app_id, (topic, message) => {
+          //     this.AppReply(topic, message)
+          //   });
+          // }
+        });
+        this.subscribe("App/Launch", (topic, message) => {
+          this.AppLaunch(topic, message)
+        });
+        this.subscribe("App/Exit", (topic, message) => {
+          this.AppExit(topic, message)
+        });
+        this.subscribe("App/Message", (topic, message) => {
+          this.AppMessage(topic, message)
+        });
+        this.subscribe("App/Reply", (topic, message) => {
+          this.AppReply(topic, message)
         });
       }
     })
+   
     this.client.subscribe('AppCenter/Apps', { qos: 2, retain: true });
   }
 
@@ -335,6 +348,7 @@ class MqttClient {
     if (app) {
       app.state = "0";
       stateStore.saveApp(app.app_id, app);
+      this.triggerAppExitEvent(app.app_id);
     }
   }
 
@@ -350,6 +364,13 @@ class MqttClient {
 
   triggerAppLaunchEvent(appId) {
     const event = new CustomEvent('app-launch', {
+      detail: { appId }
+    });
+    window.dispatchEvent(event);
+  }
+
+  triggerAppExitEvent(appId) {
+    const event = new CustomEvent('app-exit', {
       detail: { appId }
     });
     window.dispatchEvent(event);
@@ -379,15 +400,14 @@ class MqttClient {
   }
 
   CommandClose(sendcmd){
-    var msg="{app_id:"+sendcmd.app_id+",command:"+sendcmd.command+",timestamp:"+sendcmd.timestamp+"}";
+    var msg="{app_id:"+sendcmd.app_id+",timestamp:"+sendcmd.timestamp+"}";
     this.publish('Command/Close', msg)
   }
 
   CommandAction(sendcmd){
-    var msg="{app_id:"+sendcmd.app_id+",timestamp:"+sendcmd.timestamp+"}";
+    var msg="{app_id:"+sendcmd.app_id+",command:"+sendcmd.command+",timestamp:"+sendcmd.timestamp+"}";
     this.publish('Command/Action', msg)
   }
-
 
 }
 

@@ -28,7 +28,8 @@ const formatterTime = () => {
   const hour = date.getHours() < 10 ? ('0' + date.getHours()) : date.getHours()
   const min = date.getMinutes() < 10 ? ('0' + date.getMinutes()) : date.getMinutes()
   const seconds = date.getSeconds() < 10 ? ('0' + date.getSeconds()) : date.getSeconds()
-  return `${year}-${month}-${day} ${hour}:${min}:${seconds}`
+  const milliseconds = date.getMilliseconds()
+  return `${year}-${month}-${day} ${hour}:${min}:${seconds}:${milliseconds}`
 }
 
 // 核心日志函数
