@@ -161,15 +161,17 @@ const app = Vue.createApp({
             message: this.userInput
           }
         });
-        this.userInput="";
+        //this.userInput="";
       }
     },
 
     startTipCloseTimer() {
       if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId) // 清除旧定时器
       this.tipCloseTimeoutId = setTimeout(() => {
-        ipcRenderer.send("close-tip");
-        },  parseInt(configManager.pagehidetime) * 1000)  
+        if(this.IsMouseLeave && !this.isRecording && !this.isStopRecording){
+          ipcRenderer.send("close-tip");
+        }
+        }, parseInt(configManager.pagehidetime) * 1000)  
     },
 
     hanleMouseEnter() {
@@ -254,7 +256,7 @@ const app = Vue.createApp({
         // 初始化音频流
         try {
           this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          this.log('[Renderer] 已获得麦克风权限');
+          //this.log('[Renderer] 已获得麦克风权限');
         } catch (err) {
           if (err.message == "Requested device not found") {
             this.RecordingErrorMessage(99, "无法启用语音，请试试手动输入吧");
@@ -405,7 +407,7 @@ const app = Vue.createApp({
         if(volume * 100 >= this.silenceHold)  this.isSpeacking = true;
       }
       if (!this.isSpeacking) return;
-
+      
       //麦克风电流小于 silenceHold 超过 silenceStop 秒则停止录音
       if (volume * 100 < this.silenceHold) {
         this.silenceCount += 1 / 60;
@@ -435,7 +437,6 @@ const app = Vue.createApp({
         // 通知主进程停止 保存录音文件并上传接口，返回结果
         result = await ipcRenderer.invoke('audio-stop');
         this.log('[Renderer] 录音保存结果:', result);
-        this.log('[Renderer] this.isUserStop:', this.isUserStop);
       } catch (err) {
         this.RecordingErrorMessage(99, '无法启用语音，请试试手动输入吧');
         this.log('[Renderer] 音频数据处理失败:', err.message);
@@ -465,7 +466,6 @@ const app = Vue.createApp({
         const normalizedPath = path.normalize(result.path);
         const uploadres = await ipcRenderer.invoke('hnc_stt', normalizedPath);
         fs.unlinkSync(normalizedPath) // 删除文件
-        this.log("hnc_stt",uploadres);
         if (!uploadres || uploadres.code != 200) {
           this.RecordingErrorMessage(99, "无法启用语音，请试试手动输入吧");
           return;
@@ -479,9 +479,9 @@ const app = Vue.createApp({
         //发送消息给悬浮窗处理
         this.userInput=result.message;
         //两秒钟后自动发送，若两秒钟内点击输入框则停止发送
-        this.autoSendMessageId= setTimeout(() => {
+        //this.autoSendMessageId= setTimeout(() => {
           this.sendMessage();
-        }, 1000);
+        //}, 800);
       } catch (error) {
         this.RecordingErrorMessage(99, "无法启用语音，请试试手动输入吧");
         this.log("语音交互异常 ", error.message);
@@ -514,7 +514,7 @@ const app = Vue.createApp({
       this.placeholdertext = "";
       this.isSpeacking = false;
       this.recordingStartTime = 0;
-      this.log('[Renderer] 资源已清理');
+      //this.log('[Renderer] 资源已清理');
     },
 
     // ***********************麦克风录音结束 ***************//

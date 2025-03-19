@@ -76,6 +76,7 @@ const app = Vue.createApp({
     //监听APP指令完成与APP消息
     window.addEventListener('app-command-result', this.handleCommandResult);
     window.addEventListener('app-launch', this.handleAppLaunchResult);
+    window.addEventListener('app-exit', this.handleAppExitResult);
     window.addEventListener('app-message', this.handleAppMessage);
 
     //监听其他页面传来的消息    
@@ -329,22 +330,23 @@ const app = Vue.createApp({
             } else {
               //指令全部处理完成  关闭tip  改为指令成功通知
               //this.closeTip();
-              this.floatballtip(1, "好的，已为您执行成功");
+              this.runingcmd = null;
+              this.floatballtip(1, "已为您执行成功");
             }
           } else {
             //故障诊断指令执行成功，关闭故障诊断
             //this.closeTodo();
             this.runingcmd = null;
-            this.floatballtodo(1, "好的，已为您执行成功");
+            this.floatballtodo(1, "已为您执行成功");
           }
         } else {
           //指令执行失败
           if (this.runingcmd.type == 1) {
-            this.floatballtip(0, "抱歉未识别到正确的指令，请重新输入");
+            this.floatballtip(0, "抱歉未识别到正确的指令");
             this.commandList = [];
           }
           if (this.runingcmd.type == 2) {
-            this.floatballtodo(0, "抱歉未识别到正确的指令，请重新输入");
+            this.floatballtodo(0, "抱歉未识别到正确的指令");
           }
           this.runingcmd = null;
         }
@@ -364,11 +366,62 @@ const app = Vue.createApp({
       this.log("handleAppLaunchResult:",event.detail);
       //说明有正在执行的指令，继续执行
       if (this.runingcmd != null && appId == this.runingcmd.cmd.app_id) {
+        //如果是打开指令 则直接完成
+        if(this.runingcmd.cmd.command=="appopen"){
+          if (this.runingcmd.type == 1) {
+            this.commandList = this.commandList.shift()
+            if (this.commandList.length > 0) {
+              this.docommand();
+            } else {
+              //指令全部处理完成  关闭tip  改为指令成功通知
+              //this.closeTip();
+              this.runingcmd = null;
+              this.floatballtip(1, "已为您执行成功");
+            }
+          } else {
+            //故障诊断指令执行成功，关闭故障诊断
+            //this.closeTodo();
+            this.runingcmd = null;
+            this.floatballtodo(1, "已为您执行成功");
+          }
+          if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+          return;
+        }
         if (this.runingcmd.type == 1) {
           this.docommand();
         }
         if (this.runingcmd.type == 2) {
           this.fddocommand(this.runingcmd.cmd);
+        }
+      }
+    },
+
+    //APP关闭反馈
+    async handleAppExitResult(event) {
+      const { appId } = event.detail;
+      this.log("handleAppExitResult:",event.detail);
+      //说明有正在执行的指令，继续执行
+      if (this.runingcmd != null && appId == this.runingcmd.cmd.app_id) {
+        //如果是关闭指令 则直接完成
+        if(this.runingcmd.cmd.command=="appclose"){
+          if (this.runingcmd.type == 1) {
+            this.commandList = this.commandList.shift()
+            if (this.commandList.length > 0) {
+              this.docommand();
+            } else {
+              //指令全部处理完成  关闭tip  改为指令成功通知
+              //this.closeTip();
+              this.runingcmd = null;
+              this.floatballtip(1, "已为您执行成功");
+            }
+          } else {
+            //故障诊断指令执行成功，关闭故障诊断
+            //this.closeTodo();
+            this.runingcmd = null;
+            this.floatballtodo(1, "已为您执行成功");
+          }
+          if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+          return;
         }
       }
     },
@@ -412,18 +465,18 @@ const app = Vue.createApp({
               this.docommand();
             }
           } else {
-            this.floatballtip(0, "抱歉未识别到正确指令,请重试");
+            this.floatballtip(0, "抱歉未识别到正确指令");
           }
         }
         else if (res?.code == 1001 || res?.code == 1002) {
           //故障码 1001   APP不存在
           //故障码 1002   指令不存在
-          this.floatballtip(0, "抱歉未识别到正确指令,请重试");
+          this.floatballtip(0, "抱歉未识别到正确指令");
         } else {
-          this.floatballtip(0, "抱歉未识别到正确指令,请重试");
+          this.floatballtip(0, "抱歉未识别到正确指令");
         }
       } catch (error) {
-        this.floatballtip(0, "抱歉未识别到正确指令,请重试");
+        this.floatballtip(0, "抱歉未识别到正确指令");
       }
     },
 
@@ -431,7 +484,7 @@ const app = Vue.createApp({
     async FaultDiagnosis(message) {
       this.showTodo();
       this.closeTip();
-      //存在偶发消息丢失  目前采用 延时100ms 发送
+      //存在偶发消息丢失  目前采用 延时200ms 发送
       setTimeout(async () => {
         this.floatballtodo(3, message);
         try {
@@ -440,25 +493,56 @@ const app = Vue.createApp({
           if (res && res.code == "200") {
               this.floatballtodo(1, res.data.msg, res.data.command_list);
           } else {
-              this.floatballtodo(0, "抱歉未识别到正确的指令，请重新输入");
+              this.floatballtodo(0, "抱歉未识别到正确的指令");
           }
         } catch (error) {
           this.log("hnc_fd 异常:", error.message);
-          this.floatballtodo(0, "抱歉未识别到正确的指令，请重新输入");
+          this.floatballtodo(0, "抱歉未识别到正确的指令");
         }
-      }, 100);
+      }, 200);
     },
 
     //直接处理指令
     docommand() {
       if (!this.commandList || this.commandList.length <= 0)  return;
       const cmd = this.commandList[0];
-      if(!this.checkMqttState("tip",cmd)) return;
+      this.execdocommand(cmd,1);
+    },
 
-      //每次执行一个指令，等待指令完成之后继续执行下一个指令
-      var app = stateStore.getApp(cmd.app_id);
-      this.runingcmd = { type: 1, cmd };
+    //故障诊断的指令处理
+    fddocommand(cmd) {
+      this.execdocommand(cmd,2);
+    },
+
+    execdocommand(cmd,type)
+    {
+      if(!this.checkMqttState(type==1?"tip":"todo",cmd)) return;
+
+      this.runingcmd = {  type, cmd };
       this.checkTimeout();
+      //启动指令
+      if(cmd.command=="appopen" )
+      {
+        var sendcmd = {
+          app_id: cmd.app_id,
+          timestamp: Date.now()
+        }
+        this.log("推送MQTT指令：", sendcmd);
+        mqttClient.CommandOpen(sendcmd)
+        return;
+      }
+      //关闭指令
+      if(cmd.command=="appclose")
+      {
+        var sendcmd = {
+          app_id: cmd.app_id,
+          timestamp: Date.now()
+        }
+        this.log("推送MQTT指令：", sendcmd);
+        mqttClient.CommandClose(sendcmd)
+        return;
+      }
+      var app = stateStore.getApp(cmd.app_id);
       if (app.state == "0") { //先启动
         var sendcmd = {
           app_id: cmd.app_id,
@@ -492,54 +576,6 @@ const app = Vue.createApp({
         //     timestamp: Date.now()
         //   })
         // }, 1500);
-
-      }
-    },
-
-    //故障诊断的指令处理
-    fddocommand(cmd) {
-      if(!this.checkMqttState("todo",cmd)) return;
-      var app = stateStore.getApp(cmd.app_id);
-      this.runingcmd = { type: 2, cmd };
-      //启动指令超时检测
-      this.checkTimeout();
-      //先启动
-      if (app.state == "0") { 
-        var sendcmd = {
-          app_id: cmd.app_id,
-          timestamp: Date.now()
-        }
-        this.log("推送MQTT指令：", sendcmd);
-        mqttClient.CommandOpen(sendcmd)
-
-        //模拟返回MQTT
-        // setTimeout(() => {
-        //   mqttClient.publish('App/Launch/'+cmd.app_id, {
-        //     app_id: cmd.app_id,
-        //     timestamp: Date.now()
-        //   })
-        // }, 1500);
-
-      }
-      //直接发送指令 
-      else { 
-        var sendcmd = {
-          app_id: cmd.app_id,
-          command: cmd.command,
-          timestamp: Date.now()
-        }
-        this.log("推送MQTT指令：", sendcmd);
-        mqttClient.CommandAction(sendcmd)
-
-        //模拟返回MQTT
-        // setTimeout(() => {
-        //   mqttClient.publish('App/Reply/'+cmd.app_id, {
-        //     app_id: cmd.app_id,
-        //     reply:"ok",
-        //     timestamp: Date.now()
-        //   })
-        // }, 1500);
-
       }
     },
 
