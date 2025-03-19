@@ -32,11 +32,11 @@ const app = Vue.createApp({
       dfmessage: "你好，我是智能语音助手",
       topmessage: "你好，我是智能语音助手",
       userInput: "",
-      IsMouseLeave:true,
-      isMouseOnFloatBall:true,
+      IsMouseLeave: true,
+      isMouseOnFloatBall: true,
       tipCloseTimeoutId: null,
       autoSendMessageId: null,
-      lastruningtime:new Date(),
+      lastruningtime: new Date(),
       isCanRecording: true,
       deviceCheckTimer: null,
       isStopRecording: false,
@@ -48,48 +48,47 @@ const app = Vue.createApp({
       analyser: null,
       silenceCount: 0,
       animationFrameId: null,
-      maxDuration : parseInt(configManager.maxDuration),
-      silenceHold : parseInt(configManager.silenceHold),
-      silenceStop : parseInt(configManager.silenceStop),
-      isUserStop : false,
-      placeholdertext:"",
-      isruning : false,
-      isFirst : true,
-      canvasCtx : null,
-      dataArray : null,
-      canvsanimationFrameId : null,
+      maxDuration: parseInt(configManager.maxDuration),
+      silenceHold: parseInt(configManager.silenceHold),
+      silenceStop: parseInt(configManager.silenceStop),
+      isUserStop: false,
+      placeholdertext: "",
+      isruning: false,
+      isFirst: true,
+      canvasCtx: null,
+      dataArray: null,
+      canvsanimationFrameId: null,
     }
   },
 
-  async  mounted() {
+  async mounted() {
     ipcRenderer.on("tip-reverse", (e, data) => {
-      if(data == "left"){
+      if (data == "left") {
         this.reverse = true;
-      }else{
+      } else {
         this.reverse = false;
       }
     })
     ipcRenderer.on('message-to-renderer', (event, data) => {
       //鼠标在机器人上
-      if(data.type == 4){ 
-        if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId) 
+      if (data.type == 4) {
+        if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
         this.isMouseOnFloatBall = true;
       }
       //鼠标离开了机器人
-      else if(data.type == 5){ 
+      else if (data.type == 5) {
         this.isMouseOnFloatBall = false;
-        if(this.IsMouseLeave && !this.isRecording && !this.isStopRecording){
+        if (this.IsMouseLeave && !this.isRecording && !this.isStopRecording) {
           this.startTipCloseTimer();
         }
       }
       //显示文字
-      else {  
+      else {
         this.isruning = false;
         this.userInput = "";
         this.topmessage = data.message;
         //值变化时，且鼠标不在悬浮窗则启动关闭
-        if(this.IsMouseLeave && !this.isMouseOnFloatBall) 
-        {
+        if (this.IsMouseLeave && !this.isMouseOnFloatBall) {
           this.startTipCloseTimer();
         }
       }
@@ -102,7 +101,7 @@ const app = Vue.createApp({
     this.initCanvas();
 
     // 初始化设备变化监听
-    navigator.mediaDevices.addEventListener('devicechange', 
+    navigator.mediaDevices.addEventListener('devicechange',
       () => this.checkMicrophoneState()
     );
 
@@ -110,23 +109,22 @@ const app = Vue.createApp({
     await this.checkMicrophoneState();
     this.deviceCheckTimer = setInterval(() => this.checkMicrophoneState(), 5000);
 
-    if(this.isCanRecording)
-    {
+    if (this.isCanRecording) {
       //间隔一秒启动录音
-      setTimeout( async() => {
+      setTimeout(async () => {
         await this.startRecording();
         this.isFirst = false;
       }, 800);
-    }else{
+    } else {
       this.isFirst = false;
     }
   },
   beforeUnmount() {
-    if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
-    if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
-    if(this.deviceCheckTimer)  clearTimeout(this.deviceCheckTimer)
-    if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId)
-    if(this.canvsanimationFrameId)  cancelAnimationFrame(this.canvsanimationFrameId)
+    if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
+    if (this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
+    if (this.deviceCheckTimer) clearTimeout(this.deviceCheckTimer)
+    if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId)
+    if (this.canvsanimationFrameId) cancelAnimationFrame(this.canvsanimationFrameId)
   },
   methods: {
 
@@ -142,17 +140,17 @@ const app = Vue.createApp({
       //同时将消息发送至悬浮窗，      3  暂停录音
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball', // 指定目标窗口
-        data: { type: 3 , message : "暂停录音" }
+        data: { type: 3, message: "暂停录音" }
       });
     },
-    async  handleMouseDown(e) {
-      if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
+    async handleMouseDown(e) {
+      if (this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
     },
     sendMessage() {
-      if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
+      if (this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
       if (this.userInput.trim() !== '') {
-        this.isruning=true;
-        this.topmessage ="好的，正在为您执行";
+        this.isruning = true;
+        this.topmessage = "好的，正在为您执行";
         //同时将消息发送至悬浮窗
         ipcRenderer.send('message-from-renderer', {
           target: 'floatball', // 指定目标窗口
@@ -168,21 +166,21 @@ const app = Vue.createApp({
     startTipCloseTimer() {
       if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId) // 清除旧定时器
       this.tipCloseTimeoutId = setTimeout(() => {
-        if(this.IsMouseLeave && !this.isRecording && !this.isStopRecording){
+        if (this.IsMouseLeave && !this.isRecording && !this.isStopRecording) {
           ipcRenderer.send("close-tip");
         }
-        }, parseInt(configManager.pagehidetime) * 1000)  
+      }, parseInt(configManager.pagehidetime) * 1000)
     },
 
     hanleMouseEnter() {
-      this.IsMouseLeave=false;
-      if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
+      this.IsMouseLeave = false;
+      if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
     },
 
     hanleMouseLeave() {
-      this.IsMouseLeave=true;
-      if(this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
-      if(!this.isRecording && !this.isStopRecording && !this.isruning){
+      this.IsMouseLeave = true;
+      if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
+      if (!this.isRecording && !this.isStopRecording && !this.isruning) {
         this.startTipCloseTimer();
       }
     },
@@ -193,20 +191,20 @@ const app = Vue.createApp({
       await this.stopRecording();
       this.isUserStop = false;
     },
-    
+
     // ***********************麦克风录音 ***************//
 
     // 核心检测方法
     async checkMicrophoneState() {
       try {
         // 1. 检查权限状态
-        const permissionStatus = await navigator.permissions.query({ 
-          name: 'microphone' 
+        const permissionStatus = await navigator.permissions.query({
+          name: 'microphone'
         });
         // 2. 枚举音频设备
         const devices = await navigator.mediaDevices.enumerateDevices();
-        const audioInputs = devices.filter(   d => d.kind === 'audioinput' );
-        
+        const audioInputs = devices.filter(d => d.kind === 'audioinput');
+
         // 3. 组合状态判断
         const state = {
           hasPermission: permissionStatus.state === 'granted',
@@ -215,9 +213,9 @@ const app = Vue.createApp({
         };
 
         // 4. 状态变化处理
-        if(state.hasDevice && state.hasDevice && state.isDeviceReady){
+        if (state.hasDevice && state.hasDevice && state.isDeviceReady) {
           this.isCanRecording = true;
-        }else{
+        } else {
           this.isCanRecording = false;
         }
       } catch (error) {
@@ -227,18 +225,18 @@ const app = Vue.createApp({
     },
 
     //录音消息
-    RecordingErrorMessage(type,message){
+    RecordingErrorMessage(type, message) {
       this.topmessage = message;
-      this.isRecording=false;
+      this.isRecording = false;
     },
     async toggleRecording() {
-      
+
       //在1秒间隔内点击 则不触发事件
       const diff = Math.abs(new Date() - this.lastruningtime);
-      if(diff  < 1000)   return;
+      if (diff < 1000) return;
       this.lastruningtime = new Date();
 
-      if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
+      if (this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
       if (this.isRecording) {
         await this.stopRecording();
       } else {
@@ -247,7 +245,7 @@ const app = Vue.createApp({
     },
 
     async startRecording() {
-      if(!this.isCanRecording) return;
+      if (!this.isCanRecording) return;
       //是否正在录音
       if (this.isRecording || this.isStopRecording) {
         return;
@@ -273,11 +271,11 @@ const app = Vue.createApp({
         this.mediaRecorder = new MediaRecorder(this.mediaStream);
         this.setupDataHandler();
         this.isRecording = true;
-        this.userInput="";
+        this.userInput = "";
         this.topmessage = this.dfmessage;
-        this.recordingStartTime=new Date();
+        this.recordingStartTime = new Date();
         this.startMonitoring();
-        if(this.maxDuration > 2){
+        if (this.maxDuration > 2) {
           setTimeout(() => this.stopRecording(), this.maxDuration * 1000);
         }
       } catch (err) {
@@ -304,7 +302,7 @@ const app = Vue.createApp({
     // 绘制音浪
     draw() {
       if (!this.analyser) return
-      
+
       const canvas = this.$refs.waveCanvas
       const WIDTH = canvas.width / (window.devicePixelRatio || 1)
       const HEIGHT = canvas.height / (window.devicePixelRatio || 1)
@@ -312,7 +310,7 @@ const app = Vue.createApp({
       this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT)
       // 获取频率数据
       this.analyser.getByteFrequencyData(this.dataArray)
-      this.drawBars(WIDTH,HEIGHT);
+      this.drawBars(WIDTH, HEIGHT);
 
       //this.drawFrequencyBars(this.canvasCtx,canvas);
 
@@ -320,7 +318,7 @@ const app = Vue.createApp({
       this.canvsanimationFrameId = requestAnimationFrame(this.draw)
     },
 
-     /* 1. 基础柱状图 */
+    /* 1. 基础柱状图 */
     drawBars(width, height) {
       const barWidth = (width / this.dataArray.length) * 15
       let x = 0
@@ -330,7 +328,7 @@ const app = Vue.createApp({
         const gradient = this.canvasCtx.createLinearGradient(0, height - barHeight, 0, height)
         gradient.addColorStop(0, '#13cccf')
         gradient.addColorStop(1, '#13cccf')
-        
+
         this.canvasCtx.fillStyle = gradient
         this.canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight)
         x += barWidth + 2
@@ -341,7 +339,7 @@ const app = Vue.createApp({
     initCanvas() {
       const canvas = this.$refs.waveCanvas
       const container = canvas.parentElement
-      
+
       // 高清屏适配
       const dpr = window.devicePixelRatio || 1
       canvas.width = 275 * dpr
@@ -384,7 +382,7 @@ const app = Vue.createApp({
     startMonitoring() {
       const checkStatus = () => {
         if (!this.isRecording) return;
-       
+
         // 分析音量
         const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
         this.analyser.getByteFrequencyData(dataArray);
@@ -399,15 +397,14 @@ const app = Vue.createApp({
     },
     checkSilence(volume) {
       if (this.isStopRecording) return;
-      if (!this.isSpeacking)
-      {
+      if (!this.isSpeacking) {
         //两种情况判定为开始检测   1 检测到说话  2超过两秒钟
         const diff = Math.abs(new Date() - this.recordingStartTime);
-        if(diff  >= 2000)  this.isSpeacking = true;
-        if(volume * 100 >= this.silenceHold)  this.isSpeacking = true;
+        if (diff >= 2000) this.isSpeacking = true;
+        if (volume * 100 >= this.silenceHold) this.isSpeacking = true;
       }
       if (!this.isSpeacking) return;
-      
+
       //麦克风电流小于 silenceHold 超过 silenceStop 秒则停止录音
       if (volume * 100 < this.silenceHold) {
         this.silenceCount += 1 / 60;
@@ -444,10 +441,9 @@ const app = Vue.createApp({
       } finally {
         //如果是用户暂停的，则不进行后续调用接口操作
         if (!this.isUserStop) {
-            await this.handlestopRecordAfter(result);
+          await this.handlestopRecordAfter(result);
         } else {
-          if(result.path)
-          {
+          if (result.path) {
             const normalizedPath = path.normalize(result.path);
             fs.unlinkSync(normalizedPath) // 删除文件
           }
@@ -477,10 +473,10 @@ const app = Vue.createApp({
           return;
         }
         //发送消息给悬浮窗处理
-        this.userInput=result.message;
+        this.userInput = result.message;
         //两秒钟后自动发送，若两秒钟内点击输入框则停止发送
         //this.autoSendMessageId= setTimeout(() => {
-          this.sendMessage();
+        this.sendMessage();
         //}, 800);
       } catch (error) {
         this.RecordingErrorMessage(99, "无法启用语音，请试试手动输入吧");
@@ -499,7 +495,7 @@ const app = Vue.createApp({
       if (this.canvsanimationFrameId) {
         cancelAnimationFrame(this.canvsanimationFrameId);
       }
-      
+
       if (this.mediaStream) {
         this.mediaStream.getTracks().forEach(track => track.stop());
       }
@@ -521,7 +517,7 @@ const app = Vue.createApp({
 
   },
   watch: {
-    
+
   }
 })
 app.mount("#app")

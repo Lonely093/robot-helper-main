@@ -19,7 +19,7 @@ module.exports = {
   },
 
   //清空 mqttApps 消息
-  clearAllApp(){
+  clearAllApp() {
     localStorage.removeItem('mqttApps');
   }
 

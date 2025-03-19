@@ -290,8 +290,7 @@ class MqttClient {
       if (message.apps && message.apps.length > 0) {
         message.apps.forEach(app => {
           app.state = "0";//默认设置为未启动
-          if(app.app_id=="1"||app.app_id==1)
-          {
+          if (app.app_id == "1" || app.app_id == 1) {
             app.state = "1"; //HMI默认为启动
           }
           stateStore.saveApp(app.app_id, app);
@@ -328,7 +327,7 @@ class MqttClient {
         });
       }
     })
-   
+
     this.client.subscribe('AppCenter/Apps', { qos: 2, retain: true });
   }
 
@@ -339,7 +338,7 @@ class MqttClient {
       app.state = "1";
       stateStore.saveApp(app.app_id, app);
       this.triggerAppLaunchEvent(app.app_id);
-    } 
+    }
   }
 
   AppExit(topic, message) {
@@ -390,22 +389,22 @@ class MqttClient {
     window.dispatchEvent(event);
   }
 
-  GetConnected(){
+  GetConnected() {
     return this.isConnected;
   }
 
-  CommandOpen(sendcmd){
-    var msg="{app_id:"+sendcmd.app_id+",timestamp:"+sendcmd.timestamp+"}";
+  CommandOpen(sendcmd) {
+    var msg = "{app_id:" + sendcmd.app_id + ",timestamp:" + sendcmd.timestamp + "}";
     this.publish('Command/Open', msg)
   }
 
-  CommandClose(sendcmd){
-    var msg="{app_id:"+sendcmd.app_id+",timestamp:"+sendcmd.timestamp+"}";
+  CommandClose(sendcmd) {
+    var msg = "{app_id:" + sendcmd.app_id + ",timestamp:" + sendcmd.timestamp + "}";
     this.publish('Command/Close', msg)
   }
 
-  CommandAction(sendcmd){
-    var msg="{app_id:"+sendcmd.app_id+",command:"+sendcmd.command+",timestamp:"+sendcmd.timestamp+"}";
+  CommandAction(sendcmd) {
+    var msg = "{app_id:" + sendcmd.app_id + ",command:" + sendcmd.command + ",timestamp:" + sendcmd.timestamp + "}";
     this.publish('Command/Action', msg)
   }
 

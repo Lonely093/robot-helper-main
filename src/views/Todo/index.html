@@ -22,14 +22,14 @@
       </div>
 
       <!-- 输入框 -->
-      <div class="input-voice" v-show="isRecording || isStopRecording" >
+      <div class="input-voice" v-show="isRecording || isStopRecording">
         <canvas ref="waveCanvas" class="visualizer" @click="userStopRecording"></canvas>
       </div>
-      <div class="input-container" v-show="!isRecording && !isStopRecording" >
-        <input v-model="userInput" :placeholder="placeholdertext" @click="handleMouseDown"
-          @keyup.enter="sendMessage" class="input-field">
+      <div class="input-container" v-show="!isRecording && !isStopRecording">
+        <input v-model="userInput" :placeholder="placeholdertext" @click="handleMouseDown" @keyup.enter="sendMessage"
+          class="input-field">
         </input>
-        <button @click="sendMessage"  class="send-button">
+        <button @click="sendMessage" class="send-button">
           <img src="../../assets/send.svg" alt="发送" class="btn-icon">
         </button>
         <button v-show="!isRecording " @click="toggleRecording" class="send-button">

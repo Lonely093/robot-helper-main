@@ -80,42 +80,40 @@ const app = Vue.createApp({
     window.addEventListener('app-message', this.handleAppMessage);
 
     //监听其他页面传来的消息    
-    ipcRenderer.on('message-to-renderer',  (event, data) => {
+    ipcRenderer.on('message-to-renderer', (event, data) => {
       //根据文字请求故障诊断  todo
-      if (data.type == 1) 
-      {
+      if (data.type == 1) {
         this.FaultDiagnosis(data.message);
       }
       //根据指令直接执行  todo
-      if (data.type == 2)  
-      {
+      if (data.type == 2) {
         this.fddocommand(data.command);
       }
       //根据文本请求指令交互  tip
-      if (data.type == 4) {  
+      if (data.type == 4) {
         this.ExeHNC_TTI(data.message);
       }
       //接受Tip传过来的关闭页面消息
-      if (data.type == 11) {    
+      if (data.type == 11) {
         this.IsTipClose = true;
-        if(this.IsTodoClose && this.IsMouseLeave){
+        if (this.IsTodoClose && this.IsMouseLeave) {
           this.opacity = 0.7;
         }
       }
       //接受Tip传过来的打开页面消息
-      if (data.type == 12) {    
+      if (data.type == 12) {
         this.IsTipClose = false;
         this.opacity = 1;
       }
       //接受todo传过来的关闭页面消息
-      if (data.type == 21) {    
+      if (data.type == 21) {
         this.IsTodoClose = true;
-        if(this.IsTipClose && this.IsMouseLeave){
+        if (this.IsTipClose && this.IsMouseLeave) {
           this.opacity = 0.7;
         }
       }
       //接受todo传过来的打开页面消息
-      if (data.type == 22) {    
+      if (data.type == 22) {
         this.IsTodoClose = false;
         this.opacity = 1;
       }
@@ -139,10 +137,10 @@ const app = Vue.createApp({
     this.throttledMoveHandler.cancel(); // 重要！销毁时取消节流
     this.throttledTouchMoveHandler.cancel(); // 重要！销毁时取消节流
     mqttClient._safeDisconnect();  //安全断开MQTT连接
-    if(this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+    if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
   },
   methods: {
-    
+
     initThrottledMove() {
       this.throttledMoveHandler = throttle(async (e) => {
         await this.handleMove(e);
@@ -276,7 +274,7 @@ const app = Vue.createApp({
             this.reverse = false;
             newX = workArea.x + workArea.width - rect.left - rect.width;
             break;
-     
+
         }
 
         if (screenX - workArea.x < 0) {
@@ -291,8 +289,8 @@ const app = Vue.createApp({
         } else if (workArea.y + workArea.height - (screenY + rect.height) < 0) {
           newY = workArea.y + workArea.height - rect.top - rect.height;
         }
-        
-        if(this.IsTodoClose && this.IsTipClose){
+
+        if (this.IsTodoClose && this.IsTipClose) {
           this.opacity = 0.7;
         }
         // 更新窗口位置
@@ -317,8 +315,8 @@ const app = Vue.createApp({
     //指令处理结果返回
     handleCommandResult(event) {
       const { appId, msg } = event.detail;
-      this.log("handleCommandResult:",event.detail);
-      if (this.runingcmd != null && appId==this.runingcmd.cmd.app_id ) {
+      this.log("handleCommandResult:", event.detail);
+      if (this.runingcmd != null && appId == this.runingcmd.cmd.app_id) {
         //取消超时检测
         if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         if (msg == "ok" || msg == "true" || msg == true) //指令执行完成
@@ -357,17 +355,17 @@ const app = Vue.createApp({
     //APP推送消息
     handleAppMessage(event) {
       const { appId, msg } = event.detail;
-      this.log("handleAppMessage:",event.detail);
+      this.log("handleAppMessage:", event.detail);
     },
 
     //APP启动反馈
     async handleAppLaunchResult(event) {
       const { appId } = event.detail;
-      this.log("handleAppLaunchResult:",event.detail);
+      this.log("handleAppLaunchResult:", event.detail);
       //说明有正在执行的指令，继续执行
       if (this.runingcmd != null && appId == this.runingcmd.cmd.app_id) {
         //如果是打开指令 则直接完成
-        if(this.runingcmd.cmd.command=="appopen"){
+        if (this.runingcmd.cmd.command == "appopen") {
           if (this.runingcmd.type == 1) {
             this.commandList = this.commandList.shift()
             if (this.commandList.length > 0) {
@@ -399,11 +397,11 @@ const app = Vue.createApp({
     //APP关闭反馈
     async handleAppExitResult(event) {
       const { appId } = event.detail;
-      this.log("handleAppExitResult:",event.detail);
+      this.log("handleAppExitResult:", event.detail);
       //说明有正在执行的指令，继续执行
       if (this.runingcmd != null && appId == this.runingcmd.cmd.app_id) {
         //如果是关闭指令 则直接完成
-        if(this.runingcmd.cmd.command=="appclose"){
+        if (this.runingcmd.cmd.command == "appclose") {
           if (this.runingcmd.type == 1) {
             this.commandList = this.commandList.shift()
             if (this.commandList.length > 0) {
@@ -456,7 +454,7 @@ const app = Vue.createApp({
           if (res.data.command_list && res.data.command_list.length > 0) {
             //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
             //await this.FaultDiagnosis(message);
-            if(res.data.command_list[0].app_id=="fault_diagnosis"){
+            if (res.data.command_list[0].app_id == "fault_diagnosis") {
               await this.FaultDiagnosis(message);
             }
             //需要处理的指令集合
@@ -491,9 +489,9 @@ const app = Vue.createApp({
           //res = await apis.hnc_fd(result.message);
           const res = await ipcRenderer.invoke('hnc_fd', message);
           if (res && res.code == "200") {
-              this.floatballtodo(1, res.data.msg, res.data.command_list);
+            this.floatballtodo(1, res.data.msg, res.data.command_list);
           } else {
-              this.floatballtodo(0, "抱歉未识别到正确的指令");
+            this.floatballtodo(0, "抱歉未识别到正确的指令");
           }
         } catch (error) {
           this.log("hnc_fd 异常:", error.message);
@@ -504,25 +502,23 @@ const app = Vue.createApp({
 
     //直接处理指令
     docommand() {
-      if (!this.commandList || this.commandList.length <= 0)  return;
+      if (!this.commandList || this.commandList.length <= 0) return;
       const cmd = this.commandList[0];
-      this.execdocommand(cmd,1);
+      this.execdocommand(cmd, 1);
     },
 
     //故障诊断的指令处理
     fddocommand(cmd) {
-      this.execdocommand(cmd,2);
+      this.execdocommand(cmd, 2);
     },
 
-    execdocommand(cmd,type)
-    {
-      if(!this.checkMqttState(type==1?"tip":"todo",cmd)) return;
+    execdocommand(cmd, type) {
+      if (!this.checkMqttState(type == 1 ? "tip" : "todo", cmd)) return;
 
-      this.runingcmd = {  type, cmd };
+      this.runingcmd = { type, cmd };
       this.checkTimeout();
       //启动指令
-      if(cmd.command=="appopen" )
-      {
+      if (cmd.command == "appopen") {
         var sendcmd = {
           app_id: cmd.app_id,
           timestamp: Date.now()
@@ -532,8 +528,7 @@ const app = Vue.createApp({
         return;
       }
       //关闭指令
-      if(cmd.command=="appclose")
-      {
+      if (cmd.command == "appclose") {
         var sendcmd = {
           app_id: cmd.app_id,
           timestamp: Date.now()
@@ -580,27 +575,25 @@ const app = Vue.createApp({
     },
 
     //校验MQTT相关状态
-    checkMqttState(target,cmd){
+    checkMqttState(target, cmd) {
       //首先检查MQTT
-      if(!mqttClient.GetConnected())
-      {
-        this.setTimeoutSend(target,"MQTT服务未连接");
+      if (!mqttClient.GetConnected()) {
+        this.setTimeoutSend(target, "MQTT服务未连接");
         return false;
       }
       //判断APP注册消息
-      if(cmd)
-      {
+      if (cmd) {
         var app = stateStore.getApp(cmd.app_id);
-        if(!app){
-          this.setTimeoutSend(target,"当前APP未注册");
+        if (!app) {
+          this.setTimeoutSend(target, "当前APP未注册");
           return false;
-        }else{
-          if(!app.ai_interaction.action){
-            this.setTimeoutSend(target,"当前APP["+app.name+"]不支持启动");
+        } else {
+          if (!app.ai_interaction.action) {
+            this.setTimeoutSend(target, "当前APP[" + app.name + "]不支持启动");
             return false;
           }
-          if(!app.ai_interaction.exec){
-            this.setTimeoutSend(target,"当前APP["+app.name+"]不支持指令执行");
+          if (!app.ai_interaction.exec) {
+            this.setTimeoutSend(target, "当前APP[" + app.name + "]不支持指令执行");
             return false;
           }
         }
@@ -609,7 +602,7 @@ const app = Vue.createApp({
     },
 
     //延时发送异常消息
-    setTimeoutSend(target,message){
+    setTimeoutSend(target, message) {
       setTimeout(() => {
         ipcRenderer.send('message-from-renderer', {
           target: target, //指定目标窗口
@@ -646,20 +639,19 @@ const app = Vue.createApp({
       //通知tip 鼠标在悬浮窗上
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
-        data: { type: 4}
+        data: { type: 4 }
       });
     },
 
     hanleMouseLeave() {
       this.IsMouseLeave = true;
-      if(this.IsTipClose && this.IsTodoClose)
-      {
+      if (this.IsTipClose && this.IsTodoClose) {
         this.opacity = 0.7;
       }
       //通知tip 鼠标离开了悬浮窗
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
-        data: { type: 5}
+        data: { type: 5 }
       });
     },
     showTip() {
@@ -668,7 +660,7 @@ const app = Vue.createApp({
     },
     closeTip() {
       if (!this.IsTipClose)
-      ipcRenderer.send("close-tip");
+        ipcRenderer.send("close-tip");
     },
     showTodo() {
       if (this.IsTodoClose)
@@ -676,7 +668,7 @@ const app = Vue.createApp({
     },
     closeTodo() {
       if (!this.IsTodoClose)
-      ipcRenderer.send("close-todo");
+        ipcRenderer.send("close-todo");
     },
     handleMouseDown(e) {
       this.opacity = 1;
@@ -700,14 +692,14 @@ const app = Vue.createApp({
     handleTouchStart(e) {
       this.opacity = 1;
       const touch = e.touches[0];
-      
+
       // 记录初始偏移量
       biasX = touch.clientX;
       biasY = touch.clientY;
-      
+
       // 记录初始位置用于点击判断
       moveS[0] = touch.screenX;
-      moveS[1] = touch.screenY; 
+      moveS[1] = touch.screenY;
 
       document.addEventListener('touchmove', this.throttledTouchMoveHandler);
       document.addEventListener('touchend', this.handleTouchEnd);
@@ -723,7 +715,7 @@ const app = Vue.createApp({
       biasX = 0;
       biasY = 0;
       await this.snapToEdge();
-      if (calcS() ) {
+      if (calcS()) {
         this.closeTodo();
         this.showTip();
       }

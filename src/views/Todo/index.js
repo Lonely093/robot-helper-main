@@ -10,7 +10,7 @@ const app = Vue.createApp({
   data: () => {
     return {
       userInput: '',
-      placeholdertext:"有问题尽管问我...",
+      placeholdertext: "有问题尽管问我...",
       messages: [
         // {
         //   text: ' **参数配置不合理的原因及解决方案**  \n   - appopen     appclose  参数配置不合理的原因包括：坐标轴参数103517“最高速度限制” 是否设置正确；坐标轴参数103587“电机额定转速” 是否设置正确；轴参数中的103005“电子齿轮比分母”、103067 “轴每转脉冲数”、设备接口参数中的503015“反馈位置循环脉冲数”数值设置不一致；系统超速的限值(每个周期的最大长度增量)是否正确计算；以及超速系数是否设置正确。  \n   - 对应的解决方案：检查上述参数是否设置正确，计算超速限值，确保参数配置正确，必要时进行调整。  \n\n2. **编码器反馈信号异常的原因及解决方案**  \n   - 编码器反馈信号异常的原因包括：驱动单元或电机参数（如103005“电子齿轮比分母”、103067 “轴每转脉冲数”）设置不正确；编码器线缆或反馈信号异常。  \n   - 对应的解决方案：更换驱动单元或电机，通过交换法逐一排查；检查编码器线缆，更换并测试。',
@@ -73,23 +73,23 @@ const app = Vue.createApp({
       animationFrameId: null,
       lastruningtime: null,
       isruning: false,
-      maxDuration : parseInt(configManager.maxDuration),
-      silenceHold : parseInt(configManager.silenceHold),
-      silenceStop : parseInt(configManager.silenceStop),
+      maxDuration: parseInt(configManager.maxDuration),
+      silenceHold: parseInt(configManager.silenceHold),
+      silenceStop: parseInt(configManager.silenceStop),
       reverse: false,
-      canvasCtx : null,
-      dataArray : null,
-      canvsanimationFrameId : null,
-      isUserStop : false,
+      canvasCtx: null,
+      dataArray: null,
+      canvsanimationFrameId: null,
+      isUserStop: false,
     }
   },
 
   mounted() {
     ipcRenderer.on("todo-reverse", (e, data) => {
       // console.log("todo-reversetodo-reversetodo-reversetodo-reverse",data)
-      if(data == "left"){
+      if (data == "left") {
         this.reverse = true;
-      }else{
+      } else {
         this.reverse = false;
       }
     })
@@ -115,7 +115,7 @@ const app = Vue.createApp({
           // 从分隔符结束的位置开始截取，直到字符串末尾
           const startIndex = separatorIndex + separator.length;
           botMessage = data.message.substring(startIndex);
-          if(data.commandlist){
+          if (data.commandlist) {
             commandlist = data.commandlist;
           }
         }
@@ -129,7 +129,7 @@ const app = Vue.createApp({
     ipcRenderer.invoke('audio-clear');
 
     // 初始化设备变化监听
-    navigator.mediaDevices.addEventListener('devicechange', 
+    navigator.mediaDevices.addEventListener('devicechange',
       () => this.checkMicrophoneState()
     );
 
@@ -140,7 +140,7 @@ const app = Vue.createApp({
     //初始化画布
     this.initCanvas();
 
-    this.isRecording=false;
+    this.isRecording = false;
 
   },
   created() {
@@ -148,10 +148,10 @@ const app = Vue.createApp({
     window.commandClickHandler = this.handleCommandClick;
   },
   beforeUnmount() {
-    if(this.deviceCheckTimer)  clearTimeout(this.deviceCheckTimer)
-    if(this.autoSendMessageId)  clearTimeout(this.autoSendMessageId)
-    if(this.animationFrameId)  cancelAnimationFrame(this.animationFrameId)
-    if(this.canvsanimationFrameId)  cancelAnimationFrame(this.canvsanimationFrameId)
+    if (this.deviceCheckTimer) clearTimeout(this.deviceCheckTimer)
+    if (this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
+    if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId)
+    if (this.canvsanimationFrameId) cancelAnimationFrame(this.canvsanimationFrameId)
   },
   unmounted() {
     // 清理全局事件
@@ -165,15 +165,15 @@ const app = Vue.createApp({
     },
 
     //点击输入框  取消自动发送消息定时器
-    async  handleMouseDown(e) {
-      if(this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
+    async handleMouseDown(e) {
+      if (this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
     },
 
     //暂停录音并不做后续处理
     async userStopRecording() {
-      this.isUserStop=true;
+      this.isUserStop = true;
       await this.stopRecording();
-      this.isUserStop=false;
+      this.isUserStop = false;
     },
 
     // ***********************麦克风录音 ***************//
@@ -182,13 +182,13 @@ const app = Vue.createApp({
     async checkMicrophoneState() {
       try {
         // 1. 检查权限状态
-        const permissionStatus = await navigator.permissions.query({ 
-          name: 'microphone' 
+        const permissionStatus = await navigator.permissions.query({
+          name: 'microphone'
         });
         // 2. 枚举音频设备
         const devices = await navigator.mediaDevices.enumerateDevices();
-        const audioInputs = devices.filter(   d => d.kind === 'audioinput' );
-        
+        const audioInputs = devices.filter(d => d.kind === 'audioinput');
+
         // 3. 组合状态判断
         const state = {
           hasPermission: permissionStatus.state === 'granted',
@@ -197,9 +197,9 @@ const app = Vue.createApp({
         };
 
         // 4. 状态变化处理
-        if(state.hasDevice && state.hasDevice && state.isDeviceReady){
+        if (state.hasDevice && state.hasDevice && state.isDeviceReady) {
           this.isCanRecording = true;
-        }else{
+        } else {
           this.isCanRecording = false;
         }
       } catch (error) {
@@ -212,7 +212,7 @@ const app = Vue.createApp({
 
       //在1秒间隔内点击 则不触发事件
       const diff = Math.abs(new Date() - this.lastruningtime);
-      if(diff  < 1000)   return;
+      if (diff < 1000) return;
       this.lastruningtime = new Date();
 
       if (this.isRecording) {
@@ -223,7 +223,7 @@ const app = Vue.createApp({
 
     },
     async startRecording() {
-      if (this.isRecording || this.isStopRecording || !this.isCanRecording)  return;
+      if (this.isRecording || this.isStopRecording || !this.isCanRecording) return;
       try {
         // 初始化音频流
         try {
@@ -232,7 +232,7 @@ const app = Vue.createApp({
         } catch (err) {
           this.log('[Renderer] 麦克风访问被拒绝:', err.message);
           if (err.message == "Requested device not found") {
-            this.sendErrorMessage( "无法启用语音，请试试手动输入吧");
+            this.sendErrorMessage("无法启用语音，请试试手动输入吧");
           }
           return;
         }
@@ -245,11 +245,11 @@ const app = Vue.createApp({
         this.mediaRecorder = new MediaRecorder(this.mediaStream);
         this.setupDataHandler();
         this.isRecording = true;
-        this.userInput="";
+        this.userInput = "";
         this.placeholdertext = "倾听中...";
-        this.recordingStartTime=new Date();
+        this.recordingStartTime = new Date();
         this.startMonitoring();
-        if(this.maxDuration > 2){
+        if (this.maxDuration > 2) {
           setTimeout(() => this.stopRecording(), this.maxDuration * 1000);
         }
       } catch (err) {
@@ -275,7 +275,7 @@ const app = Vue.createApp({
     // 绘制音浪
     draw() {
       if (!this.analyser) return
-     
+
       const canvas = this.$refs.waveCanvas
       const WIDTH = canvas.width / (window.devicePixelRatio || 1)
       const HEIGHT = canvas.height / (window.devicePixelRatio || 1)
@@ -283,8 +283,8 @@ const app = Vue.createApp({
       this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT)
       // 获取频率数据
       this.analyser.getByteFrequencyData(this.dataArray)
-      console.log("dataArray",this.dataArray);
-      this.drawBars(WIDTH,HEIGHT);
+      console.log("dataArray", this.dataArray);
+      this.drawBars(WIDTH, HEIGHT);
 
       //this.drawFrequencyBars(this.canvasCtx,canvas);
 
@@ -292,7 +292,7 @@ const app = Vue.createApp({
       this.canvsanimationFrameId = requestAnimationFrame(this.draw)
     },
 
-     /* 1. 基础柱状图 */
+    /* 1. 基础柱状图 */
     drawBars(width, height) {
       const barWidth = (width / this.dataArray.length) * 10
       let x = 0
@@ -301,7 +301,7 @@ const app = Vue.createApp({
         const gradient = this.canvasCtx.createLinearGradient(0, height - barHeight, 0, height)
         gradient.addColorStop(0, '#13cccf')
         gradient.addColorStop(1, '#13cccf')
-        
+
         this.canvasCtx.fillStyle = gradient
         this.canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight)
         x += barWidth + 2
@@ -374,12 +374,11 @@ const app = Vue.createApp({
     },
     checkSilence(volume) {
       if (this.isStopRecording) return;
-      if (!this.isSpeacking)
-      {
+      if (!this.isSpeacking) {
         //两种情况判定为开始检测   1 检测到说话  2超过两秒钟
         const diff = Math.abs(new Date() - this.recordingStartTime);
-        if(diff  >= 2000)  this.isSpeacking = true;
-        if(volume * 100 >= this.silenceHold)  this.isSpeacking = true;
+        if (diff >= 2000) this.isSpeacking = true;
+        if (volume * 100 >= this.silenceHold) this.isSpeacking = true;
       }
       if (!this.isSpeacking) return;
 
@@ -417,10 +416,9 @@ const app = Vue.createApp({
       } finally {
         //如果是用户暂停的，则不进行后续调用接口操作
         if (!this.isUserStop) {
-            await this.handlestopRecordAfter(result);
+          await this.handlestopRecordAfter(result);
         } else {
-          if(result.path)
-          {
+          if (result.path) {
             const normalizedPath = path.normalize(result.path);
             fs.unlinkSync(normalizedPath) // 删除文件
           }
@@ -455,7 +453,7 @@ const app = Vue.createApp({
 
     //获取录音 文字之后的处理 成功：调用人机交互接口  失败：提示网络故障，请重试，并给出错误原因=result.message
     async handlestopRecordAfter(result) {
-      if (!result.success ) {
+      if (!result.success) {
         this.sendErrorMessage("无法启用语音，请试试手动输入吧");
       } else {
         const normalizedPath = path.normalize(result.path);
@@ -467,9 +465,9 @@ const app = Vue.createApp({
           this.userInput = uploadres.data.result;
           if (this.userInput.trim() !== '') {
             //this.autoSendMessageId= setTimeout(() => {
-              this.sendMessage();
+            this.sendMessage();
             //}, 800);
-          }else{
+          } else {
             this.sendErrorMessage("没听清您的声音，请重试");
           }
         }
@@ -555,8 +553,8 @@ const app = Vue.createApp({
         }
       })
     },
-    sendErrorMessage(message){
-      this.messages.push({ text: message, type: 'bot' ,commandlist:[]})
+    sendErrorMessage(message) {
+      this.messages.push({ text: message, type: 'bot', commandlist: [] })
       this.scrollToBottom();
       this.placeholdertext = "有问题尽管问我...";
     }

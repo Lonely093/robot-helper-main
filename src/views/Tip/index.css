@@ -13,9 +13,12 @@ div {
 }
 
 .tip-root {
-  position: relative; /* 添加定位上下文 */
-  margin-right: 15px; /* 为箭头留出空间 */
-  width: calc(100vw - 15px); /* 调整宽度保持原布局 */
+  position: relative;
+  /* 添加定位上下文 */
+  margin-right: 15px;
+  /* 为箭头留出空间 */
+  width: calc(100vw - 15px);
+  /* 调整宽度保持原布局 */
   background: rgba(26, 40, 40, 1);
   /* width: 100vw; */
   height: 100vh;
@@ -26,10 +29,14 @@ div {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
   /* 可选阴影 */
 }
+
 .tip-root.reverse {
-  position: relative; /* 添加定位上下文 */
-  margin-left: 15px; /* 为箭头留出空间 */
-  width: calc(100vw - 15px); /* 调整宽度保持原布局 */
+  position: relative;
+  /* 添加定位上下文 */
+  margin-left: 15px;
+  /* 为箭头留出空间 */
+  width: calc(100vw - 15px);
+  /* 调整宽度保持原布局 */
   background: rgba(26, 40, 40, 1);
   /* width: 100vw; */
   height: 100vh;
@@ -40,6 +47,7 @@ div {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
   /* 可选阴影 */
 }
+
 /* 渐变边框 */
 .tip-root::before {
   content: '';
@@ -71,7 +79,7 @@ div {
   z-index: 1;
 }
 
- .tip-root.reverse::before  {
+.tip-root.reverse::before {
   content: '';
   position: absolute;
   top: 0px;
@@ -91,7 +99,7 @@ div {
 .tip-root.reverse::after {
   content: '';
   position: absolute;
-  right: auto;  
+  right: auto;
   left: -9px;
   top: 50%;
   transform: translateY(-50%);
@@ -106,28 +114,34 @@ div {
   /* 箭头填充层 */
   content: '';
   position: absolute;
-  right: -11px; /* 原始位置 */
+  right: -11px;
+  /* 原始位置 */
   top: 50%;
   transform: translateY(-50%);
   width: 12px;
   height: 12px;
-  background: #05E6FF;/* 原背景色 */
+  background: #05E6FF;
+  /* 原背景色 */
   clip-path: polygon(0 0, 0% 100%, 100% 50%);
-  z-index: 1; /* 确保在边框层上方 */
+  z-index: 1;
+  /* 确保在边框层上方 */
 }
 
 .tip-root.reverse .tip-inner::before {
   /* 箭头填充层 */
   content: '';
   position: absolute;
-  left: -11px; /* 原始位置 */
+  left: -11px;
+  /* 原始位置 */
   top: 50%;
   transform: translateY(-50%);
   width: 12px;
   height: 12px;
-  background: #FFEA75;/* 原背景色 */
+  background: #FFEA75;
+  /* 原背景色 */
   clip-path: polygon(100% 0, 100% 100%, 0 50%);
-  z-index: 1; /* 确保在边框层上方 */
+  z-index: 1;
+  /* 确保在边框层上方 */
 }
 
 .content {
@@ -154,7 +168,7 @@ div {
   /* 最佳可读宽度 */
 }
 
-.input-vedio{
+.input-vedio {
   position: absolute;
   /* 改为相对父容器定位 */
   bottom: 5px;
@@ -167,7 +181,7 @@ div {
   /* 透明背景 */
 }
 
-.input-message{
+.input-message {
   position: absolute;
   /* 改为相对父容器定位 */
   top: 8px;

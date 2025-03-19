@@ -19,7 +19,8 @@ body {
   /* 黑色，透明度80% */
   border-radius: 5px;
   box-shadow: 0 0 20px rgba(26, 40, 40, 0);
-  box-sizing: border-box;  /* 防止尺寸计算溢出 */
+  box-sizing: border-box;
+  /* 防止尺寸计算溢出 */
   padding: 2px;
 }
 
@@ -33,8 +34,8 @@ body {
   bottom: 0px;
   background: linear-gradient(to right, #FFEA75, #05E6FF);
   border-radius: 5px;
-  z-index: 0; 
-  -webkit-mask: 
+  z-index: 0;
+  -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: source-out;
@@ -61,7 +62,7 @@ body {
   /* 可选：顶部阴影分隔线 */
 }
 
-.input-voice{
+.input-voice {
   position: absolute;
   /* 改为相对父容器定位 */
   bottom: 10px;
@@ -70,7 +71,8 @@ body {
 }
 
 .visualizer {
-  background: transparent !important; /* 透明背景 */
+  background: transparent !important;
+  /* 透明背景 */
 }
 
 
