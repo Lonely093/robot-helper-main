@@ -104,11 +104,14 @@ const app = Vue.createApp({
       let commandlist = [];
       if (data.type == 3) {
         messageType = "user";
+        this.isruning = true;
       } else if (data.type == 0) {
         this.isruning = false;
+        this.hideLoadMessage();
         botMessage = data.message;
       } else if (data.type == 1) {
         this.isruning = false;
+        this.hideLoadMessage();
         const separator = "</think>\n\n";
         const separatorIndex = data.message.indexOf(separator);
         if (separatorIndex !== -1) {
@@ -123,6 +126,10 @@ const app = Vue.createApp({
       this.messages.push({ text: botMessage, type: messageType, commandlist: commandlist })
       this.scrollToBottom();
 
+      if(data.type == 3)
+      {
+        this.showLoadMessage();
+      }
     });
 
     //页面启动，默认清空录音记录
@@ -485,6 +492,11 @@ const app = Vue.createApp({
     formatText(message) {
       //this.log("formatText(message)", message.text)
       // 生成正则表达式匹配所有指令参数
+
+      if(message.type=='load'){
+        return ' <div  class="typing-status" > 正在思考 <div class="dot-animation"> <div class="dot"></div>  <div class="dot"></div> <div class="dot"></div>  </div> </div>'
+      }
+
       let commands = [];
       if (message.type == 'bot') {
         commands = message.commandlist.map(c => c.command).join('|');
@@ -557,7 +569,21 @@ const app = Vue.createApp({
       this.messages.push({ text: message, type: 'bot', commandlist: [] })
       this.scrollToBottom();
       this.placeholdertext = "有问题尽管问我...";
-    }
+    },
+    showLoadMessage(){
+      this.messages.push({ text: '', type: 'load', commandlist: [] })
+      this.scrollToBottom();
+    },
+    hideLoadMessage(){
+      if(this.messages.length>1)
+      {
+        var lastmessage = this.messages[this.messages.length-1];
+        if(lastmessage.type=='load'){
+          this.messages.pop()
+          this.scrollToBottom();
+        }
+      }
+    },
   }
 })
 
