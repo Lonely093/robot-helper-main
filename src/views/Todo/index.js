@@ -126,8 +126,7 @@ const app = Vue.createApp({
       this.messages.push({ text: botMessage, type: messageType, commandlist: commandlist })
       this.scrollToBottom();
 
-      if(data.type == 3)
-      {
+      if (data.type == 3) {
         this.showLoadMessage();
       }
     });
@@ -493,7 +492,7 @@ const app = Vue.createApp({
       //this.log("formatText(message)", message.text)
       // 生成正则表达式匹配所有指令参数
 
-      if(message.type=='load'){
+      if (message.type == 'load') {
         return ' <div  class="typing-status" > 正在思考 <div class="dot-animation"> <div class="dot"></div>  <div class="dot"></div> <div class="dot"></div>  </div> </div>'
       }
 
@@ -570,15 +569,14 @@ const app = Vue.createApp({
       this.scrollToBottom();
       this.placeholdertext = "有问题尽管问我...";
     },
-    showLoadMessage(){
+    showLoadMessage() {
       this.messages.push({ text: '', type: 'load', commandlist: [] })
       this.scrollToBottom();
     },
-    hideLoadMessage(){
-      if(this.messages.length>1)
-      {
-        var lastmessage = this.messages[this.messages.length-1];
-        if(lastmessage.type=='load'){
+    hideLoadMessage() {
+      if (this.messages.length > 1) {
+        var lastmessage = this.messages[this.messages.length - 1];
+        if (lastmessage.type == 'load') {
           this.messages.pop()
           this.scrollToBottom();
         }
