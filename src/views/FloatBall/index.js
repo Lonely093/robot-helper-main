@@ -64,6 +64,7 @@ const app = Vue.createApp({
       IsMouseLeave: true,
       IsTipClose: true,
       IsTodoClose: true,
+      ishandleMouseUp : false,
     }
   },
   async mounted() {
@@ -151,6 +152,12 @@ const app = Vue.createApp({
     },
 
     async handleMove(e) {
+      //异常情况，先执行的 MouseUp  后出发的 handleMove
+      if(this.ishandleMouseUp)
+      {
+        await this.snapToEdge();
+        return;
+      }
       const rect = this.$refs.draggableElement.getBoundingClientRect();
       // 获取窗口内容区域边界信息
       // const winBounds = await ipcRenderer.invoke('get-win-content-bounds');
@@ -671,6 +678,7 @@ const app = Vue.createApp({
         ipcRenderer.send("close-todo");
     },
     handleMouseDown(e) {
+      this.ishandleMouseUp = false;
       this.opacity = 1;
       if (e.button == 2) {
         // ipcRenderer.send('close-tip');
@@ -728,6 +736,7 @@ const app = Vue.createApp({
 
 
     async handleMouseUp(e) {
+      this.ishandleMouseUp = true;
       moveS[2] = e.screenX - e.x
       moveS[3] = e.screenY - e.y
       biasX = 0

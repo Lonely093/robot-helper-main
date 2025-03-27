@@ -190,6 +190,9 @@ const app = Vue.createApp({
       this.isUserStop = true;
       await this.stopRecording();
       this.isUserStop = false;
+      if (this.IsMouseLeave && !this.isMouseOnFloatBall) {
+        this.startTipCloseTimer();
+      }
     },
 
     // ***********************麦克风录音 ***************//
