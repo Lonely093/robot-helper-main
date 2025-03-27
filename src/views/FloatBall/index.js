@@ -71,6 +71,7 @@ const app = Vue.createApp({
 
     //删除历史数据(APP注册)
     stateStore.clearAllApp();
+    stateStore.clearTodoMessage();
 
     this.connectmqtt();
 

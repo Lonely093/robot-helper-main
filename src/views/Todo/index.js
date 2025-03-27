@@ -3,6 +3,8 @@ const Vue = require('vue')
 const path = require('path');
 const fs = require('fs');
 const configManager = require("../../utils/configManager");
+const stateStore = require("../../utils/localStorage");
+
 
 
 const app = Vue.createApp({
@@ -148,6 +150,10 @@ const app = Vue.createApp({
 
     this.isRecording = false;
 
+    this.messages = stateStore.getTodoMessage();
+    if (this.messages.length > 0) {
+      this.scrollToBottom();
+    }
   },
   created() {
     // 创建全局事件桥接
@@ -215,7 +221,7 @@ const app = Vue.createApp({
     },
 
     async toggleRecording() {
-      if(this.isruning) return;
+      if (this.isruning) return;
       //在1秒间隔内点击 则不触发事件
       const diff = Math.abs(new Date() - this.lastruningtime);
       if (diff < 1000) return;
@@ -283,7 +289,7 @@ const app = Vue.createApp({
       if (!this.analyser) return
 
       const canvas = this.$refs.waveCanvas
-      const WIDTH = canvas.width 
+      const WIDTH = canvas.width
       const HEIGHT = canvas.height
       // 使用透明背景替代原来的半透明黑色
       this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT)
@@ -320,8 +326,8 @@ const app = Vue.createApp({
       // 高清屏适配
       //const dpr = window.devicePixelRatio || 1
       const rect = canvas.getBoundingClientRect()
-      canvas.width = 680 
-      canvas.height = 40 
+      canvas.width = 680
+      canvas.height = 40
       canvas.style.width = canvas.width + 'px'
       canvas.style.height = canvas.height + 'px'
 
@@ -543,7 +549,7 @@ const app = Vue.createApp({
       }, 1000)
     },
     sendMessage() {
-      if(this.isruning) return;
+      if (this.isruning) return;
       if (this.userInput.trim() !== '') {
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
         ipcRenderer.send('message-from-renderer', {
@@ -560,6 +566,7 @@ const app = Vue.createApp({
         if (messagesContainer) {
           messagesContainer.scrollTop = messagesContainer.scrollHeight
         }
+        stateStore.saveTodoMessage(this.messages);
       })
     },
     sendErrorMessage(message) {
