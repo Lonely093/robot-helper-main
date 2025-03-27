@@ -344,14 +344,14 @@ const app = Vue.createApp({
       const container = canvas.parentElement
 
       // 高清屏适配
-      const dpr = window.devicePixelRatio || 1
-      canvas.width = 275 * dpr
-      canvas.height = 55 * dpr
+      // const dpr = window.devicePixelRatio || 1
+      canvas.width = 275 
+      canvas.height = 55 
       canvas.style.width = canvas.width + 'px'
       canvas.style.height = canvas.height + 'px'
 
       this.canvasCtx = canvas.getContext('2d')
-      this.canvasCtx.scale(dpr, dpr)
+      // this.canvasCtx.scale(dpr, dpr)
 
       //this.createClipPath()
     },
