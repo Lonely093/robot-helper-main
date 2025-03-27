@@ -126,11 +126,16 @@ ipcMain.handle('hnc_tti', async (event, info) => {
   }
 });
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // 处理渲染进程发起的故障诊断请求
 ipcMain.handle('hnc_fd', async (event, info) => {
   try {
 
-    // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
+    //await sleep(10000);
+       // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
     const response = await axios({
       method: 'post',
       url: urlconfig.hnc_fd,
@@ -140,7 +145,7 @@ ipcMain.handle('hnc_fd', async (event, info) => {
       headers: {
         'Content-Type': 'application/json' // ✅ 必须明确指定
       },
-      timeout: 5000
+      timeout: 30000
     });
     logger.info('请求接口hnc_fd', response.data);
     return response.data;

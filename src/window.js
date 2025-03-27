@@ -28,33 +28,10 @@ const createSuspensionWindow = (suspensionConfig) => {
   win.setPosition(left, top)
   // mainWindow.setIgnoreMouseEvents(true, { forward: true })
   //win.webContents.openDevTools({ mode: 'detach' })
-
+  // 突破系统安全层级的特殊设置
+  win.setAlwaysOnTop(true, 'screen-saver')
   return win
 };
-
-const createEssayWindow = () => {
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width * 0.2, top: screen.getPrimaryDisplay().workAreaSize.height * 0.1 }
-  const win = new BrowserWindow({
-    skipTaskbar: true, // 新增这行关闭任务栏显示
-    width: 300,
-    height: 500,
-    minWidth: 300,
-    x: left,
-    y: top,
-    icon: path.join(__dirname, './assets/edit-green.png'),
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      enableRemoteModule: true,
-      webSecurity: false,
-      enableBlinkFeatures: 'AudioVideoTracks',
-      preload: path.join(__dirname, 'preload.js'),
-    },
-  });
-  win.loadFile(path.join(__dirname, 'views/Essay/index.html'));
-  // win.webContents.openDevTools()
-  return win
-}
 
 const createTodoWindow = (data) => {
   let display = data.display;
@@ -87,6 +64,7 @@ const createTodoWindow = (data) => {
     y: todoWinY,
     show: false,
     alwaysOnTop: true,
+    type: 'toolbar',
     // menuBarVisible: false,
     // minimizable: false,   // 禁用最小化按钮
     // maximizable: false,   // 禁用最大化按钮
@@ -107,6 +85,8 @@ const createTodoWindow = (data) => {
   })
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
   // win.webContents.openDevTools({ mode: 'detach' })
+  // 突破系统安全层级的特殊设置
+  win.setAlwaysOnTop(true, 'screen-saver')
   return win
 }
 
@@ -148,6 +128,7 @@ const createTipWindow = (data) => {
     y: tipWinY,
     frame: false,
     alwaysOnTop: true,
+    type: 'toolbar',
     show: false,
     transparent: true,         // 允许透明背景（可选）
     backgroundColor: '#00000000', // 透明背景
@@ -167,8 +148,35 @@ const createTipWindow = (data) => {
   // console.log("urlParams.get('reverse')1111111111",reverse);
   // win.loadURL(`file://${filePath}?reverse=${reverse}`);
   // win.webContents.openDevTools({ mode: 'detach' })
+  // 突破系统安全层级的特殊设置
+  win.setAlwaysOnTop(true, 'screen-saver')
   return win
 }
+
+const createEssayWindow = () => {
+  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width * 0.2, top: screen.getPrimaryDisplay().workAreaSize.height * 0.1 }
+  const win = new BrowserWindow({
+    skipTaskbar: true, // 新增这行关闭任务栏显示
+    width: 300,
+    height: 500,
+    minWidth: 300,
+    x: left,
+    y: top,
+    icon: path.join(__dirname, './assets/edit-green.png'),
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
+      webSecurity: false,
+      enableBlinkFeatures: 'AudioVideoTracks',
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+  win.loadFile(path.join(__dirname, 'views/Essay/index.html'));
+  // win.webContents.openDevTools()
+  return win
+}
+
 const createConfigWindow = () => {
   const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 345, top: screen.getPrimaryDisplay().workAreaSize.height - 840 }
   const win = new BrowserWindow({
