@@ -295,7 +295,6 @@ const app = Vue.createApp({
       this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT)
       // 获取频率数据
       this.analyser.getByteFrequencyData(this.dataArray)
-      console.log("dataArray", this.dataArray);
       this.drawBars(WIDTH, HEIGHT);
 
       //this.drawFrequencyBars(this.canvasCtx,canvas);
