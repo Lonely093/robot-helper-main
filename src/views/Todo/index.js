@@ -215,7 +215,7 @@ const app = Vue.createApp({
     },
 
     async toggleRecording() {
-
+      if(this.isruning) return;
       //在1秒间隔内点击 则不触发事件
       const diff = Math.abs(new Date() - this.lastruningtime);
       if (diff < 1000) return;
@@ -283,8 +283,8 @@ const app = Vue.createApp({
       if (!this.analyser) return
 
       const canvas = this.$refs.waveCanvas
-      const WIDTH = canvas.width / (window.devicePixelRatio || 1)
-      const HEIGHT = canvas.height / (window.devicePixelRatio || 1)
+      const WIDTH = canvas.width 
+      const HEIGHT = canvas.height
       // 使用透明背景替代原来的半透明黑色
       this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT)
       // 获取频率数据
@@ -318,18 +318,15 @@ const app = Vue.createApp({
     initCanvas() {
       const canvas = this.$refs.waveCanvas
       // 高清屏适配
-      const dpr = window.devicePixelRatio || 1
+      //const dpr = window.devicePixelRatio || 1
       const rect = canvas.getBoundingClientRect()
-      canvas.width = rect.width * dpr
-      canvas.height = rect.height * dpr
-
-      canvas.width = 680 * dpr
-      canvas.height = 40 * dpr
+      canvas.width = 680 
+      canvas.height = 40 
       canvas.style.width = canvas.width + 'px'
       canvas.style.height = canvas.height + 'px'
 
       this.canvasCtx = canvas.getContext('2d')
-      this.canvasCtx.scale(dpr, dpr)
+      //this.canvasCtx.scale(dpr, dpr)
 
       //this.createClipPath()
 
@@ -546,6 +543,7 @@ const app = Vue.createApp({
       }, 1000)
     },
     sendMessage() {
+      if(this.isruning) return;
       if (this.userInput.trim() !== '') {
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
         ipcRenderer.send('message-from-renderer', {
