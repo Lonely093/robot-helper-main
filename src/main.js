@@ -244,6 +244,7 @@ ipcMain.on('close-tip', (event) => {
 
 // 悬浮窗 窗口移动 监听
 ipcMain.on('ballWindowMove', (e, data) => {
+  // console.log("ballWindowMove",data);
   pages.suspensionWin.setBounds({ x: data.x, y: data.y, width: suspensionConfig.width, height: suspensionConfig.height })
   // let display =screen.getPrimaryDisplay();
   let display = data.display;
@@ -269,7 +270,7 @@ ipcMain.on('ballWindowMove', (e, data) => {
     } else if (tipWinY > display.workArea.height - 70) {
       tipWinY = display.workArea.height - 70
     }
-    pages.tipWin.setBounds({ x: tipWinX, y: tipWinY })
+    pages.tipWin.setBounds({ x: tipWinX, y: tipWinY, width: 300, height: 70 })
   }
 
   if (pages.todoWin) {
@@ -292,7 +293,7 @@ ipcMain.on('ballWindowMove', (e, data) => {
     } else if (todoWinY > display.workArea.height - 450) {
       todoWinY = display.workArea.height - 450
     }
-    pages.todoWin.setBounds({ x: todoWinX, y: todoWinY })
+    pages.todoWin.setBounds({ x: todoWinX, y: todoWinY, width: 700, height: 450 })
   }
 
 })
