@@ -183,9 +183,21 @@ const app = Vue.createApp({
 
     //暂停录音并不做后续处理
     async userStopRecording() {
+      if (this.isUserStop) return;
       this.isUserStop = true;
-      await this.stopRecording();
-      this.isUserStop = false;
+      //在1秒间隔内点击 则不触发事件
+      var inttimeout = 1;
+      const diff = Math.abs(new Date() - this.lastruningtime);
+      if (diff < 500) {
+        inttimeout = 500 - diff;
+      };
+      setTimeout(async () => {
+        await this.stopRecording();
+        this.isUserStop = false;
+        if (this.IsMouseLeave && !this.isMouseOnFloatBall) {
+          this.startTipCloseTimer();
+        }
+      }, inttimeout);
     },
 
     // ***********************麦克风录音 ***************//

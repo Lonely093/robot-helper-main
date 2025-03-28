@@ -11,13 +11,12 @@
   <div id="app">
 
     <div class="tip-root" :class="{'reverse': reverse}" @mouseleave="hanleMouseLeave"
-      @mouseenter.native="hanleMouseEnter" @touchstart.native="hanleMouseEnter" @touchend="hanleMouseLeave"
-      @click="userStopRecording">
+      @mouseenter.native="hanleMouseEnter" @touchstart.native="hanleMouseEnter" @touchend="hanleMouseLeave">
       <div class="tip-inner">
         <div class="input-message" v-show="!isRecording && !isStopRecording">
           {{topmessage}}
         </div>
-        <div class="input-vedio" v-show="isRecording || isStopRecording || isFirst">
+        <div class="input-vedio" v-show="isRecording || isStopRecording || isFirst" @click="userStopRecording">
           <canvas ref="waveCanvas" class="visualizer "></canvas>
         </div>
         <div class="input-container" v-show="!isRecording && !isStopRecording && !isFirst">
