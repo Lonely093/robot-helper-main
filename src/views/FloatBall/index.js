@@ -64,7 +64,7 @@ const app = Vue.createApp({
       IsMouseLeave: true,
       IsTipClose: true,
       IsTodoClose: true,
-      ishandleMouseUp : false,
+      ishandleMouseUp: false,
     }
   },
   async mounted() {
@@ -147,14 +147,15 @@ const app = Vue.createApp({
         await this.handleMove(e);
       }, 3); // 60 FPS
       this.throttledTouchMoveHandler = throttle(async (e) => {
+        const touch = e.touches[0];
+        console.log("throttledTouchMoveHandler touch", touch);
         await this.handleTouchMove(e);
       }, 3); // 60 FPS
     },
 
     async handleMove(e) {
       //异常情况，先执行的 MouseUp  后出发的 handleMove
-      if(this.ishandleMouseUp)
-      {
+      if (this.ishandleMouseUp) {
         await this.snapToEdge();
         return;
       }
@@ -197,8 +198,11 @@ const app = Vue.createApp({
       ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY, closestEdge: closestEdge, display: display })
     },
 
+
+    // 拖动事件
     async handleTouchMove(e) {
       const touch = e.touches[0];
+      console.log("handleTouchMove touch", touch);
       const rect = this.$refs.draggableElement.getBoundingClientRect();
       const display = await ipcRenderer.invoke('get-primary-display');
       const screenX = touch.screenX - biasX;
@@ -678,6 +682,7 @@ const app = Vue.createApp({
         ipcRenderer.send("close-todo");
     },
     handleMouseDown(e) {
+      // console.log("handleMouseDown",e);
       this.ishandleMouseUp = false;
       this.opacity = 1;
       if (e.button == 2) {
@@ -697,29 +702,35 @@ const app = Vue.createApp({
 
     },
 
-    handleTouchStart(e) {
+    async handleTouchStart(e) {
+      e.preventDefault();
       this.opacity = 1;
       const touch = e.touches[0];
+      const winPosition = await ipcRenderer.invoke('get-window-position');
+      console.log(`触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`, winPosition);
 
       // 记录初始偏移量
       biasX = touch.clientX;
       biasY = touch.clientY;
 
       // 记录初始位置用于点击判断
-      moveS[0] = touch.screenX;
-      moveS[1] = touch.screenY;
-
-      document.addEventListener('touchmove', this.throttledTouchMoveHandler);
+      moveS[0] = winPosition[0];
+      moveS[1] = winPosition[1];
+      console.log("moveS[0], moveS[1]", moveS[0], moveS[1]);
+      // document.addEventListener('touchmove', this.throttledTouchMoveHandler);
       document.addEventListener('touchend', this.handleTouchEnd);
       document.addEventListener('touchcancel', this.handleTouchEnd);
-      this.hanleMouseEnter();
+
     },
 
     async handleTouchEnd(e) {
       // 刚离开屏幕的触点
-      const touch = e.changedTouches[0];
-      moveS[2] = touch.screenX - e.x;
-      moveS[3] = touch.screenY - e.y;
+      const winPosition = await ipcRenderer.invoke('get-window-position');
+      // const touch = e.changedTouches[0];
+      moveS[2] = winPosition[0];
+      moveS[3] = winPosition[1];
+      // console.log(`离开屏幕触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`, winPosition);
+      // console.log("moveS[2], moveS[3]", moveS[2], moveS[3]);
       biasX = 0;
       biasY = 0;
       await this.snapToEdge();

@@ -135,7 +135,7 @@ ipcMain.handle('hnc_fd', async (event, info) => {
   try {
 
     //await sleep(10000);
-       // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
+    // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
     const response = await axios({
       method: 'post',
       url: urlconfig.hnc_fd,
@@ -330,7 +330,10 @@ ipcMain.on('openMenu', (e) => {
   }
   suspensionMenu.popup({});
 });
-
+ipcMain.handle('get-window-position', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  return win.getPosition();
+});
 ipcMain.handle('get-win-content-bounds', (event) => {
   // 从发送请求的渲染进程获取对应的 BrowserWindow 实例
   const win = BrowserWindow.fromWebContents(event.sender);
