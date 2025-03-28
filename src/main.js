@@ -326,6 +326,10 @@ ipcMain.on('openMenu', (e) => {
           app.quit();
         }
       },
+      {
+        label: '版本:'+readConfig.about?.version,
+        enabled: false // 添加这一行禁用点击
+      },
     ]);
   }
   suspensionMenu.popup({});

@@ -20,7 +20,7 @@ const DEFAULT_CONFIG = {
   silenceStop: 1,        //配置主动停止录音时长，默认2s
   about: {
     appname: "语音助手APP",
-    version: "1.0.0",
+    version: "1.0",
     info: "支持语音交互，识别指令，自动执行指令，故障诊断，手动执行指令等功能"
   }
 };

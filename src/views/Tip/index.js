@@ -148,6 +148,7 @@ const app = Vue.createApp({
     },
     sendMessage() {
       if (this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
+      if (this.isruning) return;
       if (this.userInput.trim() !== '') {
         this.isruning = true;
         this.topmessage = "好的，正在为您执行";
@@ -233,7 +234,7 @@ const app = Vue.createApp({
       this.isRecording = false;
     },
     async toggleRecording() {
-
+      if (this.isruning) return;
       //在1秒间隔内点击 则不触发事件
       const diff = Math.abs(new Date() - this.lastruningtime);
       if (diff < 1000) return;
@@ -345,8 +346,8 @@ const app = Vue.createApp({
 
       // 高清屏适配
       // const dpr = window.devicePixelRatio || 1
-      canvas.width = 275 
-      canvas.height = 55 
+      canvas.width = 275
+      canvas.height = 55
       canvas.style.width = canvas.width + 'px'
       canvas.style.height = canvas.height + 'px'
 
