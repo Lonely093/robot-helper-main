@@ -83,6 +83,7 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
+      showProgressInfo: true, 
     }
   },
 

@@ -13,32 +13,42 @@
       <div class="custom-toolbar">
         <div class="close-btn" @click="handleWindowClose">x</div>
       </div>
+      <div class="main-content">
 
-      <div class="messages">
-        <div v-for="(message, index) in messages" :key="index" class="message"
-          :class="[ { 'reverse': reverse },message.type]">
-          <div class="message-content" v-html="formatText(message)"></div>
+        <div v-if="showProgressInfo" class="info-panel">
+          <!-- 这里放你的信息显示内容 -->
+        </div>
+
+        <!-- 分割线 -->
+        <div v-if="showProgressInfo" class="divider"></div>
+        <div class="chat-area">
+          <div class="messages">
+            <div v-for="(message, index) in messages" :key="index" class="message"
+              :class="[ { 'reverse': reverse },message.type]">
+              <div class="message-content" v-html="formatText(message)"></div>
+            </div>
+          </div>
+
+          <!-- 输入框 -->
+          <div class="input-voice" v-show="isRecording || isStopRecording">
+            <canvas ref="waveCanvas" class="visualizer" @click="userStopRecording"></canvas>
+          </div>
+          <div class="input-container" v-show="!isRecording && !isStopRecording">
+            <input v-model="userInput" :placeholder="placeholdertext" @click="handleMouseDown"
+              @keyup.enter="sendMessage" class="input-field">
+            </input>
+            <button @click="sendMessage" class="send-button">
+              <img src="../../assets/send.svg" alt="发送" class="btn-icon">
+            </button>
+            <button v-show="!isRecording " @click="toggleRecording" class="send-button">
+              <img v-show="isCanRecording" src="../../assets/voice.svg" alt="语音" class="btn-icon">
+              <img v-show="!isCanRecording" src="../../assets/unvoice.svg" alt="语音" class="btn-icon">
+            </button>
+          </div>
+
         </div>
       </div>
-
-      <!-- 输入框 -->
-      <div class="input-voice" v-show="isRecording || isStopRecording">
-        <canvas ref="waveCanvas" class="visualizer" @click="userStopRecording"></canvas>
-      </div>
-      <div class="input-container" v-show="!isRecording && !isStopRecording">
-        <input v-model="userInput" :placeholder="placeholdertext" @click="handleMouseDown" @keyup.enter="sendMessage"
-          class="input-field">
-        </input>
-        <button @click="sendMessage" class="send-button">
-          <img src="../../assets/send.svg" alt="发送" class="btn-icon">
-        </button>
-        <button v-show="!isRecording " @click="toggleRecording" class="send-button">
-          <img v-show="isCanRecording" src="../../assets/voice.svg" alt="语音" class="btn-icon">
-          <img v-show="!isCanRecording" src="../../assets/unvoice.svg" alt="语音" class="btn-icon">
-        </button>
-      </div>
     </div>
-
   </div>
   <script src="./index.js"></script>
 </body>
