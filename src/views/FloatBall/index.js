@@ -64,7 +64,8 @@ const app = Vue.createApp({
       IsMouseLeave: true,
       IsTipClose: true,
       IsTodoClose: true,
-      ishandleMouseUp : false,
+      IsAlertClose: true,
+      ishandleMouseUp: false,
     }
   },
   async mounted() {
@@ -154,8 +155,7 @@ const app = Vue.createApp({
 
     async handleMove(e) {
       //异常情况，先执行的 MouseUp  后出发的 handleMove
-      if(this.ishandleMouseUp)
-      {
+      if (this.ishandleMouseUp) {
         await this.snapToEdge();
         return;
       }
@@ -678,6 +678,14 @@ const app = Vue.createApp({
       if (!this.IsTodoClose)
         ipcRenderer.send("close-todo");
     },
+    showAlert() {
+      if (this.IsAlertClose)
+        ipcRenderer.send("showAlert", "show")
+    },
+    closeAlert() {
+      if (!this.IsAlertClose)
+        ipcRenderer.send("close-alert");
+    },
     handleMouseDown(e) {
       this.ishandleMouseUp = false;
       this.opacity = 1;
@@ -748,8 +756,10 @@ const app = Vue.createApp({
         this.showTip();
       }
       if (calcS() && e.button == 1) {
-        this.showTodo();
+        // this.showTodo();
+        this.showAlert();
       }
+ 
       document.removeEventListener('mousemove', this.throttledMoveHandler)
       document.removeEventListener('mouseup', this.handleMouseUp)
     },

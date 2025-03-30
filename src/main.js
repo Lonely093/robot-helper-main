@@ -1,6 +1,6 @@
 const { app, Menu, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
-const { createSuspensionWindow, createTodoWindow, createTipWindow } = require("./window.js")
+const { createSuspensionWindow, createTodoWindow, createTipWindow, createAlertWindow } = require("./window.js")
 Menu.setApplicationMenu(null);
 const recorder = require('./utils/recorder');
 const readConfig = require('./utils/configManager');
@@ -29,6 +29,7 @@ const pages = {
   todoWin: undefined,
   configWin: undefined,
   tipWin: undefined,
+  alertWin: undefined,
 }
 
 //悬浮窗位置
@@ -135,7 +136,7 @@ ipcMain.handle('hnc_fd', async (event, info) => {
   try {
 
     //await sleep(10000);
-       // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
+    // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
     const response = await axios({
       method: 'post',
       url: urlconfig.hnc_fd,
@@ -163,6 +164,9 @@ ipcMain.on('message-from-renderer', (event, { target, data }) => {
   var targetWindow = null;
   if (target == "tip") {
     targetWindow = pages.tipWin;
+  }
+  if (target == "alert") {
+    targetWindow = pages.alertWin;
   }
   if (target == "todo") {
     targetWindow = pages.todoWin;
@@ -247,6 +251,26 @@ ipcMain.on('close-tip', (event) => {
   }
 });
 
+//打开 提示框页面 监听
+ipcMain.on('showAlert', (e, data) => {
+  if (pages.alertWin == null) {
+    pages.alertWin = createAlertWindow(suspensionWinPosition)
+    // pages.alertWin.send('tip-reverse', suspensionWinPosition.closestEdge)
+    pages.alertWin.on('close', (e, data) => {
+      pages.alertWin = null
+    })
+    // pages.suspensionWin.webContents.send('message-to-renderer', { type: 12 });
+  }
+})
+
+//关闭 提示框页面 监听
+ipcMain.on('close-alert', (event) => {
+  if (pages.alertWin) {
+    pages.alertWin.close();
+    // pages.suspensionWin.webContents.send('message-to-renderer', { type: 11 });
+  }
+});
+
 // 悬浮窗 窗口移动 监听
 ipcMain.on('ballWindowMove', (e, data) => {
   // console.log("ballWindowMove",data);
@@ -327,7 +351,7 @@ ipcMain.on('openMenu', (e) => {
         }
       },
       {
-        label: '版本:'+readConfig.about?.version,
+        label: '版本:' + readConfig.about?.version,
         enabled: false // 添加这一行禁用点击
       },
     ]);
