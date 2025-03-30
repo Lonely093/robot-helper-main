@@ -83,7 +83,19 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
-      showProgressInfo: true, 
+      showProgressInfo: true,
+      steps: [
+        {
+          title: '智能会话式编程',
+          status: 'process', // process | error | success
+          message: ''
+        },
+        {
+          title: '智能仿真',
+          status: 'error',
+          message: '环境配置校验失败'
+        }
+      ],
     }
   },
 

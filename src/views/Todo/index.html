@@ -16,7 +16,33 @@
       <div class="main-content">
 
         <div v-if="showProgressInfo" class="info-panel">
-          <!-- 这里放你的信息显示内容 -->
+          <div v-for="(step, index) in steps" :key="index" class="step-item"
+            :class="{ 'last-item': index === steps.length - 1 }">
+            <!-- 步骤图标 -->
+            <div class="step-icon-container">
+              <div class="step-icon" :class="{
+            'processing': step.status === 'process',
+            'error': step.status === 'error'
+          }"></div>
+              <!-- 连接线 -->
+              <div v-if="index !== steps.length - 1" class="step-line"></div>
+            </div>
+
+            <!-- 步骤内容 -->
+            <div class="step-content">
+              <h3 class="step-title">{{ step.title }}</h3>
+              <div class="step-description">
+                <!-- 进行中状态 -->
+                <span v-if="step.status === 'process'" class="processing-text">
+                  进行中...
+                </span>
+                <!-- 错误状态 -->
+                <span v-if="step.status === 'error'" class="error-text">
+                  失败原因：{{ step.message }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 分割线 -->

@@ -142,7 +142,7 @@ body {
   position: absolute;
   /* 改为相对父容器定位 */
   bottom: 50px;
-  top: 25px;
+  top: 10px;
   left: 10px;
   right: 10px;
   flex: 1;
@@ -307,12 +307,12 @@ body {
 
 .main-content {
   display: flex;
-  height: calc(100vh - 29px); /* 扣除工具栏高度 */
+  height: calc(100vh - 30px); /* 扣除工具栏高度 */
   overflow: hidden;
 }
 /* 左侧信息面板 */
 .info-panel {
-  width: 300px; /* 可根据需求调整 */
+  width: 200px; /* 可根据需求调整 */
   background: rgba(26, 40, 40, 0.9);
   overflow-y: auto;
 }
@@ -327,4 +327,83 @@ body {
   flex: 1;
   position: relative;
   overflow: hidden;
+}
+
+
+
+
+.step-item {
+  display: flex;
+  position: relative;
+  padding: 6px 0;
+}
+
+.step-icon-container {
+  position: relative;
+  width: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.step-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 3px solid #ccc;
+  position: relative;
+  z-index: 2;
+}
+
+.step-line {
+  position: absolute;
+  height: 100%;
+  width: 2px;
+  background-color: #e8e8e8;
+  top: 24px; /* 根据图标尺寸调整（图标高度14px + 边框3px*2） */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.step-content {
+  flex: 1;
+  margin-left: 20px;
+}
+
+.step-title {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #fff;
+}
+
+.step-description {
+  font-size: 14px;
+}
+
+/* 状态颜色 */
+.processing {
+  border-color: #52c41a;
+  background-color: #52c41a;
+}
+
+.error {
+  border-color: #ff4d4f;
+  background-color: #ff4d4f;
+}
+
+/* 状态文字 */
+.processing-text {
+  color: #52c41a;
+}
+
+.error-text {
+  color: #ff4d4f;
+}
+
+/* 最后一个步骤隐藏连接线 */
+.last-item .step-line {
+  display: none;
 }
