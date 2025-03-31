@@ -18,6 +18,10 @@ const createSuspensionWindow = (suspensionConfig) => {
       contextIsolation: false,
       enableRemoteModule: true,
       webSecurity: false,
+      // 启用触摸事件支持
+      touchEvents: true,
+      // 可选：优化触摸交互模式
+      enablePreferredSizeMode: true,
       enableBlinkFeatures: 'AudioVideoTracks',
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -27,7 +31,7 @@ const createSuspensionWindow = (suspensionConfig) => {
   // mainWindow.setBounds({ x: left, y: top, width: suspensionConfig.width, height: suspensionConfig.height })
   win.setPosition(left, top)
   // mainWindow.setIgnoreMouseEvents(true, { forward: true })
-  //win.webContents.openDevTools({ mode: 'detach' })
+  win.webContents.openDevTools({ mode: 'detach' })
   // 突破系统安全层级的特殊设置
   win.setAlwaysOnTop(true, 'screen-saver')
   return win
@@ -98,7 +102,7 @@ const createTipWindow = (data) => {
   let tipWinX = data.x - 300;
   let tipWinY = data.y - 15;
   // let reverse = false;
-  // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"111111111")
+  // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"")
   if (data.closestEdge == "left") {
     tipWinX = data.x + 85;
     // reverse = true;
@@ -106,7 +110,7 @@ const createTipWindow = (data) => {
     tipWinX = data.x - 300;
     // reverse = false;
   }
-  // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"222222222222222")
+  // console.log("tipWinX",tipWinX,"tipWinY",tipWinY,"")
   if (tipWinX < 0) {
     tipWinX = 0
   } else if (tipWinX > display.workArea.width - 300) {

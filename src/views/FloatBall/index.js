@@ -12,7 +12,8 @@ function calcS() {
   const res = Math.pow(moveS[0] - moveS[2], 2) + Math.pow(moveS[1] - moveS[3], 2)
   return res < 5
 }
-
+let moveXPos = 0;
+let moveYPos = 0;
 
 /**
  * Vue应用主组件 - 悬浮球界面
@@ -65,6 +66,7 @@ const app = Vue.createApp({
       IsTipClose: true,
       IsTodoClose: true,
       ishandleMouseUp: false,
+      movePosition: []
     }
   },
   async mounted() {
@@ -147,8 +149,6 @@ const app = Vue.createApp({
         await this.handleMove(e);
       }, 3); // 60 FPS
       this.throttledTouchMoveHandler = throttle(async (e) => {
-        const touch = e.touches[0];
-        console.log("throttledTouchMoveHandler touch", touch);
         await this.handleTouchMove(e);
       }, 3); // 60 FPS
     },
@@ -202,10 +202,13 @@ const app = Vue.createApp({
     // 拖动事件
     async handleTouchMove(e) {
       const touch = e.touches[0];
-      console.log("handleTouchMove touch", touch);
+      console.log(`触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`);
+      // console.log("handleTouchMove touch", touch);
       const rect = this.$refs.draggableElement.getBoundingClientRect();
       const display = await ipcRenderer.invoke('get-primary-display');
-      const screenX = touch.screenX - biasX;
+      const winPosition = await ipcRenderer.invoke('get-window-position');
+      // console.log(touch, rect, display, winPosition);
+      const screenX = winPosition[0];
       const workArea = display.workArea;
       const edges = {
         left: screenX - workArea.x,
@@ -227,7 +230,16 @@ const app = Vue.createApp({
       } else {
         this.reverse = false;
       }
-      ipcRenderer.send('ballWindowMove', { x: touch.screenX - biasX, y: touch.screenY - biasY, closestEdge: closestEdge, display: display })
+      console.log("moveXPos moveYPos before", moveXPos, touch.clientX, biasX)
+      moveXPos = moveXPos + touch.clientX - biasX;
+      moveYPos = moveYPos + touch.clientY - biasY;
+
+      // console.log("resX", resX, resY, moveXPos, moveYPos)
+      // console.log(this.movePosition)
+      // console.log(biasX, biasY)
+      console.log("moveXPos moveYPos after", moveXPos, moveYPos)
+
+      ipcRenderer.send('ballWindowMove', { x: moveXPos, y: moveYPos, closestEdge: closestEdge, display: display })
     },
 
     //发送日志记录
@@ -707,17 +719,21 @@ const app = Vue.createApp({
       this.opacity = 1;
       const touch = e.touches[0];
       const winPosition = await ipcRenderer.invoke('get-window-position');
-      console.log(`触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`, winPosition);
+      this.movePosition = winPosition;
+      console.log(`开始触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`, e);
 
       // 记录初始偏移量
       biasX = touch.clientX;
       biasY = touch.clientY;
 
+      moveXPos = winPosition[0];
+      moveYPos = winPosition[1];
+
       // 记录初始位置用于点击判断
       moveS[0] = winPosition[0];
       moveS[1] = winPosition[1];
       console.log("moveS[0], moveS[1]", moveS[0], moveS[1]);
-      // document.addEventListener('touchmove', this.throttledTouchMoveHandler);
+      document.addEventListener('touchmove', this.throttledTouchMoveHandler);
       document.addEventListener('touchend', this.handleTouchEnd);
       document.addEventListener('touchcancel', this.handleTouchEnd);
 
