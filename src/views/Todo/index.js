@@ -201,7 +201,7 @@ const app = Vue.createApp({
           if (this.fileList.length <= 0) {
             this.messages.push({ text: '未找到零件模型，请放置零件模型文件到系统或U盘中后重试', type: 'bot', commandlist: [] })
           } else {
-            
+            this.messages.push({ text: '', type: 'file', commandlist: [] })
           }
         } else {
           this.fileList = [];
@@ -613,9 +613,9 @@ const app = Vue.createApp({
 
       if (message.type == 'file') {
         const prefix = "在系统和U盘中搜索到以下零件模型，请选择编号加工：";
-        const files = message.files || [];
+        const files = this.fileList || [];
         // 生成带编号的可点击文件列表
-        const fileList = files.map((file, index) =>
+        const fileListRender = files.map((file, index) =>
           `<div>${index + 1}. <a class="command-link" 
          onclick="fileClickHandler('${file}')"
          onmouseover="this.style.color='#79bbff'"
@@ -626,7 +626,7 @@ const app = Vue.createApp({
         ).join('');
         return `<div class="file-list">
               <div>${prefix}</div>
-              ${fileList}
+              ${fileListRender}
             </div>`;
       }
 
@@ -685,7 +685,7 @@ const app = Vue.createApp({
       }, 1000)
     },
     sendMessage() {
-      // this.messages.push({ text: "", type: "file", commandlist: [], files: [{ "path": "D:\\test\\1233.txt", "name": "1233.txt" }, { "path": "D:\\test\\3212.txt", "name": "3212.txt" }] })
+      // this.messages.push({ text: "", type: "file", commandlist: [] })
       if (this.isruning) return;
       if (this.userInput.trim() !== '') {
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
