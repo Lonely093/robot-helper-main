@@ -96,6 +96,7 @@ const app = Vue.createApp({
           message: '未开始'
         }
       ],
+      fileList: [],
       isMQTTRuning: false
 
     }
@@ -189,10 +190,22 @@ const app = Vue.createApp({
   methods: {
 
 
-    Programming(data) {
+    async Programming(data) {
       // 搜索零件模型
       if (data.type == 11) {
-
+        const scanres = await ipcRenderer.invoke('scan-directory')
+        if (scanres.success) {
+          this.fileList = scanres.files;
+          if (this.fileList.length <= 0) {
+            this.messages.push({ text: '未找到零件模型，请放置零件模型文件到系统或U盘中后重试', type: 'bot', commandlist: [] })
+          } else {
+            
+          }
+        } else {
+          this.fileList = [];
+          this.messages.push({ text: '在系统和U盘中查找零件模型失败:' + scanres.message, type: 'bot', commandlist: [] })
+        }
+        this.scrollToBottom();
       }
       //判断指令返回结果
       if (data.type == 12) {
