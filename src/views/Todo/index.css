@@ -329,6 +329,7 @@ body {
 
 /* 左侧信息面板 */
 .info-panel {
+  position: relative;
   width: 200px;
   /* 可根据需求调整 */
   background: rgba(26, 40, 40, 0.9);
@@ -371,7 +372,7 @@ body {
   height: 10px;
   border-radius: 50%;
   background-color: #fff;
-  border: 5px solid #aaaaaa;
+  border: 5px solid #505050;
   position: relative;
   z-index: 2;
 }
@@ -426,4 +427,36 @@ body {
 /* 最后一个步骤隐藏连接线 */
 .last-item .step-line {
   display: none;
+}
+
+.terminate-button-container {
+  text-align: center;
+  padding: 20px 0;
+  position: absolute;
+  bottom: 0px;
+  right: 35%;
+}
+
+.terminate-btn {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.terminate-btn:hover {
+  background-color: #ff7875;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.2);
+}
+
+.terminate-btn:active {
+  background-color: #d9363e;
+  transform: translateY(1px);
 }

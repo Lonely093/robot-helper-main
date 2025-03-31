@@ -83,7 +83,7 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
-      showProgressInfo: true,
+      showProgressInfo: false,
       isFinishProgress: true,
       GcodePath: '',
       nowStep: 0,
@@ -197,6 +197,9 @@ const app = Vue.createApp({
     delete window.fileClickHandler;
   },
   methods: {
+    handleTerminate() {
+      console.log("程序终止");
+    },
     updateLineHeights() {
       this.steps.forEach((step, index) => {
         const contentEl = this.$refs[`content-${index}`]?.[0];
