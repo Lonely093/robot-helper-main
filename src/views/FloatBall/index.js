@@ -156,6 +156,20 @@ const app = Vue.createApp({
     // })
 
     this.initThrottledMove();
+
+    // setTimeout(async () => {
+    //   var date1 = new Date();
+    //   const scanres = await ipcRenderer.invoke('scan-directory')
+    //   if(scanres.success){
+
+    //   }else{
+
+    //   }
+    //   var chazhi = (new Date() - date1) / 1000;
+    //   this.log("files", files);
+    //   this.log("chazhi", chazhi);
+    // }, 10000);
+
   },
   beforeUnmount() {
     this.throttledMoveHandler.cancel(); // 重要！销毁时取消节流
@@ -497,6 +511,7 @@ const app = Vue.createApp({
 
     //执行指令交互
     async ExeHNC_TTI(message) {
+      return await this.FaultDiagnosis(message, 1);
       try {
         //调用 指令交互接口    根据结果判断
         const res = await ipcRenderer.invoke('hnc_tti', message);
@@ -537,11 +552,11 @@ const app = Vue.createApp({
       this.closeTip();
       //存在偶发消息丢失  目前采用 延时200ms 发送
       setTimeout(async () => {
-        this.floatballtodo(3, message);
         if (type == 1) {
-          this.floatballtodo(11); //会话式编程
+          this.floatballtodo(11, message); //会话式编程
           return;
         }
+        this.floatballtodo(3, message);
         try {
           //res = await apis.hnc_fd(result.message);
           const res = await ipcRenderer.invoke('hnc_fd', message);

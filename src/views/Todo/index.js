@@ -142,6 +142,7 @@ const app = Vue.createApp({
         }
       } else if (data.type == 11 || data.type == 12) { //11=打开会话式编程 提供可选择的目录  12=指令返回结果
         this.Programming(data);
+        return;
       }
       this.messages.push({ text: botMessage, type: messageType, commandlist: commandlist })
       this.scrollToBottom();
@@ -195,6 +196,7 @@ const app = Vue.createApp({
     async Programming(data) {
       // 搜索零件模型
       if (data.type == 11) {
+        this.messages.push({ text: data.message, type: 'user', commandlist: [] })
         const scanres = await ipcRenderer.invoke('scan-directory')
         if (scanres.success) {
           this.fileList = scanres.files;
@@ -616,11 +618,12 @@ const app = Vue.createApp({
         const files = this.fileList || [];
         // 生成带编号的可点击文件列表
         const fileListRender = files.map((file, index) =>
-          `<div>${index + 1}. <a class="command-link" 
-         onclick="fileClickHandler('${file}')"
+          `<div> <a class="command-link" 
+         onclick="fileClickHandler('${index}')"
          onmouseover="this.style.color='#79bbff'"
          onmouseout="this.style.color='#13CCCF'"
          style="cursor: pointer; color: #13CCCF;">
+         ${index + 1}.
          ${file.name}
        </a></div>`
         ).join('');
@@ -673,8 +676,8 @@ const app = Vue.createApp({
 
     },
 
-    handlefileClick(file) {
-      console.log("文件处理", file);
+    handlefileClick(index) {
+      console.log("文件处理", index);
 
     },
 
