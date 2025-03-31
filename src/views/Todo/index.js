@@ -83,7 +83,7 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
-      showProgressInfo: false,
+      showProgressInfo: true,
       steps: [
         {
           title: '智能会话式编程',
@@ -617,7 +617,7 @@ const app = Vue.createApp({
         // 生成带编号的可点击文件列表
         const fileListRender = files.map((file, index) =>
           `<div>${index + 1}. <a class="command-link" 
-         onclick="fileClickHandler('${file}')"
+         onclick="fileClickHandler('${file.name, file.path}')"
          onmouseover="this.style.color='#79bbff'"
          onmouseout="this.style.color='#13CCCF'"
          style="cursor: pointer; color: #13CCCF;">
@@ -673,8 +673,8 @@ const app = Vue.createApp({
 
     },
 
-    handlefileClick(file) {
-      console.log("文件处理", file);
+    handlefileClick(name, path) {
+      console.log("文件处理", name, path);
 
     },
 
