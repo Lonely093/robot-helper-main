@@ -138,18 +138,18 @@ const app = Vue.createApp({
 
     this.initThrottledMove();
 
-    // setTimeout(async () => {
-    //   var date1 = new Date();
-    //   const scanres = await ipcRenderer.invoke('scan-directory')
-    //   if(scanres.success){
+    setTimeout(async () => {
+      var date1 = new Date();
+      const scanres = await ipcRenderer.invoke('scan-directory')
+      // if(scanres.success){
 
-    //   }else{
+      // }else{
 
-    //   }
-    //   var chazhi = (new Date() - date1) / 1000;
-    //   this.log("files", files);
-    //   this.log("chazhi", chazhi);
-    // }, 10000);
+      // }
+      var chazhi = (new Date() - date1) / 1000;
+      this.log("files", scanres);
+      this.log("chazhi", chazhi);
+    }, 1000);
 
   },
   beforeUnmount() {

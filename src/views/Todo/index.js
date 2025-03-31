@@ -352,7 +352,7 @@ const app = Vue.createApp({
       const rect = canvas.getBoundingClientRect()
       canvas.width = 680
       canvas.height = 40
-      canvas.style.width = canvas.width + 'px'
+      canvas.style.width = "100%"
       canvas.style.height = canvas.height + 'px'
 
       this.canvasCtx = canvas.getContext('2d')

@@ -11,7 +11,7 @@
   <div id="app">
     <div class="chatbot-container">
       <div class="custom-toolbar">
-        <div class="close-btn" @click="handleWindowClose">x</div>
+        <div class="close-btn" @click="handleWindowClose" v-if="!showProgressInfo">x</div>
       </div>
       <div class="main-content">
 
@@ -30,7 +30,7 @@
 
             <!-- 步骤内容 -->
             <div class="step-content">
-              <h3 class="step-title">{{ step.title }}</h3>
+              <div class="step-title">{{ step.title }}</div>
               <div class="step-description">
                 <!-- 进行中状态 -->
                 <span v-if="step.status === 'process'" class="processing-text">
