@@ -283,52 +283,35 @@ class MqttClient {
   initialize() {
     //APP注册发布
     if (this.subscriptions.length > 0) return;
-    this.subscriptions.set('AppCenter/Apps', (topic, message) => {
-      //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
-      console.log("AppCenter:", message);
-
-      if (message.apps && message.apps.length > 0) {
-        message.apps.forEach(app => {
-          app.state = "0";//默认设置为未启动
-          if (app.app_id == "1" || app.app_id == 1) {
-            app.state = "1"; //HMI默认为启动
-          }
-          stateStore.saveApp(app.app_id, app);
-          //根据app是否支持启动，来订阅  启动/关闭/指令执行功能
-          if (app.ai_interaction.action) {
-            // this.subscribe("App/Launch/" + app.app_id, (topic, message) => {
-            //   this.AppLaunch(topic, message)
-            // });
-            // this.subscribe("App/Exit/" + app.app_id, (topic, message) => {
-            //   this.AppExit(topic, message)
-            // });
-            // this.subscribe("App/Message/" + app.app_id, (topic, message) => {
-            //   this.AppMessage(topic, message)
-            // });
-          }
-          //是否可执行指令
-          // if (app.ai_interaction.exec) {
-          //   this.subscribe("App/Reply/" + app.app_id, (topic, message) => {
-          //     this.AppReply(topic, message)
-          //   });
-          // }
-        });
-        this.subscribe("App/Launch", (topic, message) => {
-          this.AppLaunch(topic, message)
-        });
-        this.subscribe("App/Exit", (topic, message) => {
-          this.AppExit(topic, message)
-        });
-        this.subscribe("App/Message", (topic, message) => {
-          this.AppMessage(topic, message)
-        });
-        this.subscribe("App/Reply", (topic, message) => {
-          this.AppReply(topic, message)
-        });
-      }
-    })
-
-    this.client.subscribe('AppCenter/Apps', { qos: 2, retain: true });
+    for (let index = 1; index < 30; index++) {
+      this.subscriptions.set('AppCenter/Apps/' + index, (topic, message) => {
+        //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
+        console.log("AppCenter:", message);
+        if (message.apps && message.apps.length > 0) {
+          message.apps.forEach(app => {
+            app.state = "0";//默认设置为未启动
+            if (app.app_id == "1" || app.app_id == 1) {
+              app.state = "1"; //HMI默认为启动
+            }
+            stateStore.saveApp(app.app_id, app);
+          });
+        }
+      })
+      this.client.subscribe('AppCenter/Apps/' + index, { qos: 1, retain: true });
+    }
+    //订阅其他主题
+    this.subscribe("App/Launch", (topic, message) => {
+      this.AppLaunch(topic, message)
+    });
+    this.subscribe("App/Exit", (topic, message) => {
+      this.AppExit(topic, message)
+    });
+    this.subscribe("App/Message", (topic, message) => {
+      this.AppMessage(topic, message)
+    });
+    this.subscribe("App/Reply", (topic, message) => {
+      this.AppReply(topic, message)
+    });
   }
 
   AppLaunch(topic, message) {
