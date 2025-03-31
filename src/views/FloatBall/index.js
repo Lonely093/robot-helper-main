@@ -3,6 +3,7 @@ const Vue = require('vue')
 const throttle = require('lodash.throttle');
 const mqttClient = require("../../utils/mqtt")
 const stateStore = require("../../utils/localStorage");
+const configManager = require("../../utils/configManager");
 
 
 let biasX = 0
@@ -66,7 +67,8 @@ const app = Vue.createApp({
       IsTipClose: true,
       IsTodoClose: true,
       ishandleMouseUp: false,
-      movePosition: []
+      movePosition: [],
+      mqtttimeout: parseInt(configManager.mqtt.timeout),
     }
   },
   async mounted() {
@@ -650,7 +652,7 @@ const app = Vue.createApp({
           this.runingcmd = null;
           this.commandList = [];
         }
-      }, 3000);
+      }, this.mqtttimeout * 1000);
     },
 
     /****************** HTTP接口处理结束 ****************/
