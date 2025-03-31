@@ -65,6 +65,7 @@ const app = Vue.createApp({
       IsMouseLeave: true,
       IsTipClose: true,
       IsTodoClose: true,
+      IsAlertClose: true,
       ishandleMouseUp: false,
       movePosition: []
     }
@@ -73,6 +74,7 @@ const app = Vue.createApp({
 
     //删除历史数据(APP注册)
     stateStore.clearAllApp();
+    stateStore.clearTodoMessage();
 
     this.connectmqtt();
 
@@ -693,6 +695,14 @@ const app = Vue.createApp({
       if (!this.IsTodoClose)
         ipcRenderer.send("close-todo");
     },
+    showAlert() {
+      if (this.IsAlertClose)
+        ipcRenderer.send("showAlert", "show")
+    },
+    closeAlert() {
+      if (!this.IsAlertClose)
+        ipcRenderer.send("close-alert");
+    },
     handleMouseDown(e) {
       // console.log("handleMouseDown",e);
       this.ishandleMouseUp = false;
@@ -775,7 +785,9 @@ const app = Vue.createApp({
       }
       if (calcS() && e.button == 1) {
         this.showTodo();
+        // this.showAlert();
       }
+ 
       document.removeEventListener('mousemove', this.throttledMoveHandler)
       document.removeEventListener('mouseup', this.handleMouseUp)
     },

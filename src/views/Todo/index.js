@@ -3,6 +3,8 @@ const Vue = require('vue')
 const path = require('path');
 const fs = require('fs');
 const configManager = require("../../utils/configManager");
+const stateStore = require("../../utils/localStorage");
+
 
 
 const app = Vue.createApp({
@@ -81,6 +83,19 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
+      showProgressInfo: true,
+      steps: [
+        {
+          title: '智能会话式编程',
+          status: 'process', // process | error | success
+          message: ''
+        },
+        {
+          title: '智能仿真',
+          status: 'error',
+          message: '环境配置校验失败'
+        }
+      ],
     }
   },
 
@@ -148,6 +163,10 @@ const app = Vue.createApp({
 
     this.isRecording = false;
 
+    this.messages = stateStore.getTodoMessage();
+    if (this.messages.length > 0) {
+      this.scrollToBottom();
+    }
   },
   created() {
     // 创建全局事件桥接
@@ -177,9 +196,21 @@ const app = Vue.createApp({
 
     //暂停录音并不做后续处理
     async userStopRecording() {
+      if (this.isUserStop) return;
       this.isUserStop = true;
-      await this.stopRecording();
-      this.isUserStop = false;
+      //在1秒间隔内点击 则不触发事件
+      var inttimeout = 1;
+      const diff = Math.abs(new Date() - this.lastruningtime);
+      if (diff < 500) {
+        inttimeout = 500 - diff;
+      };
+      setTimeout(async () => {
+        await this.stopRecording();
+        this.isUserStop = false;
+        if (this.IsMouseLeave && !this.isMouseOnFloatBall) {
+          this.startTipCloseTimer();
+        }
+      }, inttimeout);
     },
 
     // ***********************麦克风录音 ***************//
@@ -215,7 +246,7 @@ const app = Vue.createApp({
     },
 
     async toggleRecording() {
-
+      if (this.isruning) return;
       //在1秒间隔内点击 则不触发事件
       const diff = Math.abs(new Date() - this.lastruningtime);
       if (diff < 1000) return;
@@ -283,13 +314,12 @@ const app = Vue.createApp({
       if (!this.analyser) return
 
       const canvas = this.$refs.waveCanvas
-      const WIDTH = canvas.width / (window.devicePixelRatio || 1)
-      const HEIGHT = canvas.height / (window.devicePixelRatio || 1)
+      const WIDTH = canvas.width
+      const HEIGHT = canvas.height
       // 使用透明背景替代原来的半透明黑色
       this.canvasCtx.clearRect(0, 0, WIDTH, HEIGHT)
       // 获取频率数据
       this.analyser.getByteFrequencyData(this.dataArray)
-      console.log("dataArray", this.dataArray);
       this.drawBars(WIDTH, HEIGHT);
 
       //this.drawFrequencyBars(this.canvasCtx,canvas);
@@ -318,18 +348,15 @@ const app = Vue.createApp({
     initCanvas() {
       const canvas = this.$refs.waveCanvas
       // 高清屏适配
-      const dpr = window.devicePixelRatio || 1
+      //const dpr = window.devicePixelRatio || 1
       const rect = canvas.getBoundingClientRect()
-      canvas.width = rect.width * dpr
-      canvas.height = rect.height * dpr
-
-      canvas.width = 680 * dpr
-      canvas.height = 40 * dpr
+      canvas.width = 680
+      canvas.height = 40
       canvas.style.width = canvas.width + 'px'
       canvas.style.height = canvas.height + 'px'
 
       this.canvasCtx = canvas.getContext('2d')
-      this.canvasCtx.scale(dpr, dpr)
+      //this.canvasCtx.scale(dpr, dpr)
 
       //this.createClipPath()
 
@@ -546,6 +573,7 @@ const app = Vue.createApp({
       }, 1000)
     },
     sendMessage() {
+      if (this.isruning) return;
       if (this.userInput.trim() !== '') {
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
         ipcRenderer.send('message-from-renderer', {
@@ -562,6 +590,7 @@ const app = Vue.createApp({
         if (messagesContainer) {
           messagesContainer.scrollTop = messagesContainer.scrollHeight
         }
+        stateStore.saveTodoMessage(this.messages);
       })
     },
     sendErrorMessage(message) {

@@ -88,7 +88,7 @@ const createTodoWindow = (data) => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
-  // win.webContents.openDevTools({ mode: 'detach' })
+  win.webContents.openDevTools({ mode: 'detach' })
   // 突破系统安全层级的特殊设置
   win.setAlwaysOnTop(true, 'screen-saver')
   return win
@@ -157,6 +157,63 @@ const createTipWindow = (data) => {
   return win
 }
 
+
+const createAlertWindow = (data) => {
+  // console.log("suspensionWinPositionsuspensionWinPosition",data)
+  let display = data.display;
+  let alertWinX = data.x - 300;
+  let alertWinY = data.y - 15;
+  if (data.closestEdge == "left") {
+    alertWinX = data.x + 85;
+  } else if (data.closestEdge == "right") {
+    alertWinX = data.x - 300;
+  }
+
+  if (alertWinX < 0) {
+    alertWinX = 0
+  } else if (alertWinX > display.workArea.width - 300) {
+    alertWinX = display.workArea.width - 300
+  }
+  if (alertWinY < 0) {
+    alertWinY = 0
+  } else if (alertWinY > display.workArea.height - 70) {
+    alertWinY = display.workArea.height - 70
+  }
+
+  const win = new BrowserWindow({
+    skipTaskbar: true, // 新增这行关闭任务栏显示
+    width: 300,
+    minWidth: 300,
+    resizable: false,
+    height: 200,
+    x: (screen.getPrimaryDisplay().workAreaSize.width - 300) / 2,
+    y: 300,
+    frame: false,
+    alwaysOnTop: true,
+    type: 'toolbar',
+    show: false,
+    transparent: true,         // 允许透明背景（可选）
+    backgroundColor: '#00000000', // 透明背景
+    // icon: path.join(__dirname, './assets/edit-green.png'),
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+  win.once('ready-to-show', () => {
+    win.show()
+  })
+  win.loadFile(path.join(__dirname, 'views/Alert/index.html'));
+
+  // win.webContents.openDevTools({ mode: 'detach' })
+  // 突破系统安全层级的特殊设置
+  win.setAlwaysOnTop(true, 'screen-saver')
+  return win
+}
+
+
 const createEssayWindow = () => {
   const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width * 0.2, top: screen.getPrimaryDisplay().workAreaSize.height * 0.1 }
   const win = new BrowserWindow({
@@ -209,6 +266,7 @@ module.exports = {
   createSuspensionWindow,
   createEssayWindow,
   createTodoWindow,
+  createAlertWindow,
   createConfigWindow,
   createTipWindow,
 }
