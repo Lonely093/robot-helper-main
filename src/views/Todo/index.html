@@ -25,11 +25,11 @@
             'error': step.status === 'error'
           }"></div>
               <!-- 连接线 -->
-              <div v-if="index !== steps.length - 1" class="step-line"></div>
+              <div v-if="index !== steps.length - 1" class="step-line" :ref="'line-' + index"></div>
             </div>
 
             <!-- 步骤内容 -->
-            <div class="step-content">
+            <div class="step-content" :ref="'content-' + index">
               <div class="step-title">{{ step.title }}</div>
               <div class="step-description">
                 <!-- 进行中状态 -->

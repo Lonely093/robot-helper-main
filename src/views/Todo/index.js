@@ -83,7 +83,7 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
-      showProgressInfo: false,
+      showProgressInfo: true,
       isFinishProgress: true,
       GcodePath: '',
       nowStep: 0,
@@ -103,8 +103,11 @@ const app = Vue.createApp({
       isMQTTRuning: false
     }
   },
-
+  updated() {
+    this.$nextTick(this.updateLineHeights);
+  },
   mounted() {
+    this.$nextTick(this.updateLineHeights);
     ipcRenderer.on("todo-reverse", (e, data) => {
       // console.log("todo-reversetodo-reversetodo-reversetodo-reverse",data)
       if (data == "left") {
@@ -194,7 +197,18 @@ const app = Vue.createApp({
     delete window.fileClickHandler;
   },
   methods: {
+    updateLineHeights() {
+      this.steps.forEach((step, index) => {
+        const contentEl = this.$refs[`content-${index}`]?.[0];
+        const lineEl = this.$refs[`line-${index}`]?.[0];
 
+        if (contentEl && lineEl) {
+          // 获取内容高度 + 下方间距（根据实际样式调整）
+          const contentHeight = contentEl.offsetHeight + 8;
+          lineEl.style.height = `${contentHeight}px`;
+        }
+      });
+    },
 
     async Programming(data) {
       // 搜索零件模型
