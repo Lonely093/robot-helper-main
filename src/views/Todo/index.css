@@ -213,6 +213,12 @@ body {
   color: #FFF;
   border-radius: 10px 10px 10px 0px;
 }
+/* 机器人文件框消息样式 */
+.message.reverse.file .message-content {
+  background: #303d3d;
+  color: #FFF;
+  border-radius: 10px 10px 10px 0px;
+}
 
 .message.user .message-content {
   background: #303d3d;
@@ -226,7 +232,12 @@ body {
   color: #FFF;
   border-radius: 10px 10px 10px 0px;
 }
-
+/* 机器人文件框消息样式 */
+.message.file .message-content {
+  background: #303d3d;
+  color: #FFF;
+  border-radius: 10px 10px 10px 0px;
+}
 /* 动画效果 */
 @keyframes fadeIn {
   from {

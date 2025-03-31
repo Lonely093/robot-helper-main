@@ -171,6 +171,7 @@ const app = Vue.createApp({
   created() {
     // 创建全局事件桥接
     window.commandClickHandler = this.handleCommandClick;
+    window.fileClickHandler = this.handlefileClick;
   },
   beforeUnmount() {
     if (this.deviceCheckTimer) clearTimeout(this.deviceCheckTimer)
@@ -181,6 +182,7 @@ const app = Vue.createApp({
   unmounted() {
     // 清理全局事件
     delete window.commandClickHandler;
+    delete window.fileClickHandler;
   },
   methods: {
 
@@ -523,6 +525,25 @@ const app = Vue.createApp({
         return ' <div  class="typing-status" > 正在思考 <div class="dot-animation"> <div class="dot"></div>  <div class="dot"></div> <div class="dot"></div>  </div> </div>'
       }
 
+      if (message.type == 'file') {
+        const prefix = "在系统和U盘中搜索到以下零件模型，请选择编号加工：";
+        const files = message.files || [];
+        // 生成带编号的可点击文件列表
+        const fileList = files.map((file, index) =>
+          `<div>${index + 1}. <a class="command-link" 
+         onclick="fileClickHandler('${file}')"
+         onmouseover="this.style.color='#79bbff'"
+         onmouseout="this.style.color='#13CCCF'"
+         style="cursor: pointer; color: #13CCCF;">
+         ${file.name}
+       </a></div>`
+        ).join('');
+        return `<div class="file-list">
+              <div>${prefix}</div>
+              ${fileList}
+            </div>`;
+      }
+
       let commands = [];
       if (message.type == 'bot') {
         commands = message.commandlist.map(c => c.command).join('|');
@@ -566,6 +587,11 @@ const app = Vue.createApp({
 
     },
 
+    handlefileClick(file) {
+      console.log("文件处理", file);
+
+    },
+
     sendVoiceMessage() {
       setTimeout(() => {
         this.messages.push({ text: '这是AI机器人的回复。', type: 'bot', commandlist: [] })
@@ -573,6 +599,7 @@ const app = Vue.createApp({
       }, 1000)
     },
     sendMessage() {
+      // this.messages.push({ text: "", type: "file", commandlist: [], files: [{ "path": "D:\\test\\1233.txt", "name": "1233.txt" }, { "path": "D:\\test\\3212.txt", "name": "3212.txt" }] })
       if (this.isruning) return;
       if (this.userInput.trim() !== '') {
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
