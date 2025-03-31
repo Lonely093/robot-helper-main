@@ -354,7 +354,7 @@ class MqttClient {
   //指令执行反馈
   AppReply(topic, message) {
     console.log("AppReply:", message);
-    this.triggerCommandResultEvent(message.app_id, message.reply);
+    this.triggerCommandResultEvent(message.app_id, message.reply, message.command, message.message);
   }
 
   AppMessage(topic, message) {
@@ -375,11 +375,18 @@ class MqttClient {
     window.dispatchEvent(event);
   }
 
-  triggerCommandResultEvent(appId, msg) {
-    const event = new CustomEvent('app-command-result', {
-      detail: { appId, msg }
-    });
-    window.dispatchEvent(event);
+  triggerCommandResultEvent(appId, reply, command, message) {
+    if (command == 'openfile' || command == 'interaction_order' || command == 'handstop' || command == 'programming' || command == 'simulating') {
+      const event = new CustomEvent('shopcam-command-result', {
+        detail: { appId, reply, command, message }
+      });
+      window.dispatchEvent(event);
+    } else {
+      const event = new CustomEvent('app-command-result', {
+        detail: { appId, reply }
+      });
+      window.dispatchEvent(event);
+    }
   }
 
   triggerAppMessagetEvent(appId, msg) {
@@ -405,6 +412,11 @@ class MqttClient {
 
   CommandAction(sendcmd) {
     var msg = "{app_id:" + sendcmd.app_id + ",command:" + sendcmd.command + ",timestamp:" + sendcmd.timestamp + "}";
+    this.publish('Command/Action', msg)
+  }
+
+  CommandActionToShopCam(sendcmd) {
+    var msg = "{app_id:3,command:" + sendcmd.command + ",message:" + sendcmd.message + ",timestamp:" + sendcmd.timestamp + "}";
     this.publish('Command/Action', msg)
   }
 

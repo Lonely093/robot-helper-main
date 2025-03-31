@@ -83,19 +83,21 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
-      showProgressInfo: true,
+      showProgressInfo: false,
       steps: [
         {
           title: '智能会话式编程',
           status: 'process', // process | error | success
-          message: ''
+          message: '进行中'
         },
         {
           title: '智能仿真',
-          status: 'error',
-          message: '环境配置校验失败'
+          status: '',
+          message: '未开始'
         }
       ],
+      isMQTTRuning: false
+
     }
   },
 
@@ -111,7 +113,7 @@ const app = Vue.createApp({
     //悬浮窗传递过来的消息
     ipcRenderer.on('message-to-renderer', (event, data) => {
       //this.log('收到消息:', data);
-      //  data.type 0 错误消息  1 正常消息   
+      //  data.type 0 错误消息  1 正常消息   5 会话式编程
       //  data.message  
       //  data.commandlist    注意可能存在  undefined  null 数据，需要判断一下
       let botMessage = data.message;
@@ -137,6 +139,8 @@ const app = Vue.createApp({
             commandlist = data.commandlist;
           }
         }
+      } else if (data.type == 11 || data.type == 12) { //11=打开会话式编程 提供可选择的目录  12=指令返回结果
+        this.Programming(data);
       }
       this.messages.push({ text: botMessage, type: messageType, commandlist: commandlist })
       this.scrollToBottom();
@@ -183,6 +187,75 @@ const app = Vue.createApp({
     delete window.commandClickHandler;
   },
   methods: {
+
+
+    Programming(data) {
+      // 搜索零件模型
+      if (data.type == 11) {
+
+      }
+      //判断指令返回结果
+      if (data.type == 12) {
+        if (data.result.command == "openfile") {
+          if (data.result.reply == true || data.result.reply == 'true') {
+            this.showProgressInfo = true;
+            steps[0].status = 'process'
+            steps[0].message = '进行中'
+            steps[1].status = ''
+            steps[1].status = '未开始'
+            this.messages.push({ text: '好的，正在为您进行智能编程与仿真', type: 'bot', commandlist: [] })
+          } else {
+            this.messages.push({ text: '开始加工失败:' + data.result.message, type: 'bot', commandlist: [] })
+          }
+          this.scrollToBottom();
+        }
+        if (data.result.command == "interaction_order") {
+          if (data.result.reply == true || data.result.reply == 'true') {
+            this.messages.push({ text: '好的，已为您成功执行', type: 'bot', commandlist: [] })
+          } else {
+            this.messages.push({ text: '指令执行失败:' + data.result.message, type: 'bot', commandlist: [] })
+          }
+          this.scrollToBottom();
+        }
+        if (data.result.command == "handstop") {
+          if (data.result.reply == true || data.result.reply == 'true') {
+            this.messages.push({ text: '智能编程已终止', type: 'bot', commandlist: [] })
+          } else {
+            this.messages.push({ text: '手动终止失败:' + data.result.message, type: 'bot', commandlist: [] })
+          }
+          this.scrollToBottom();
+        }
+        if (data.result.command == "programming") {
+          if (data.result.reply == true || data.result.reply == 'true') {
+            steps[0].status = 'success'
+            steps[0].message = '成功生成编程文件 ' + data.result.message
+            steps[1].status = 'process'
+          } else {
+            steps[0].status = 'error'
+            steps[0].message = '失败原因 ' + data.result.message
+          }
+        }
+        if (data.result.command == "simulating") {
+          if (data.result.reply == true || data.result.reply == 'true') {
+            steps[1].status = 'success'
+            steps[1].message = '完成智能仿真'
+          } else {
+            steps[1].status = 'error'
+            steps[1].message = '失败原因 ' + data.result.message
+          }
+        }
+      }
+      this.isMQTTRuning = false;
+    },
+    //发送MQTT指令
+    SendMQTTMessage(command, message) {
+      if (this.isMQTTRuning) return;
+      this.isMQTTRuning = true;
+      ipcRenderer.send('message-from-renderer', {
+        target: 'floatball',
+        data: { type: 32, command, message }
+      });
+    },
 
     //发送日志记录
     log(msg, ctx) {

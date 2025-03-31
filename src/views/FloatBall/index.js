@@ -67,7 +67,8 @@ const app = Vue.createApp({
       IsTodoClose: true,
       IsAlertClose: true,
       ishandleMouseUp: false,
-      movePosition: []
+      movePosition: [],
+      isSmartSessions: false,
     }
   },
   async mounted() {
@@ -80,6 +81,7 @@ const app = Vue.createApp({
 
     //监听APP指令完成与APP消息
     window.addEventListener('app-command-result', this.handleCommandResult);
+    window.addEventListener('shopcam-command-result', this.ShopCamhandleCommandResult);
     window.addEventListener('app-launch', this.handleAppLaunchResult);
     window.addEventListener('app-exit', this.handleAppExitResult);
     window.addEventListener('app-message', this.handleAppMessage);
@@ -122,6 +124,23 @@ const app = Vue.createApp({
         this.IsTodoClose = false;
         this.opacity = 1;
       }
+
+      //todo传过来的 开启/关闭智能会话式流程
+      if (data.type == 31) {
+        this.isSmartSessions = data.success;
+      }
+
+      //todo传过来的  发送mqtt消息
+      if (data.type == 32) {
+        var sendcmd = {
+          command: data.command,
+          message: data.message,
+          timestamp: Date.now()
+        }
+        this.log("推送MQTT指令：", sendcmd);
+        mqttClient.CommandActionToShopCam(sendcmd)
+      }
+
     });
 
     //  asr连接 前端监听
@@ -137,20 +156,6 @@ const app = Vue.createApp({
     // })
 
     this.initThrottledMove();
-
-    // setTimeout(async () => {
-    //   var date1 = new Date();
-    //   const scanres = await ipcRenderer.invoke('scan-directory')
-    //   if(scanres.success){
-
-    //   }else{
-
-    //   }
-    //   var chazhi = (new Date() - date1) / 1000;
-    //   this.log("files", files);
-    //   this.log("chazhi", chazhi);
-    // }, 10000);
-
   },
   beforeUnmount() {
     this.throttledMoveHandler.cancel(); // 重要！销毁时取消节流
@@ -353,12 +358,12 @@ const app = Vue.createApp({
 
     //指令处理结果返回
     handleCommandResult(event) {
-      const { appId, msg } = event.detail;
+      const { appId, reply } = event.detail;
       this.log("handleCommandResult:", event.detail);
       if (this.runingcmd != null && appId == this.runingcmd.cmd.app_id) {
         //取消超时检测
         if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
-        if (msg == "ok" || msg == "true" || msg == true) //指令执行完成
+        if (reply == "ok" || reply == "true" || reply == true) //指令执行完成
         {
           if (this.runingcmd.type == 1) {
             this.commandList = this.commandList.shift()
@@ -389,6 +394,12 @@ const app = Vue.createApp({
         }
         if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
       }
+    },
+
+    //智能会话式编程 ，返回给todo
+    ShopCamhandleCommandResult(event) {
+      this.log("ShopCamhandleCommandResult:", event.detail);
+      this.floatballtodo(12, '', [], event.detail);
     },
 
     //APP推送消息
@@ -476,11 +487,11 @@ const app = Vue.createApp({
     },
 
     //通知故障诊断页面
-    floatballtodo(type, message, commandlist) {
+    floatballtodo(type, message = '', commandlist = [], result = {}) {
       // 发送消息到主进程
       ipcRenderer.send('message-from-renderer', {
         target: 'todo', // 指定目标窗口
-        data: { type: type, message: message, commandlist }
+        data: { type, message, commandlist, result }
       });
     },
 
@@ -494,12 +505,10 @@ const app = Vue.createApp({
             //故障诊断 需要弹出大的提示框，并返回故障诊断信息以及指令
             //await this.FaultDiagnosis(message);
             if (res.data.command_list[0].app_id == "fault_diagnosis") {
-              await this.FaultDiagnosis(message);
+              await this.FaultDiagnosis(message, 0);
             }
-            else if (res.data.command_list[0].app_id == "智能编程") {
-              // 弹出智能编程框，
-
-
+            else if (res.data.command_list[0].app_id == "conversation_programming") {
+              await this.FaultDiagnosis(message, 1);
             }
             //需要处理的指令集合
             else {
@@ -523,12 +532,16 @@ const app = Vue.createApp({
     },
 
     //故障诊断接口
-    async FaultDiagnosis(message) {
+    async FaultDiagnosis(message, type) {
       this.showTodo();
       this.closeTip();
       //存在偶发消息丢失  目前采用 延时200ms 发送
       setTimeout(async () => {
         this.floatballtodo(3, message);
+        if (type == 1) {
+          this.floatballtodo(11); //会话式编程
+          return;
+        }
         try {
           //res = await apis.hnc_fd(result.message);
           const res = await ipcRenderer.invoke('hnc_fd', message);
@@ -806,7 +819,7 @@ const app = Vue.createApp({
         this.showTodo();
         // this.showAlert();
       }
- 
+
       document.removeEventListener('mousemove', this.throttledMoveHandler)
       document.removeEventListener('mouseup', this.handleMouseUp)
     },
