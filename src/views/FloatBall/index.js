@@ -64,7 +64,7 @@ const app = Vue.createApp({
       IsMouseLeave: true,
       IsTipClose: true,
       IsTodoClose: true,
-      ishandleMouseUp : false,
+      ishandleMouseUp: false,
     }
   },
   async mounted() {
@@ -134,6 +134,20 @@ const app = Vue.createApp({
     // })
 
     this.initThrottledMove();
+
+    // setTimeout(async () => {
+    //   var date1 = new Date();
+    //   const scanres = await ipcRenderer.invoke('scan-directory')
+    //   if(scanres.success){
+
+    //   }else{
+
+    //   }
+    //   var chazhi = (new Date() - date1) / 1000;
+    //   this.log("files", files);
+    //   this.log("chazhi", chazhi);
+    // }, 10000);
+
   },
   beforeUnmount() {
     this.throttledMoveHandler.cancel(); // 重要！销毁时取消节流
@@ -154,8 +168,7 @@ const app = Vue.createApp({
 
     async handleMove(e) {
       //异常情况，先执行的 MouseUp  后出发的 handleMove
-      if(this.ishandleMouseUp)
-      {
+      if (this.ishandleMouseUp) {
         await this.snapToEdge();
         return;
       }
@@ -464,6 +477,11 @@ const app = Vue.createApp({
             //await this.FaultDiagnosis(message);
             if (res.data.command_list[0].app_id == "fault_diagnosis") {
               await this.FaultDiagnosis(message);
+            }
+            else if (res.data.command_list[0].app_id == "智能编程") {
+              // 弹出智能编程框，
+
+
             }
             //需要处理的指令集合
             else {

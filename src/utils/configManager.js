@@ -22,7 +22,9 @@ const DEFAULT_CONFIG = {
     appname: "语音助手APP",
     version: "1.0",
     info: "支持语音交互，识别指令，自动执行指令，故障诊断，手动执行指令等功能"
-  }
+  },
+  scandirectory:"D://test",   //扫描指定目录
+  scansuffix:".txt",          //扫码指定后缀文件
 };
 
 // 读取配置

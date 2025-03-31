@@ -1,4 +1,5 @@
 const { app, Menu, BrowserWindow, ipcMain, screen } = require('electron');
+const { exec } = require('child_process')
 const path = require('path');
 const { createSuspensionWindow, createTodoWindow, createTipWindow } = require("./window.js")
 Menu.setApplicationMenu(null);
@@ -7,6 +8,7 @@ const readConfig = require('./utils/configManager');
 const logger = require('./utils/logger');
 const axios = require("axios");
 const FormData = require('form-data');
+const fsp = require('fs').promises;
 const fs = require('fs');
 
 //请求URL地址
@@ -135,7 +137,7 @@ ipcMain.handle('hnc_fd', async (event, info) => {
   try {
 
     //await sleep(10000);
-       // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
+    // 3. 发送请求  当前返回结果是  data.msg data.command_list  结构
     const response = await axios({
       method: 'post',
       url: urlconfig.hnc_fd,
@@ -327,7 +329,7 @@ ipcMain.on('openMenu', (e) => {
         }
       },
       {
-        label: '版本:'+readConfig.about?.version,
+        label: '版本 ' + readConfig.about?.version,
         enabled: false // 添加这一行禁用点击
       },
     ]);
@@ -366,3 +368,166 @@ ipcMain.on('set-win-position', (event, position) => {
     true // 启用动画
   )
 })
+
+
+// 扫描指定目录+ 自动检测U盘并扫描
+ipcMain.handle('scan-directory', async (event) => {
+  try {
+
+    var results = await findSptFiles(readConfig.scandirectory)
+    const drives = await getRemovableDrives()
+    for (const drive of drives) {
+      try {
+        const files = await findSptFiles(drive.mountPoint)
+        results.push(...files)
+      } catch (err) {
+        console.error(`扫描 ${drive.name} 失败:`, err)
+      }
+    }
+    return {
+      success: true,
+      files: results
+    }
+  }
+  catch {
+    return {
+      success: false,
+      message: err.message
+    }
+  }
+})
+
+// 文件扫描核心逻辑
+async function findSptFiles(dir, depth = 3) {
+  const results = []
+  try {
+    const normalizedDir = path.normalize(dir)
+    if (isSystemDirectory(normalizedDir)) return []
+     
+     // 使用安全读取模式
+    const entries = await fsp.readdir(normalizedDir, { withFileTypes: true})
+    for (const entry of entries) {
+      const fullPath = path.join(normalizedDir, entry.name)
+
+       // 过滤隐藏文件（如带"."或系统隐藏属性）
+      if (isHiddenFile(fullPath)) continue
+
+      if (entry.isDirectory() && depth > 0) {
+        const subResults = await findSptFiles(fullPath, depth - 1)
+        results.push(...subResults)
+      } else if (entry.isFile() && path.extname(entry.name).toLowerCase() === readConfig.scansuffix) {
+        results.push({
+          path: fullPath,
+          name: entry.name,
+          //stats: await fs.stat(fullPath),
+          //content: await readSptFile(fullPath) // 可选
+        })
+      }
+    }
+  } catch (error) {
+
+  }
+  return results
+}
+
+const isSystemDirectory = (dirPath) => {
+  const systemDirs = [
+    'System Volume Information',
+    '$RECYCLE.BIN',
+    'Windows',
+    'Program Files'
+  ]
+  return systemDirs.some(name =>
+    dirPath.toLowerCase().includes(name.toLowerCase())
+  )
+}
+
+// 判断隐藏文件
+function isHiddenFile(filePath) {
+  if (process.platform === 'win32') {
+    try {
+      const stats = fs.statSync(filePath)
+      return (stats.mode & 0o444) === 0 // 检查系统隐藏属性
+    } catch {
+      return true
+    }
+  } else {
+    //return path.basename(filePath).startsWith('.')
+  }
+  return false;
+}
+
+// 读取.spt文件内容（示例）
+async function readSptFile(filePath) {
+  try {
+    const content = await fsp.readFile(filePath, 'utf-8')
+    return {
+      raw: content,
+      parsed: parseSptContent(content) // 自定义解析逻辑
+    }
+  } catch (err) {
+    return { error: err.message }
+  }
+}
+
+// 获取可移动磁盘列表（跨平台）
+async function getRemovableDrives() {
+  return new Promise((resolve, reject) => {
+    exec('wmic logicaldisk get DeviceID,DriveType,VolumeName 2>&1', (error, stdout, stderr) => {
+      if (error) {
+        console.error('命令执行失败:', error.message)
+        return resolve([])
+      }
+      if (stderr) {
+        console.error('错误输出:', stderr)
+        return resolve([])
+      }
+
+      try {
+        const drives = []
+        const lines = stdout.split('\r\r\n').slice(1) // 分割有效行
+
+        for (const line of lines) {
+          const cleaned = line.replace(/\s+/g, ' ').trim()
+          if (!cleaned) continue
+
+          const [deviceId, driveType, volumeName] = cleaned.split(' ')
+          // DriveType: 2=Removable, 3=Fixed, 5=CD-ROM
+          if (driveType === '2') {
+            const mountPoint = deviceId + '\\'
+
+            // 二次验证驱动器有效性
+            if (fs.existsSync(mountPoint)) {
+              drives.push({
+                deviceId,
+                mountPoint,
+                name: volumeName || 'Removable Disk',
+                type: 'USB',
+                size: getDriveSize(mountPoint) // 新增容量检测
+              })
+            }
+          }
+        }
+
+        resolve(drives)
+      } catch (parseError) {
+        console.error('解析错误:', parseError)
+        resolve([])
+      }
+    })
+  })
+}
+
+
+// 新增驱动器容量检测
+function getDriveSize(mountPoint) {
+  try {
+    const stats = fs.statfsSync ? fs.statfsSync(mountPoint) : null // 需要Node.js v18.15+
+    return stats ? {
+      total: stats.blocks * stats.bsize,
+      free: stats.bfree * stats.bsize
+    } : null
+  } catch {
+    return null
+  }
+}
