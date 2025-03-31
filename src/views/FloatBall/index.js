@@ -3,7 +3,7 @@ const Vue = require('vue')
 const throttle = require('lodash.throttle');
 const mqttClient = require("../../utils/mqtt")
 const stateStore = require("../../utils/localStorage");
-
+const configManager = require("../../utils/configManager");
 
 let biasX = 0
 let biasY = 0
@@ -61,6 +61,7 @@ const app = Vue.createApp({
       commandList: [],
       runingcmd: null,
       checkTimeoutId: null,
+      mqtttimeout: parseInt(configManager.mqtt.timeout),
       reverse: false,
       IsMouseLeave: true,
       IsTipClose: true,
@@ -136,7 +137,9 @@ const app = Vue.createApp({
           app_id: 3,
           command: data.command,
           message: data.message,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          reply: false,
+          message: ''
         }
         this.programing(sendcmd);
       }
@@ -482,11 +485,19 @@ const app = Vue.createApp({
     },
 
     //通知故障诊断页面
-    floatballtodo(type, message = '', commandlist = [], result = {}) {
+    floatballtodo(type, message = '', commandlist = [], result = null) {
       // 发送消息到主进程
+      var sendresult = {};
+      if (result != null) {
+        sendresult = {
+          command: result.command,
+          reply: result.reply,
+          message: result.message
+        }
+      }
       ipcRenderer.send('message-from-renderer', {
         target: 'todo', // 指定目标窗口
-        data: { type, message, commandlist, result }
+        data: { type, message, commandlist, result: sendresult }
       });
     },
 
@@ -629,7 +640,7 @@ const app = Vue.createApp({
 
     //会话式编程
     programing(sendcmd) {
-      console.log("programing",sendcmd);
+      console.log("programing", sendcmd);
       var app = stateStore.getApp(sendcmd.app_id);
       if (!app) {
         sendcmd.reply = false;
@@ -637,11 +648,11 @@ const app = Vue.createApp({
         this.floatballtodo(12, '', [], sendcmd);
         return;
       }
-      this.runingcmd = { type: 3, sendcmd };
+      this.runingcmd = { type: 3, cmd: sendcmd };
       this.checkTimeout();
       if (app.state == "0") { //先启动
         var sendopencmd = {
-          app_id: cmd.app_id,
+          app_id: sendcmd.app_id,
           timestamp: Date.now()
         }
         this.log("推送MQTT指令：", sendopencmd);
@@ -711,7 +722,7 @@ const app = Vue.createApp({
           this.runingcmd = null;
           this.commandList = [];
         }
-      }, 3000);
+      }, this.mqtttimeout * 1000);
     },
 
     /****************** HTTP接口处理结束 ****************/

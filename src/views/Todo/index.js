@@ -230,6 +230,7 @@ const app = Vue.createApp({
       }
       //判断指令返回结果
       if (data.type == 12) {
+        
         if (data.result.command == "openfile") {
           if (data.result.reply == true || data.result.reply == 'true') {
             this.showProgressInfo = true;
