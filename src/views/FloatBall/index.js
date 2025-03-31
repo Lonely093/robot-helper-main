@@ -832,7 +832,7 @@ const app = Vue.createApp({
       }
       if (calcS() && e.button == 1) {
         this.showTodo();
-        this.showAlert();
+        // this.showAlert();
       }
 
       document.removeEventListener('mousemove', this.throttledMoveHandler)

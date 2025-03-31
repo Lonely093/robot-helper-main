@@ -34,11 +34,11 @@
               <div class="step-description">
                 <!-- 进行中状态 -->
                 <span v-if="step.status === 'process'" class="processing-text">
-                  进行中...
+                  {{ step.message }}
                 </span>
                 <!-- 错误状态 -->
                 <span v-if="step.status === 'error'" class="error-text">
-                  失败原因：{{ step.message }}
+                  {{ step.message }}
                 </span>
               </div>
             </div>

@@ -88,7 +88,7 @@ const app = Vue.createApp({
         {
           title: '智能会话式编程',
           status: 'process', // process | error | success
-          message: '进行中'
+          message: '进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中'
         },
         {
           title: '智能仿真',
@@ -219,7 +219,7 @@ const app = Vue.createApp({
             steps[0].status = 'process'
             steps[0].message = '进行中'
             steps[1].status = ''
-            steps[1].status = '未开始'
+            steps[1].message = '未开始'
             this.messages.push({ text: '好的，正在为您进行智能编程与仿真', type: 'bot', commandlist: [] })
           } else {
             this.messages.push({ text: '开始加工失败:' + data.result.message, type: 'bot', commandlist: [] })
