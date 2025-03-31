@@ -18,8 +18,8 @@
           <p>当前零件已完成仿真，是否开始加工？</p>
         </div>
         <div class="dialog-footer">
-          <button class="btn cancel" >取消</button>
-          <button class="btn confirm">确定</button>
+          <button class="btn cancel" @click="handleCancel">取消</button>
+          <button class="btn confirm" @click="handleConfirm">确定</button>
         </div>
       </div>
     </div>

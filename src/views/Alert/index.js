@@ -17,13 +17,18 @@ const app = Vue.createApp({
 
   },
   methods: {
-
+    handleConfirm() {
+      ipcRenderer.send("close-alert")
+    },
+    handleCancel() {
+      ipcRenderer.send("close-alert")
+    },
     //发送日志记录
     log(msg, ctx) {
-      ipcRenderer.invoke('app-log', { msg: 'tip--' + msg, ctx });
+      ipcRenderer.invoke('app-log', { msg: 'alert--' + msg, ctx });
     },
 
-   
+
   },
   watch: {
 
