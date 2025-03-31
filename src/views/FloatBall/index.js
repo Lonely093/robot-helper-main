@@ -133,42 +133,15 @@ const app = Vue.createApp({
       //todo传过来的  发送mqtt消息
       if (data.type == 32) {
         var sendcmd = {
+          app_id: 3,
           command: data.command,
           message: data.message,
           timestamp: Date.now()
         }
-        this.log("推送MQTT指令：", sendcmd);
-        mqttClient.CommandActionToShopCam(sendcmd)
+        this.programing(sendcmd);
       }
-
     });
-
-    //  asr连接 前端监听
-    // ipcRenderer.on('asr-transcript', (event, data) => {
-    //   if (data.isFinal) {
-    //     this.finalTranscript += data.text + ' '
-    //   }
-    //   this.interimTranscript = data.text
-    //   this.log(this.interimTranscript);
-    // })
-    // ipcRenderer.on('asr-error', (event, error) => {
-    //   this.log(error.message );
-    // })
-
     this.initThrottledMove();
-
-    // setTimeout(async () => {
-    //   var date1 = new Date();
-    //   const scanres = await ipcRenderer.invoke('scan-directory')
-    //   if(scanres.success){
-
-    //   }else{
-
-    //   }
-    //   var chazhi = (new Date() - date1) / 1000;
-    //   this.log("files", files);
-    //   this.log("chazhi", chazhi);
-    // }, 10000);
 
   },
   beforeUnmount() {
@@ -412,6 +385,11 @@ const app = Vue.createApp({
 
     //智能会话式编程 ，返回给todo
     ShopCamhandleCommandResult(event) {
+
+      //取消超时检测
+      if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+      this.runingcmd = null;
+
       this.log("ShopCamhandleCommandResult:", event.detail);
       this.floatballtodo(12, '', [], event.detail);
     },
@@ -454,6 +432,9 @@ const app = Vue.createApp({
         }
         if (this.runingcmd.type == 2) {
           this.fddocommand(this.runingcmd.cmd);
+        }
+        if (this.runingcmd.type == 3) {
+          this.programing(this.runingcmd.cmd);
         }
       }
     },
@@ -646,6 +627,32 @@ const app = Vue.createApp({
       }
     },
 
+    //会话式编程
+    programing(sendcmd) {
+      console.log("programing",sendcmd);
+      var app = stateStore.getApp(sendcmd.app_id);
+      if (!app) {
+        sendcmd.reply = false;
+        sendcmd.message = "智能会话式编程APP未注册"
+        this.floatballtodo(12, '', [], sendcmd);
+        return;
+      }
+      this.runingcmd = { type: 3, sendcmd };
+      this.checkTimeout();
+      if (app.state == "0") { //先启动
+        var sendopencmd = {
+          app_id: cmd.app_id,
+          timestamp: Date.now()
+        }
+        this.log("推送MQTT指令：", sendopencmd);
+        mqttClient.CommandOpen(sendopencmd)
+      } else {
+        this.log("推送MQTT指令：", sendcmd);
+        mqttClient.CommandActionToShopCam(sendcmd)
+      }
+    },
+
+
     //校验MQTT相关状态
     checkMqttState(target, cmd) {
       //首先检查MQTT
@@ -695,6 +702,11 @@ const app = Vue.createApp({
           }
           if (this.runingcmd.type == 2) {
             this.floatballtodo(0, "指令执行超时");
+          }
+          if (this.runingcmd.type == 3) {
+            this.runingcmd.cmd.reply = false;
+            this.runingcmd.cmd.message = "指令执行超时"
+            this.floatballtodo(12, '', [], this.runingcmd.cmd);
           }
           this.runingcmd = null;
           this.commandList = [];

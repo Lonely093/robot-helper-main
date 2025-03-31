@@ -83,7 +83,10 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
-      showProgressInfo: true,
+      showProgressInfo: false,
+      isFinishProgress: true,
+      GcodePath: '',
+      nowStep: 0,
       steps: [
         {
           title: '智能会话式编程',
@@ -98,7 +101,6 @@ const app = Vue.createApp({
       ],
       fileList: [],
       isMQTTRuning: false
-
     }
   },
 
@@ -114,7 +116,7 @@ const app = Vue.createApp({
     //悬浮窗传递过来的消息
     ipcRenderer.on('message-to-renderer', (event, data) => {
       //this.log('收到消息:', data);
-      //  data.type 0 错误消息  1 正常消息   5 会话式编程
+      //  data.type 0 错误消息  1 正常消息   11=打开会话式编程 提供可选择的目录  12=指令返回结果
       //  data.message  
       //  data.commandlist    注意可能存在  undefined  null 数据，需要判断一下
       let botMessage = data.message;
@@ -140,7 +142,8 @@ const app = Vue.createApp({
             commandlist = data.commandlist;
           }
         }
-      } else if (data.type == 11 || data.type == 12) { //11=打开会话式编程 提供可选择的目录  12=指令返回结果
+      } else if (data.type == 11 || data.type == 12) {
+        this.isruning = false;
         this.Programming(data);
         return;
       }
@@ -216,6 +219,8 @@ const app = Vue.createApp({
         if (data.result.command == "openfile") {
           if (data.result.reply == true || data.result.reply == 'true') {
             this.showProgressInfo = true;
+            this.isFinishProgress = false;
+            this.nowStep = 1;
             steps[0].status = 'process'
             steps[0].message = '进行中'
             steps[1].status = ''
@@ -247,19 +252,24 @@ const app = Vue.createApp({
             steps[0].status = 'success'
             steps[0].message = '成功生成编程文件 ' + data.result.message
             steps[1].status = 'process'
+            this.nowStep = 2
+            this.GcodePath = data.result.message
           } else {
             steps[0].status = 'error'
             steps[0].message = '失败原因 ' + data.result.message
+            this.isFinishProgress = true
           }
         }
         if (data.result.command == "simulating") {
           if (data.result.reply == true || data.result.reply == 'true') {
             steps[1].status = 'success'
             steps[1].message = '完成智能仿真'
+            //弹出提示框，是否确认加工
           } else {
             steps[1].status = 'error'
             steps[1].message = '失败原因 ' + data.result.message
           }
+          this.isFinishProgress = true
         }
       }
       this.isMQTTRuning = false;
@@ -677,8 +687,13 @@ const app = Vue.createApp({
     },
 
     handlefileClick(index) {
-      console.log("文件处理", index);
-
+      if (this.isMQTTRuning) return;
+      if (this.fileList.length > index) {
+        var file = this.fileList[index];
+        this.SendMQTTMessage("openfile", file.path);
+        this.messages.push({ text: '选择零件模型 ' + file.name, type: 'user', commandlist: [] })
+        this.scrollToBottom()
+      }
     },
 
     sendVoiceMessage() {
@@ -688,7 +703,14 @@ const app = Vue.createApp({
       }, 1000)
     },
     sendMessage() {
-      // this.messages.push({ text: "", type: "file", commandlist: [] })
+
+      //智能式会话编程 + 流程没有结束  = 中途给加工发送指令
+      if (this.showProgressInfo && !this.isFinishProgress) {
+        if (this.nowStep == 1 && this.userInput.trim() !== '') {
+          this.SendMQTTMessage("interaction_order", this.userInput);
+        }
+        return;
+      }
       if (this.isruning) return;
       if (this.userInput.trim() !== '') {
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
