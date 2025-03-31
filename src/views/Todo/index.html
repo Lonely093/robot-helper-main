@@ -13,32 +13,68 @@
       <div class="custom-toolbar">
         <div class="close-btn" @click="handleWindowClose">x</div>
       </div>
+      <div class="main-content">
 
-      <div class="messages">
-        <div v-for="(message, index) in messages" :key="index" class="message"
-          :class="[ { 'reverse': reverse },message.type]">
-          <div class="message-content" v-html="formatText(message)"></div>
+        <div v-if="showProgressInfo" class="info-panel">
+          <div v-for="(step, index) in steps" :key="index" class="step-item"
+            :class="{ 'last-item': index === steps.length - 1 }">
+            <!-- 步骤图标 -->
+            <div class="step-icon-container">
+              <div class="step-icon" :class="{
+            'processing': step.status === 'process',
+            'error': step.status === 'error'
+          }"></div>
+              <!-- 连接线 -->
+              <div v-if="index !== steps.length - 1" class="step-line"></div>
+            </div>
+
+            <!-- 步骤内容 -->
+            <div class="step-content">
+              <h3 class="step-title">{{ step.title }}</h3>
+              <div class="step-description">
+                <!-- 进行中状态 -->
+                <span v-if="step.status === 'process'" class="processing-text">
+                  进行中...
+                </span>
+                <!-- 错误状态 -->
+                <span v-if="step.status === 'error'" class="error-text">
+                  失败原因：{{ step.message }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分割线 -->
+        <div v-if="showProgressInfo" class="divider"></div>
+        <div class="chat-area">
+          <div class="messages">
+            <div v-for="(message, index) in messages" :key="index" class="message"
+              :class="[ { 'reverse': reverse },message.type]">
+              <div class="message-content" v-html="formatText(message)"></div>
+            </div>
+          </div>
+
+          <!-- 输入框 -->
+          <div class="input-voice" v-show="isRecording || isStopRecording">
+            <canvas ref="waveCanvas" class="visualizer" @click="userStopRecording"></canvas>
+          </div>
+          <div class="input-container" v-show="!isRecording && !isStopRecording">
+            <input v-model="userInput" :placeholder="placeholdertext" @click="handleMouseDown"
+              @keyup.enter="sendMessage" class="input-field">
+            </input>
+            <button @click="sendMessage" class="send-button">
+              <img src="../../assets/send.svg" alt="发送" class="btn-icon">
+            </button>
+            <button v-show="!isRecording " @click="toggleRecording" class="send-button">
+              <img v-show="isCanRecording" src="../../assets/voice.svg" alt="语音" class="btn-icon">
+              <img v-show="!isCanRecording" src="../../assets/unvoice.svg" alt="语音" class="btn-icon">
+            </button>
+          </div>
+
         </div>
       </div>
-
-      <!-- 输入框 -->
-      <div class="input-voice" v-show="isRecording || isStopRecording">
-        <canvas ref="waveCanvas" class="visualizer" @click="userStopRecording"></canvas>
-      </div>
-      <div class="input-container" v-show="!isRecording && !isStopRecording">
-        <input v-model="userInput" :placeholder="placeholdertext" @click="handleMouseDown" @keyup.enter="sendMessage"
-          class="input-field">
-        </input>
-        <button @click="sendMessage" class="send-button">
-          <img src="../../assets/send.svg" alt="发送" class="btn-icon">
-        </button>
-        <button v-show="!isRecording " @click="toggleRecording" class="send-button">
-          <img v-show="isCanRecording" src="../../assets/voice.svg" alt="语音" class="btn-icon">
-          <img v-show="!isCanRecording" src="../../assets/unvoice.svg" alt="语音" class="btn-icon">
-        </button>
-      </div>
     </div>
-
   </div>
   <script src="./index.js"></script>
 </body>

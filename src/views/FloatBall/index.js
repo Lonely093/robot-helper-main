@@ -12,7 +12,8 @@ function calcS() {
   const res = Math.pow(moveS[0] - moveS[2], 2) + Math.pow(moveS[1] - moveS[3], 2)
   return res < 5
 }
-
+let moveXPos = 0;
+let moveYPos = 0;
 
 /**
  * Vue应用主组件 - 悬浮球界面
@@ -64,7 +65,9 @@ const app = Vue.createApp({
       IsMouseLeave: true,
       IsTipClose: true,
       IsTodoClose: true,
+      IsAlertClose: true,
       ishandleMouseUp: false,
+      movePosition: []
     }
   },
   async mounted() {
@@ -211,11 +214,17 @@ const app = Vue.createApp({
       ipcRenderer.send('ballWindowMove', { x: e.screenX - biasX, y: e.screenY - biasY, closestEdge: closestEdge, display: display })
     },
 
+
+    // 拖动事件
     async handleTouchMove(e) {
       const touch = e.touches[0];
+      console.log(`触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`);
+      // console.log("handleTouchMove touch", touch);
       const rect = this.$refs.draggableElement.getBoundingClientRect();
       const display = await ipcRenderer.invoke('get-primary-display');
-      const screenX = touch.screenX - biasX;
+      const winPosition = await ipcRenderer.invoke('get-window-position');
+      // console.log(touch, rect, display, winPosition);
+      const screenX = winPosition[0];
       const workArea = display.workArea;
       const edges = {
         left: screenX - workArea.x,
@@ -237,7 +246,16 @@ const app = Vue.createApp({
       } else {
         this.reverse = false;
       }
-      ipcRenderer.send('ballWindowMove', { x: touch.screenX - biasX, y: touch.screenY - biasY, closestEdge: closestEdge, display: display })
+      console.log("moveXPos moveYPos before", moveXPos, touch.clientX, biasX)
+      moveXPos = moveXPos + touch.clientX - biasX;
+      moveYPos = moveYPos + touch.clientY - biasY;
+
+      // console.log("resX", resX, resY, moveXPos, moveYPos)
+      // console.log(this.movePosition)
+      // console.log(biasX, biasY)
+      console.log("moveXPos moveYPos after", moveXPos, moveYPos)
+
+      ipcRenderer.send('ballWindowMove', { x: moveXPos, y: moveYPos, closestEdge: closestEdge, display: display })
     },
 
     //发送日志记录
@@ -696,7 +714,16 @@ const app = Vue.createApp({
       if (!this.IsTodoClose)
         ipcRenderer.send("close-todo");
     },
+    showAlert() {
+      if (this.IsAlertClose)
+        ipcRenderer.send("showAlert", "show")
+    },
+    closeAlert() {
+      if (!this.IsAlertClose)
+        ipcRenderer.send("close-alert");
+    },
     handleMouseDown(e) {
+      // console.log("handleMouseDown",e);
       this.ishandleMouseUp = false;
       this.opacity = 1;
       if (e.button == 2) {
@@ -716,29 +743,39 @@ const app = Vue.createApp({
 
     },
 
-    handleTouchStart(e) {
+    async handleTouchStart(e) {
+      e.preventDefault();
       this.opacity = 1;
       const touch = e.touches[0];
+      const winPosition = await ipcRenderer.invoke('get-window-position');
+      this.movePosition = winPosition;
+      console.log(`开始触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`, e);
 
       // 记录初始偏移量
       biasX = touch.clientX;
       biasY = touch.clientY;
 
-      // 记录初始位置用于点击判断
-      moveS[0] = touch.screenX;
-      moveS[1] = touch.screenY;
+      moveXPos = winPosition[0];
+      moveYPos = winPosition[1];
 
+      // 记录初始位置用于点击判断
+      moveS[0] = winPosition[0];
+      moveS[1] = winPosition[1];
+      console.log("moveS[0], moveS[1]", moveS[0], moveS[1]);
       document.addEventListener('touchmove', this.throttledTouchMoveHandler);
       document.addEventListener('touchend', this.handleTouchEnd);
       document.addEventListener('touchcancel', this.handleTouchEnd);
-      this.hanleMouseEnter();
+
     },
 
     async handleTouchEnd(e) {
       // 刚离开屏幕的触点
-      const touch = e.changedTouches[0];
-      moveS[2] = touch.screenX - e.x;
-      moveS[3] = touch.screenY - e.y;
+      const winPosition = await ipcRenderer.invoke('get-window-position');
+      // const touch = e.changedTouches[0];
+      moveS[2] = winPosition[0];
+      moveS[3] = winPosition[1];
+      // console.log(`离开屏幕触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`, winPosition);
+      // console.log("moveS[2], moveS[3]", moveS[2], moveS[3]);
       biasX = 0;
       biasY = 0;
       await this.snapToEdge();
@@ -767,7 +804,9 @@ const app = Vue.createApp({
       }
       if (calcS() && e.button == 1) {
         this.showTodo();
+        // this.showAlert();
       }
+ 
       document.removeEventListener('mousemove', this.throttledMoveHandler)
       document.removeEventListener('mouseup', this.handleMouseUp)
     },

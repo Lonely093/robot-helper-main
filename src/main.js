@@ -1,7 +1,7 @@
 const { app, Menu, BrowserWindow, ipcMain, screen } = require('electron');
 const { exec } = require('child_process')
 const path = require('path');
-const { createSuspensionWindow, createTodoWindow, createTipWindow } = require("./window.js")
+const { createSuspensionWindow, createTodoWindow, createTipWindow, createAlertWindow } = require("./window.js")
 Menu.setApplicationMenu(null);
 const recorder = require('./utils/recorder');
 const readConfig = require('./utils/configManager');
@@ -31,6 +31,7 @@ const pages = {
   todoWin: undefined,
   configWin: undefined,
   tipWin: undefined,
+  alertWin: undefined,
 }
 
 //悬浮窗位置
@@ -166,6 +167,9 @@ ipcMain.on('message-from-renderer', (event, { target, data }) => {
   if (target == "tip") {
     targetWindow = pages.tipWin;
   }
+  if (target == "alert") {
+    targetWindow = pages.alertWin;
+  }
   if (target == "todo") {
     targetWindow = pages.todoWin;
   }
@@ -246,6 +250,26 @@ ipcMain.on('close-tip', (event) => {
   if (pages.tipWin) {
     pages.tipWin.close();
     pages.suspensionWin.webContents.send('message-to-renderer', { type: 11 });
+  }
+});
+
+//打开 提示框页面 监听
+ipcMain.on('showAlert', (e, data) => {
+  if (pages.alertWin == null) {
+    pages.alertWin = createAlertWindow(suspensionWinPosition)
+    // pages.alertWin.send('tip-reverse', suspensionWinPosition.closestEdge)
+    pages.alertWin.on('close', (e, data) => {
+      pages.alertWin = null
+    })
+    // pages.suspensionWin.webContents.send('message-to-renderer', { type: 12 });
+  }
+})
+
+//关闭 提示框页面 监听
+ipcMain.on('close-alert', (event) => {
+  if (pages.alertWin) {
+    pages.alertWin.close();
+    // pages.suspensionWin.webContents.send('message-to-renderer', { type: 11 });
   }
 });
 
@@ -336,7 +360,10 @@ ipcMain.on('openMenu', (e) => {
   }
   suspensionMenu.popup({});
 });
-
+ipcMain.handle('get-window-position', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  return win.getPosition();
+});
 ipcMain.handle('get-win-content-bounds', (event) => {
   // 从发送请求的渲染进程获取对应的 BrowserWindow 实例
   const win = BrowserWindow.fromWebContents(event.sender);
