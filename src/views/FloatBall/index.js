@@ -758,7 +758,7 @@ const app = Vue.createApp({
       //通知tip 鼠标在悬浮窗上
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
-        data: { type: 4 }
+        data: { type: 4, message: "鼠标在悬浮窗上" }
       });
     },
 
@@ -770,7 +770,7 @@ const app = Vue.createApp({
       //通知tip 鼠标离开了悬浮窗
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
-        data: { type: 5 }
+        data: { type: 5, message: "鼠标离开悬浮窗" }
       });
     },
     showTip() {

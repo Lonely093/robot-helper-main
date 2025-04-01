@@ -296,7 +296,7 @@ const app = Vue.createApp({
             //弹出提示框，是否确认加工
             ipcRenderer.send("showAlert");
             setTimeout(() => {
-              ipcRenderer.send('message-from-renderer', { target: 'alert', data: { type: 1, message: this.GcodePath } });
+              ipcRenderer.send('message-from-renderer', { target: 'alert', data: { type: 1, message: this.GcodePath, des: "通知alterG代码地址" } });
               ipcRenderer.send("close-todo");
             }, 200);
 
@@ -306,7 +306,7 @@ const app = Vue.createApp({
           this.isFinishProgress = true
         }
       }
-      ipcRenderer.send('message-from-renderer', { target: 'floatball', data: { type: 31, success: !this.isFinishProgress } });
+      ipcRenderer.send('message-from-renderer', { target: 'floatball', data: { type: 31, des: "智能编程流程是否结束", success: !this.isFinishProgress } });
       this.isMQTTRuning = false;
     },
     SetStepStatus(index, status, message) {
@@ -319,7 +319,7 @@ const app = Vue.createApp({
       this.isMQTTRuning = true;
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball',
-        data: { type: 32, command, message }
+        data: { type: 32, command, message, des: "智能编程执行指令" }
       });
     },
 
@@ -716,7 +716,7 @@ const app = Vue.createApp({
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball', // 指定目标窗口
         data: {
-          type: 2, command: {
+          type: 2, des: "执行指令", command: {
             command: appCommand,
             app_id: appId
           }
@@ -760,7 +760,7 @@ const app = Vue.createApp({
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
         ipcRenderer.send('message-from-renderer', {
           target: 'floatball', // 指定目标窗口
-          data: { type: 1, message: this.userInput }
+          data: { type: 1, message: this.userInput, des: "故障诊断" }
         });
         this.userInput = ''
         this.isruning = true;

@@ -132,17 +132,7 @@ const app = Vue.createApp({
     log(msg, ctx) {
       ipcRenderer.invoke('app-log', { msg: 'tip--' + msg, ctx });
     },
-
-    changeInput() {
-      this.showinput = true;
-      this.showtext = false;
-      this.userInput = "";
-      //同时将消息发送至悬浮窗，      3  暂停录音
-      ipcRenderer.send('message-from-renderer', {
-        target: 'floatball', // 指定目标窗口
-        data: { type: 3, message: "暂停录音" }
-      });
-    },
+   
     async handleMouseDown(e) {
       if (this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
     },
@@ -157,7 +147,8 @@ const app = Vue.createApp({
           target: 'floatball', // 指定目标窗口
           data: {
             type: 4,
-            message: this.userInput
+            message: this.userInput,
+            des: "发送消息"
           }
         });
         //this.userInput="";

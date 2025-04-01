@@ -221,7 +221,7 @@ ipcMain.on('showTodo', (e, data) => {
     pages.todoWin.on('close', (e, data) => {
       pages.todoWin = null
     })
-    pages.suspensionWin.webContents.send('message-to-renderer', { type: 22 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 22, des: "showTodo" });
   }
 })
 
@@ -229,7 +229,7 @@ ipcMain.on('showTodo', (e, data) => {
 ipcMain.on('close-todo', (event) => {
   if (pages.todoWin) {
     pages.todoWin.close();
-    pages.suspensionWin.webContents.send('message-to-renderer', { type: 21 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 21, des: "close-todo" });
   }
 });
 
@@ -241,7 +241,7 @@ ipcMain.on('showTip', (e, data) => {
     pages.tipWin.on('close', (e, data) => {
       pages.tipWin = null
     })
-    pages.suspensionWin.webContents.send('message-to-renderer', { type: 12 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 12, des: "showTip" });
   }
 })
 
@@ -249,7 +249,7 @@ ipcMain.on('showTip', (e, data) => {
 ipcMain.on('close-tip', (event) => {
   if (pages.tipWin) {
     pages.tipWin.close();
-    pages.suspensionWin.webContents.send('message-to-renderer', { type: 11 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 11, des: "close-tip" });
   }
 });
 
@@ -261,7 +261,7 @@ ipcMain.on('showAlert', (e, data) => {
     pages.alertWin.on('close', (e, data) => {
       pages.alertWin = null
     })
-    pages.suspensionWin.webContents.send('message-to-renderer', { type: 42 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 42, des: "showAlert" });
   }
 })
 
@@ -269,7 +269,7 @@ ipcMain.on('showAlert', (e, data) => {
 ipcMain.on('close-alert', (event) => {
   if (pages.alertWin) {
     pages.alertWin.close();
-    pages.suspensionWin.webContents.send('message-to-renderer', { type: 41 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 41, des: "close-alert" });
   }
 });
 
