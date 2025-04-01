@@ -139,7 +139,6 @@ const app = Vue.createApp({
           message: data.message,
           timestamp: Date.now(),
           reply: false,
-          message: ''
         }
         this.programing(sendcmd);
       }
@@ -350,7 +349,7 @@ const app = Vue.createApp({
     handleCommandResult(event) {
       const { appId, reply } = event.detail;
       this.log("handleCommandResult:", event.detail);
-      if (this.runingcmd != null && appId == this.runingcmd.cmd.app_id) {
+      if (this.runingcmd != null && appId == this.runingcmd.cmd.app_id && this.runingcmd.type != 3) {
         //取消超时检测
         if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
         if (reply == "ok" || reply == "true" || reply == true) //指令执行完成
@@ -545,7 +544,16 @@ const app = Vue.createApp({
       //存在偶发消息丢失  目前采用 延时200ms 发送
       setTimeout(async () => {
         if (type == 1) {
-          this.floatballtodo(11, message); //会话式编程
+          this.floatballtodo(11, message); //会话式编程  
+          var app = stateStore.getApp(3); //默认打开编程软件
+          if (app && app.state == "0") {
+            var sendopencmd = {
+              app_id: 3,
+              timestamp: Date.now()
+            }
+            this.log("推送MQTT指令：", sendopencmd);
+            mqttClient.CommandOpen(sendopencmd)
+          }
           return;
         }
         this.floatballtodo(3, message);
@@ -640,7 +648,6 @@ const app = Vue.createApp({
 
     //会话式编程
     programing(sendcmd) {
-      console.log("programing", sendcmd);
       var app = stateStore.getApp(sendcmd.app_id);
       if (!app) {
         sendcmd.reply = false;
@@ -658,7 +665,7 @@ const app = Vue.createApp({
         this.log("推送MQTT指令：", sendopencmd);
         mqttClient.CommandOpen(sendopencmd)
       } else {
-        this.log("推送MQTT指令：", sendcmd);
+        this.log("推送MQTT指令：", { command: sendcmd.command, app_id: sendcmd.app_id, message: sendcmd.message });
         mqttClient.CommandActionToShopCam(sendcmd)
       }
     },

@@ -91,7 +91,7 @@ const app = Vue.createApp({
         {
           title: '智能会话式编程',
           status: 'process', // process | error | success
-          message: '进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中'
+          message: '进行中'
         },
         {
           title: '智能仿真',
@@ -198,7 +198,14 @@ const app = Vue.createApp({
   },
   methods: {
     handleTerminate() {
-      console.log("程序终止");
+      if (this.isMQTTRuning || this.isFinishProgress) return
+      this.SendMQTTMessage("handstop", "");
+      this.messages.push({ text: '手动终止流程', type: 'user', commandlist: [] })
+      this.scrollToBottom();
+    },
+    execGCode() {
+      //执行G代码   先加载程序  后运行  通过HMI
+
     },
     updateLineHeights() {
       this.steps.forEach((step, index) => {
@@ -216,6 +223,7 @@ const app = Vue.createApp({
     async Programming(data) {
       // 搜索零件模型
       if (data.type == 11) {
+        this.messages = [];
         this.messages.push({ text: data.message, type: 'user', commandlist: [] })
         const scanres = await ipcRenderer.invoke('scan-directory')
         if (scanres.success) {
@@ -227,25 +235,23 @@ const app = Vue.createApp({
           }
         } else {
           this.fileList = [];
-          this.messages.push({ text: '在系统和U盘中查找零件模型失败:' + scanres.message, type: 'bot', commandlist: [] })
+          this.messages.push({ text: '在系统和U盘中查找零件模型失败 ' + scanres.message, type: 'bot', commandlist: [] })
         }
         this.scrollToBottom();
       }
       //判断指令返回结果
       if (data.type == 12) {
-        
         if (data.result.command == "openfile") {
           if (data.result.reply == true || data.result.reply == 'true') {
             this.showProgressInfo = true;
             this.isFinishProgress = false;
             this.nowStep = 1;
-            steps[0].status = 'process'
-            steps[0].message = '进行中'
-            steps[1].status = ''
-            steps[1].message = '未开始'
+            this.SetStepStatus(0, 'process', '进行中');
+            this.SetStepStatus(1, '', '未开始');
+            this.messages = [];
             this.messages.push({ text: '好的，正在为您进行智能编程与仿真', type: 'bot', commandlist: [] })
           } else {
-            this.messages.push({ text: '开始加工失败:' + data.result.message, type: 'bot', commandlist: [] })
+            this.messages.push({ text: '开始加工失败 ' + data.result.message, type: 'bot', commandlist: [] })
           }
           this.scrollToBottom();
         }
@@ -253,44 +259,47 @@ const app = Vue.createApp({
           if (data.result.reply == true || data.result.reply == 'true') {
             this.messages.push({ text: '好的，已为您成功执行', type: 'bot', commandlist: [] })
           } else {
-            this.messages.push({ text: '指令执行失败:' + data.result.message, type: 'bot', commandlist: [] })
+            this.messages.push({ text: '执行失败 ' + data.result.message, type: 'bot', commandlist: [] })
           }
           this.scrollToBottom();
         }
         if (data.result.command == "handstop") {
           if (data.result.reply == true || data.result.reply == 'true') {
             this.messages.push({ text: '智能编程已终止', type: 'bot', commandlist: [] })
+            this.SetStepStatus(0, '', '未开始');
+            this.SetStepStatus(1, '', '未开始');
+            this.isFinishProgress = true
           } else {
-            this.messages.push({ text: '手动终止失败:' + data.result.message, type: 'bot', commandlist: [] })
+            this.messages.push({ text: '手动终止失败 ' + data.result.message, type: 'bot', commandlist: [] })
           }
           this.scrollToBottom();
         }
         if (data.result.command == "programming") {
           if (data.result.reply == true || data.result.reply == 'true') {
-            steps[0].status = 'success'
-            steps[0].message = '成功生成编程文件 ' + data.result.message
-            steps[1].status = 'process'
+            this.SetStepStatus(0, 'success', '成功生成编程文件 ' + data.result.message);
+            this.SetStepStatus(1, 'process', '进行中 ');
             this.nowStep = 2
             this.GcodePath = data.result.message
           } else {
-            steps[0].status = 'error'
-            steps[0].message = '失败原因 ' + data.result.message
+            this.SetStepStatus(0, 'error', data.result.message);
             this.isFinishProgress = true
           }
         }
         if (data.result.command == "simulating") {
           if (data.result.reply == true || data.result.reply == 'true') {
-            steps[1].status = 'success'
-            steps[1].message = '完成智能仿真'
+            this.SetStepStatus(1, 'success', '完成智能仿真');
             //弹出提示框，是否确认加工
           } else {
-            steps[1].status = 'error'
-            steps[1].message = '失败原因 ' + data.result.message
+            this.SetStepStatus(1, 'error', data.result.message);
           }
           this.isFinishProgress = true
         }
       }
       this.isMQTTRuning = false;
+    },
+    SetStepStatus(index, status, message) {
+      this.steps[index].status = status
+      this.steps[index].message = message
     },
     //发送MQTT指令
     SendMQTTMessage(command, message) {
@@ -642,7 +651,7 @@ const app = Vue.createApp({
       }
 
       if (message.type == 'file') {
-        const prefix = "在系统和U盘中搜索到以下零件模型，请选择编号加工：";
+        const prefix = "在系统和U盘中搜索到以下零件模型，请选择文件加工：";
         const files = this.fileList || [];
         // 生成带编号的可点击文件列表
         const fileListRender = files.map((file, index) =>
@@ -725,7 +734,10 @@ const app = Vue.createApp({
       //智能式会话编程 + 流程没有结束  = 中途给加工发送指令
       if (this.showProgressInfo && !this.isFinishProgress) {
         if (this.nowStep == 1 && this.userInput.trim() !== '') {
+          this.messages.push({ text: this.userInput, type: 'user', commandlist: [] })
+          this.scrollToBottom();
           this.SendMQTTMessage("interaction_order", this.userInput);
+          this.userInput = ''
         }
         return;
       }

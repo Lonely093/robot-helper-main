@@ -451,6 +451,20 @@ body {
   align-items: center;
 }
 
+.terminate-btn-disabled {
+  background-color: #8537397e;
+  color: rgb(170, 170, 170);
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 .terminate-btn:hover {
   background-color: #ff7875;
   box-shadow: 0 2px 8px rgba(255, 77, 79, 0.2);

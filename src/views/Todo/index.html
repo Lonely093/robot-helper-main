@@ -11,7 +11,7 @@
   <div id="app">
     <div class="chatbot-container">
       <div class="custom-toolbar">
-        <div class="close-btn" @click="handleWindowClose" v-if="!showProgressInfo">x</div>
+        <div class="close-btn" @click="handleWindowClose" v-if="isFinishProgress">x</div>
       </div>
       <div class="main-content">
 
@@ -44,7 +44,7 @@
             </div>
           </div>
           <div class="terminate-button-container">
-            <button class="terminate-btn" @click="handleTerminate">
+            <button :class="isFinishProgress?'terminate-btn-disabled':'terminate-btn' " @click="handleTerminate">
               终止
             </button>
           </div>

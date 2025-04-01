@@ -8,12 +8,12 @@ const DEFAULT_CONFIG = {
   },
   mqtt: {
     brokerUrl: 'mqtt://127.0.0.1:1883',
-    clientId: 'AIRobot', 
+    clientId: 'AIRobot',
     username: '',
     password: '',
     protocolVersion: 4,    // 3.1 =	3   3.1.1  =  4   5.0 = 5
     protocolId: "MQTT",   // 3.1 =MQIsdp    3.1.1 & 5.0 = MQTT 
-    timeout :5,           //配置MQTT指令执行超时时长(秒)
+    timeout: 5,           //配置MQTT指令执行超时时长(秒)
   },
   pagehidetime: 5,       //配置鼠标离开窗口后 自动隐藏的时间(秒)
   maxDuration: 20,       //配置最大录音时长(小于3不生效，不限制时长) (秒)
@@ -24,8 +24,8 @@ const DEFAULT_CONFIG = {
     version: "1.0",
     info: "支持语音交互，识别指令，自动执行指令，故障诊断，手动执行指令等功能"
   },
-  scandirectory:"D://test",   //扫描指定目录
-  scansuffix:".txt",          //扫码指定后缀文件
+  scandirectory: "D://test",   //扫描指定目录
+  scansuffix: ".txt",          //扫码指定后缀文件
 };
 
 // 读取配置
