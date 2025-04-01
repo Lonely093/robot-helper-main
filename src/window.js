@@ -88,7 +88,7 @@ const createTodoWindow = (data) => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
-  win.webContents.openDevTools({ mode: 'detach' })
+  // win.webContents.openDevTools({ mode: 'detach' })
   // 突破系统安全层级的特殊设置
   win.setAlwaysOnTop(true, 'screen-saver')
   return win
@@ -206,7 +206,7 @@ const createAlertWindow = (data) => {
   })
   win.loadFile(path.join(__dirname, 'views/Alert/index.html'));
 
-  win.webContents.openDevTools({ mode: 'detach' })
+  // win.webContents.openDevTools({ mode: 'detach' })
   // 突破系统安全层级的特殊设置
   win.setAlwaysOnTop(true, 'screen-saver')
   return win
