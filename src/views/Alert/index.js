@@ -6,7 +6,7 @@ const app = Vue.createApp({
   // },
   data() {
     return {
-
+      message: "当前零件(XXX.stp)已完成智能编程与仿真，输出加工程序O123，路径path/to/Gcode，是否开始加工？"
     }
   },
 

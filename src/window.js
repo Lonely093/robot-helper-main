@@ -88,7 +88,7 @@ const createTodoWindow = (data) => {
     win.show()
   })
   win.loadFile(path.join(__dirname, 'views/Todo/index.html'));
-  //win.webContents.openDevTools({ mode: 'detach' })
+  win.webContents.openDevTools({ mode: 'detach' })
   // 突破系统安全层级的特殊设置
   win.setAlwaysOnTop(true, 'screen-saver')
   return win
@@ -182,10 +182,9 @@ const createAlertWindow = (data) => {
 
   const win = new BrowserWindow({
     skipTaskbar: true, // 新增这行关闭任务栏显示
-    width: 300,
-    minWidth: 300,
+    width: 400,
     resizable: false,
-    height: 200,
+    height: 250,
     x: (screen.getPrimaryDisplay().workAreaSize.width - 300) / 2,
     y: 300,
     frame: false,
