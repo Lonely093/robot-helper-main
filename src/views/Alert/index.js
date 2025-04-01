@@ -20,6 +20,11 @@ const app = Vue.createApp({
   },
   methods: {
     handleConfirm() {
+      //处理加工  发送指令给HMI
+      ipcRenderer.send('message-from-renderer', {
+        target: 'floatball',
+        data: { type: 32, command: "LOADFILE", message: GcodePath }
+      });
       ipcRenderer.send("close-alert")
     },
     handleCancel() {

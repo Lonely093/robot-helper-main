@@ -261,7 +261,7 @@ ipcMain.on('showAlert', (e, data) => {
     pages.alertWin.on('close', (e, data) => {
       pages.alertWin = null
     })
-    // pages.suspensionWin.webContents.send('message-to-renderer', { type: 12 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 42 });
   }
 })
 
@@ -269,7 +269,7 @@ ipcMain.on('showAlert', (e, data) => {
 ipcMain.on('close-alert', (event) => {
   if (pages.alertWin) {
     pages.alertWin.close();
-    // pages.suspensionWin.webContents.send('message-to-renderer', { type: 11 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 41 });
   }
 });
 
@@ -430,13 +430,12 @@ async function findSptFiles(dir, depth = 3) {
   try {
     const normalizedDir = path.normalize(dir)
     if (isSystemDirectory(normalizedDir)) return []
-     
-     // 使用安全读取模式
-    const entries = await fsp.readdir(normalizedDir, { withFileTypes: true})
+    // 使用安全读取模式
+    const entries = await fsp.readdir(normalizedDir, { withFileTypes: true })
     for (const entry of entries) {
       const fullPath = path.join(normalizedDir, entry.name)
 
-       // 过滤隐藏文件（如带"."或系统隐藏属性）
+      // 过滤隐藏文件（如带"."或系统隐藏属性）
       if (isHiddenFile(fullPath)) continue
 
       if (entry.isDirectory() && depth > 0) {

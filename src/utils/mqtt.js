@@ -416,8 +416,8 @@ class MqttClient {
   }
 
   CommandActionToShopCam(sendcmd) {
-    var msg = "{app_id:3,command:" + sendcmd.command + ",message:" + sendcmd.message + ",timestamp:" + sendcmd.timestamp + "}";
-    this.publish('Command/Action', msg)
+    var msg = '{"app_id":"' + sendcmd.app_id + '","command":"' + sendcmd.command + '","message":"' + sendcmd.message + '","timestamp": ' + sendcmd.timestamp + ' }';
+    this.publish('Command/Action', sendcmd)
   }
 
 }

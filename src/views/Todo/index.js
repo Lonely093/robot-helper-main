@@ -78,6 +78,7 @@ const app = Vue.createApp({
       maxDuration: parseInt(configManager.maxDuration),
       silenceHold: parseInt(configManager.silenceHold),
       silenceStop: parseInt(configManager.silenceStop),
+      pagehidetime: parseInt(configManager.pagehidetime),
       reverse: false,
       canvasCtx: null,
       dataArray: null,
@@ -266,13 +267,17 @@ const app = Vue.createApp({
         if (data.result.command == "handstop") {
           if (data.result.reply == true || data.result.reply == 'true') {
             this.messages.push({ text: '智能编程已终止', type: 'bot', commandlist: [] })
-            this.SetStepStatus(0, 'waiting', '未开始');
-            this.SetStepStatus(1, 'waiting', '未开始');
-            this.isFinishProgress = true
           } else {
             this.messages.push({ text: '手动终止失败 ' + data.result.message, type: 'bot', commandlist: [] })
           }
           this.scrollToBottom();
+          this.SetStepStatus(0, 'waiting', '未开始');
+          this.SetStepStatus(1, 'waiting', '未开始');
+          this.isFinishProgress = true
+          //延时几秒主动关闭页面
+          setTimeout(() => {
+            ipcRenderer.send("close-todo");
+          }, this.pagehidetime * 1000);
         }
         if (data.result.command == "programming") {
           if (data.result.reply == true || data.result.reply == 'true') {
@@ -724,7 +729,9 @@ const app = Vue.createApp({
       if (this.isMQTTRuning) return;
       if (this.fileList.length > index) {
         var file = this.fileList[index];
-        this.SendMQTTMessage("openfile", file.path);
+        // 输入: C:\Users\John\file.txt → 输出: C:/Users/John/file.txt
+        var newpath = file.path.replace(/\\/g, '/');
+        this.SendMQTTMessage("openfile", newpath);
         this.messages.push({ text: '选择零件模型 ' + file.name, type: 'user', commandlist: [] })
         this.scrollToBottom()
       }

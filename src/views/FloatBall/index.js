@@ -104,7 +104,7 @@ const app = Vue.createApp({
       //接受Tip传过来的关闭页面消息
       if (data.type == 11) {
         this.IsTipClose = true;
-        if (this.IsTodoClose && this.IsMouseLeave) {
+        if (this.IsTodoClose && this.IsAlertClose && this.IsMouseLeave) {
           this.opacity = 0.7;
         }
       }
@@ -116,13 +116,25 @@ const app = Vue.createApp({
       //接受todo传过来的关闭页面消息
       if (data.type == 21) {
         this.IsTodoClose = true;
-        if (this.IsTipClose && this.IsMouseLeave) {
+        if (this.IsTipClose && this.IsAlertClose && this.IsMouseLeave) {
           this.opacity = 0.7;
         }
       }
       //接受todo传过来的打开页面消息
       if (data.type == 22) {
         this.IsTodoClose = false;
+        this.opacity = 1;
+      }
+      //接受Alter传过来的关闭页面消息
+      if (data.type == 41) {
+        this.IsAlertClose = true;
+        if (this.IsTipClose && this.IsTodoClose && this.IsMouseLeave) {
+          this.opacity = 0.7;
+        }
+      }
+      //接受Alter传过来的打开页面消息
+      if (data.type == 42) {
+        this.IsAlertClose = false;
         this.opacity = 1;
       }
 
@@ -134,11 +146,10 @@ const app = Vue.createApp({
       //todo传过来的  发送mqtt消息
       if (data.type == 32) {
         var sendcmd = {
-          app_id: 3,
+          app_id: "3",
           command: data.command,
           message: data.message,
           timestamp: Date.now(),
-          reply: false,
         }
         this.programing(sendcmd);
       }
@@ -161,10 +172,10 @@ const app = Vue.createApp({
     initThrottledMove() {
       this.throttledMoveHandler = throttle(async (e) => {
         await this.handleMove(e);
-      }, 3); // 60 FPS
+      }, 10); // 60 FPS
       this.throttledTouchMoveHandler = throttle(async (e) => {
         await this.handleTouchMove(e);
-      }, 3); // 60 FPS
+      }, 10); // 60 FPS
     },
 
     async handleMove(e) {
@@ -327,8 +338,10 @@ const app = Vue.createApp({
           newY = workArea.y + workArea.height - rect.top - rect.height;
         }
 
-        if (this.IsTodoClose && this.IsTipClose) {
+        if (this.IsTodoClose && this.IsTipClose && this.IsAlertClose) {
           this.opacity = 0.7;
+        } else {
+          this.opacity = 1;
         }
         // 更新窗口位置
         ipcRenderer.send('set-win-position', {
@@ -669,7 +682,7 @@ const app = Vue.createApp({
         this.log("推送MQTT指令：", sendopencmd);
         mqttClient.CommandOpen(sendopencmd)
       } else {
-        this.log("推送MQTT指令：", { command: sendcmd.command, app_id: sendcmd.app_id, message: sendcmd.message });
+        this.log("推送MQTT指令：", { command: sendcmd.command, app_id: sendcmd.app_id, message: sendcmd.message, timestamp: Date.now() });
         mqttClient.CommandActionToShopCam(sendcmd)
       }
     },
@@ -751,7 +764,7 @@ const app = Vue.createApp({
 
     hanleMouseLeave() {
       this.IsMouseLeave = true;
-      if (this.IsTipClose && this.IsTodoClose) {
+      if (this.IsTipClose && this.IsTodoClose && this.IsAlertClose) {
         this.opacity = 0.7;
       }
       //通知tip 鼠标离开了悬浮窗
