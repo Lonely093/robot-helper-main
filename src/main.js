@@ -221,7 +221,7 @@ ipcMain.on('showTodo', (e, data) => {
     pages.todoWin.on('close', (e, data) => {
       pages.todoWin = null
     })
-    pages.suspensionWin.webContents.send('message-to-renderer', { type: 22 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 22, des: "showTodo" });
   }
 })
 
@@ -229,7 +229,7 @@ ipcMain.on('showTodo', (e, data) => {
 ipcMain.on('close-todo', (event) => {
   if (pages.todoWin) {
     pages.todoWin.close();
-    pages.suspensionWin.webContents.send('message-to-renderer', { type: 21 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 21, des: "close-todo" });
   }
 });
 
@@ -241,7 +241,7 @@ ipcMain.on('showTip', (e, data) => {
     pages.tipWin.on('close', (e, data) => {
       pages.tipWin = null
     })
-    pages.suspensionWin.webContents.send('message-to-renderer', { type: 12 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 12, des: "showTip" });
   }
 })
 
@@ -249,7 +249,7 @@ ipcMain.on('showTip', (e, data) => {
 ipcMain.on('close-tip', (event) => {
   if (pages.tipWin) {
     pages.tipWin.close();
-    pages.suspensionWin.webContents.send('message-to-renderer', { type: 11 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 11, des: "close-tip" });
   }
 });
 
@@ -261,7 +261,7 @@ ipcMain.on('showAlert', (e, data) => {
     pages.alertWin.on('close', (e, data) => {
       pages.alertWin = null
     })
-    // pages.suspensionWin.webContents.send('message-to-renderer', { type: 12 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 42, des: "showAlert" });
   }
 })
 
@@ -269,7 +269,7 @@ ipcMain.on('showAlert', (e, data) => {
 ipcMain.on('close-alert', (event) => {
   if (pages.alertWin) {
     pages.alertWin.close();
-    // pages.suspensionWin.webContents.send('message-to-renderer', { type: 11 });
+    pages.suspensionWin.webContents.send('message-to-renderer', { type: 41, des: "close-alert" });
   }
 });
 
@@ -408,7 +408,7 @@ ipcMain.handle('scan-directory', async (event) => {
         const files = await findSptFiles(drive.mountPoint)
         results.push(...files)
       } catch (err) {
-        console.error(`扫描 ${drive.name} 失败:`, err)
+        //console.error(`扫描 ${drive.name} 失败:`, err)
       }
     }
     return {
@@ -430,13 +430,12 @@ async function findSptFiles(dir, depth = 3) {
   try {
     const normalizedDir = path.normalize(dir)
     if (isSystemDirectory(normalizedDir)) return []
-     
-     // 使用安全读取模式
-    const entries = await fsp.readdir(normalizedDir, { withFileTypes: true})
+    // 使用安全读取模式
+    const entries = await fsp.readdir(normalizedDir, { withFileTypes: true })
     for (const entry of entries) {
       const fullPath = path.join(normalizedDir, entry.name)
 
-       // 过滤隐藏文件（如带"."或系统隐藏属性）
+      // 过滤隐藏文件（如带"."或系统隐藏属性）
       if (isHiddenFile(fullPath)) continue
 
       if (entry.isDirectory() && depth > 0) {
@@ -502,11 +501,11 @@ async function getRemovableDrives() {
   return new Promise((resolve, reject) => {
     exec('wmic logicaldisk get DeviceID,DriveType,VolumeName 2>&1', (error, stdout, stderr) => {
       if (error) {
-        console.error('命令执行失败:', error.message)
+        //console.error('命令执行失败:', error.message)
         return resolve([])
       }
       if (stderr) {
-        console.error('错误输出:', stderr)
+        //console.error('错误输出:', stderr)
         return resolve([])
       }
 
@@ -538,7 +537,7 @@ async function getRemovableDrives() {
 
         resolve(drives)
       } catch (parseError) {
-        console.error('解析错误:', parseError)
+        //console.error('解析错误:', parseError)
         resolve([])
       }
     })

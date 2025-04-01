@@ -41,28 +41,28 @@ class AudioRecorder {
     try {
       if (!fs.existsSync(this.recordDir)) {
         fs.mkdirSync(this.recordDir, { recursive: true });
-        console.log(`[存储] 已创建录音目录: ${this.recordDir}`);
+        //console.log(`[存储] 已创建录音目录: ${this.recordDir}`);
       }
       // 验证目录可写性
       fs.accessSync(this.recordDir, fs.constants.W_OK);
     } catch (err) {
-      console.log(`[存储] 目录初始化失败: ${err.message}`);
+      //console.log(`[存储] 目录初始化失败: ${err.message}`);
       throw new Error('无法创建录音存储目录');
     }
   }
 
   initialize() {
     if (this.initialized) {
-      console.log('[Recorder] 模块已初始化');
+      //console.log('[Recorder] 模块已初始化');
       return;
     }
     try {
-      console.log('[Recorder] 开始初始化');
+      //console.log('[Recorder] 开始初始化');
       this.registerIPC();
       this.initialized = true;
-      console.log('[Recorder] 初始化完成');
+      //console.log('[Recorder] 初始化完成');
     } catch (err) {
-      console.log('[Recorder] 初始化失败:', err.message);
+      //console.log('[Recorder] 初始化失败:', err.message);
       throw new Error('录音模块初始化失败');
     }
   }
@@ -77,7 +77,7 @@ class AudioRecorder {
     ipcMain.handle('audio-stop', this.handleStop.bind(this));
     ipcMain.handle('audio-clear', this.cleanup.bind(this));
 
-    console.log('[Recorder] IPC事件注册成功');
+    //console.log('[Recorder] IPC事件注册成功');
   }
 
   cleanupIPC() {
@@ -87,7 +87,7 @@ class AudioRecorder {
       ipcMain.removeAllListeners('audio-chunk');
       ipcMain.removeAllListeners('audio-clear');
     } catch (err) {
-      console.error('[Recorder] 清理IPC失败:', err.message);
+      //console.error('[Recorder] 清理IPC失败:', err.message);
     }
   }
 
@@ -161,7 +161,7 @@ class AudioRecorder {
       // this.writer.write(header);
       this.isRecording = true;
 
-      //console.log(`[Recorder] 录音开始: ${this.filePath}`);
+      ////console.log(`[Recorder] 录音开始: ${this.filePath}`);
       return { success: true, path: this.filePath };
     } catch (err) {
       this.isRecording = false;
@@ -171,7 +171,7 @@ class AudioRecorder {
 
   handleChunk(event, chunk) {
     if (!this.isRecording || !this.writer) {
-      console.log('[Recorder] 无效的音频块写入请求');
+      //console.log('[Recorder] 无效的音频块写入请求');
       return;
     }
 
@@ -180,7 +180,7 @@ class AudioRecorder {
       //const pcmData = this.convertAudioData(chunk)
       this.writer.write(Buffer.from(chunk));
     } catch (err) {
-      console.log('[Recorder] 写入失败:', err.message);
+      //console.log('[Recorder] 写入失败:', err.message);
       this.cleanup();
       throw new Error('音频数据写入失败');
     }
@@ -355,7 +355,7 @@ class AudioRecorder {
           fs.unlinkSync(tempPath);
         }
       } catch (err) {
-        console.log('清理失败:', err.message);
+        //console.log('清理失败:', err.message);
       }
     }
     this.writer = null;

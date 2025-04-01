@@ -104,7 +104,7 @@ const app = Vue.createApp({
       //接受Tip传过来的关闭页面消息
       if (data.type == 11) {
         this.IsTipClose = true;
-        if (this.IsTodoClose && this.IsMouseLeave) {
+        if (this.IsTodoClose && this.IsAlertClose && this.IsMouseLeave) {
           this.opacity = 0.7;
         }
       }
@@ -116,13 +116,25 @@ const app = Vue.createApp({
       //接受todo传过来的关闭页面消息
       if (data.type == 21) {
         this.IsTodoClose = true;
-        if (this.IsTipClose && this.IsMouseLeave) {
+        if (this.IsTipClose && this.IsAlertClose && this.IsMouseLeave) {
           this.opacity = 0.7;
         }
       }
       //接受todo传过来的打开页面消息
       if (data.type == 22) {
         this.IsTodoClose = false;
+        this.opacity = 1;
+      }
+      //接受Alter传过来的关闭页面消息
+      if (data.type == 41) {
+        this.IsAlertClose = true;
+        if (this.IsTipClose && this.IsTodoClose && this.IsMouseLeave) {
+          this.opacity = 0.7;
+        }
+      }
+      //接受Alter传过来的打开页面消息
+      if (data.type == 42) {
+        this.IsAlertClose = false;
         this.opacity = 1;
       }
 
@@ -134,33 +146,36 @@ const app = Vue.createApp({
       //todo传过来的  发送mqtt消息
       if (data.type == 32) {
         var sendcmd = {
-          app_id: 3,
+          app_id: "3",
           command: data.command,
           message: data.message,
           timestamp: Date.now(),
-          reply: false,
         }
         this.programing(sendcmd);
       }
     });
     this.initThrottledMove();
-
   },
   beforeUnmount() {
     this.throttledMoveHandler.cancel(); // 重要！销毁时取消节流
     this.throttledTouchMoveHandler.cancel(); // 重要！销毁时取消节流
     mqttClient._safeDisconnect();  //安全断开MQTT连接
     if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+    window.removeEventListener('app-command-result', this.handleCommandResult);
+    window.removeEventListener('shopcam-command-result', this.ShopCamhandleCommandResult);
+    window.removeEventListener('app-launch', this.handleAppLaunchResult);
+    window.removeEventListener('app-exit', this.handleAppExitResult);
+    window.removeEventListener('app-message', this.handleAppMessage);
   },
   methods: {
 
     initThrottledMove() {
       this.throttledMoveHandler = throttle(async (e) => {
         await this.handleMove(e);
-      }, 3); // 60 FPS
+      }, 10); // 60 FPS
       this.throttledTouchMoveHandler = throttle(async (e) => {
         await this.handleTouchMove(e);
-      }, 3); // 60 FPS
+      }, 10); // 60 FPS
     },
 
     async handleMove(e) {
@@ -212,7 +227,7 @@ const app = Vue.createApp({
     // 拖动事件
     async handleTouchMove(e) {
       const touch = e.touches[0];
-      console.log(`触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`);
+      //console.log(`触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`);
       // console.log("handleTouchMove touch", touch);
       const rect = this.$refs.draggableElement.getBoundingClientRect();
       const display = await ipcRenderer.invoke('get-primary-display');
@@ -240,14 +255,14 @@ const app = Vue.createApp({
       } else {
         this.reverse = false;
       }
-      console.log("moveXPos moveYPos before", moveXPos, touch.clientX, biasX)
+      //console.log("moveXPos moveYPos before", moveXPos, touch.clientX, biasX)
       moveXPos = moveXPos + touch.clientX - biasX;
       moveYPos = moveYPos + touch.clientY - biasY;
 
       // console.log("resX", resX, resY, moveXPos, moveYPos)
       // console.log(this.movePosition)
       // console.log(biasX, biasY)
-      console.log("moveXPos moveYPos after", moveXPos, moveYPos)
+      //console.log("moveXPos moveYPos after", moveXPos, moveYPos)
 
       ipcRenderer.send('ballWindowMove', { x: moveXPos, y: moveYPos, closestEdge: closestEdge, display: display })
     },
@@ -323,8 +338,10 @@ const app = Vue.createApp({
           newY = workArea.y + workArea.height - rect.top - rect.height;
         }
 
-        if (this.IsTodoClose && this.IsTipClose) {
+        if (this.IsTodoClose && this.IsTipClose && this.IsAlertClose) {
           this.opacity = 0.7;
+        } else {
+          this.opacity = 1;
         }
         // 更新窗口位置
         ipcRenderer.send('set-win-position', {
@@ -665,7 +682,7 @@ const app = Vue.createApp({
         this.log("推送MQTT指令：", sendopencmd);
         mqttClient.CommandOpen(sendopencmd)
       } else {
-        this.log("推送MQTT指令：", { command: sendcmd.command, app_id: sendcmd.app_id, message: sendcmd.message });
+        this.log("推送MQTT指令：", { command: sendcmd.command, app_id: sendcmd.app_id, message: sendcmd.message, timestamp: Date.now() });
         mqttClient.CommandActionToShopCam(sendcmd)
       }
     },
@@ -741,19 +758,19 @@ const app = Vue.createApp({
       //通知tip 鼠标在悬浮窗上
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
-        data: { type: 4 }
+        data: { type: 4, message: "鼠标在悬浮窗上" }
       });
     },
 
     hanleMouseLeave() {
       this.IsMouseLeave = true;
-      if (this.IsTipClose && this.IsTodoClose) {
+      if (this.IsTipClose && this.IsTodoClose && this.IsAlertClose) {
         this.opacity = 0.7;
       }
       //通知tip 鼠标离开了悬浮窗
       ipcRenderer.send('message-from-renderer', {
         target: 'tip', // 指定目标窗口
-        data: { type: 5 }
+        data: { type: 5, message: "鼠标离开悬浮窗" }
       });
     },
     showTip() {
@@ -807,7 +824,7 @@ const app = Vue.createApp({
       const touch = e.touches[0];
       const winPosition = await ipcRenderer.invoke('get-window-position');
       this.movePosition = winPosition;
-      console.log(`开始触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`, e);
+      //console.log(`开始触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`, e);
 
       // 记录初始偏移量
       biasX = touch.clientX;
@@ -819,7 +836,7 @@ const app = Vue.createApp({
       // 记录初始位置用于点击判断
       moveS[0] = winPosition[0];
       moveS[1] = winPosition[1];
-      console.log("moveS[0], moveS[1]", moveS[0], moveS[1]);
+      //console.log("moveS[0], moveS[1]", moveS[0], moveS[1]);
       document.addEventListener('touchmove', this.throttledTouchMoveHandler);
       document.addEventListener('touchend', this.handleTouchEnd);
       document.addEventListener('touchcancel', this.handleTouchEnd);
@@ -837,7 +854,7 @@ const app = Vue.createApp({
       biasX = 0;
       biasY = 0;
       await this.snapToEdge();
-      if (calcS()) {
+      if (calcS() && !this.isSmartSessions) {
         this.closeTodo();
         this.showTip();
       }
@@ -856,7 +873,7 @@ const app = Vue.createApp({
       biasX = 0
       biasY = 0
       await this.snapToEdge();
-      if (calcS() && e.button == 0) {
+      if (calcS() && e.button == 0 && !this.isSmartSessions) {
         this.closeTodo();
         this.showTip();
       }

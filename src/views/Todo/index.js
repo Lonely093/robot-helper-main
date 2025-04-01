@@ -78,19 +78,20 @@ const app = Vue.createApp({
       maxDuration: parseInt(configManager.maxDuration),
       silenceHold: parseInt(configManager.silenceHold),
       silenceStop: parseInt(configManager.silenceStop),
+      pagehidetime: parseInt(configManager.pagehidetime),
       reverse: false,
       canvasCtx: null,
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
-      showProgressInfo: true,
+      showProgressInfo: false,
       isFinishProgress: true,
       GcodePath: '',
       nowStep: 0,
       steps: [
         {
           title: '智能会话式编程',
-          status: 'process', // process | error | success
+          status: 'process', // process | error | success | waiting
           message: '进行中'
         },
         {
@@ -266,13 +267,17 @@ const app = Vue.createApp({
         if (data.result.command == "handstop") {
           if (data.result.reply == true || data.result.reply == 'true') {
             this.messages.push({ text: '智能编程已终止', type: 'bot', commandlist: [] })
-            this.SetStepStatus(0, 'waiting', '未开始');
-            this.SetStepStatus(1, 'waiting', '未开始');
-            this.isFinishProgress = true
           } else {
             this.messages.push({ text: '手动终止失败 ' + data.result.message, type: 'bot', commandlist: [] })
           }
           this.scrollToBottom();
+          this.SetStepStatus(0, 'waiting', '未开始');
+          this.SetStepStatus(1, 'waiting', '未开始');
+          this.isFinishProgress = true
+          //延时几秒主动关闭页面
+          setTimeout(() => {
+            ipcRenderer.send("close-todo");
+          }, this.pagehidetime * 1000);
         }
         if (data.result.command == "programming") {
           if (data.result.reply == true || data.result.reply == 'true') {
@@ -289,12 +294,19 @@ const app = Vue.createApp({
           if (data.result.reply == true || data.result.reply == 'true') {
             this.SetStepStatus(1, 'success', '完成智能仿真');
             //弹出提示框，是否确认加工
+            ipcRenderer.send("showAlert");
+            setTimeout(() => {
+              ipcRenderer.send('message-from-renderer', { target: 'alert', data: { type: 1, message: this.GcodePath, des: "通知alterG代码地址" } });
+              ipcRenderer.send("close-todo");
+            }, 200);
+
           } else {
             this.SetStepStatus(1, 'error', data.result.message);
           }
           this.isFinishProgress = true
         }
       }
+      ipcRenderer.send('message-from-renderer', { target: 'floatball', data: { type: 31, des: "智能编程流程是否结束", success: !this.isFinishProgress } });
       this.isMQTTRuning = false;
     },
     SetStepStatus(index, status, message) {
@@ -307,7 +319,7 @@ const app = Vue.createApp({
       this.isMQTTRuning = true;
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball',
-        data: { type: 32, command, message }
+        data: { type: 32, command, message, des: "智能编程执行指令" }
       });
     },
 
@@ -704,7 +716,7 @@ const app = Vue.createApp({
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball', // 指定目标窗口
         data: {
-          type: 2, command: {
+          type: 2, des: "执行指令", command: {
             command: appCommand,
             app_id: appId
           }
@@ -717,7 +729,9 @@ const app = Vue.createApp({
       if (this.isMQTTRuning) return;
       if (this.fileList.length > index) {
         var file = this.fileList[index];
-        this.SendMQTTMessage("openfile", file.path);
+        // 输入: C:\Users\John\file.txt → 输出: C:/Users/John/file.txt
+        var newpath = file.path.replace(/\\/g, '/');
+        this.SendMQTTMessage("openfile", newpath);
         this.messages.push({ text: '选择零件模型 ' + file.name, type: 'user', commandlist: [] })
         this.scrollToBottom()
       }
@@ -746,7 +760,7 @@ const app = Vue.createApp({
         //同时将消息发送至悬浮窗，   type  1 表示进行故障诊断   2 表示执行指令
         ipcRenderer.send('message-from-renderer', {
           target: 'floatball', // 指定目标窗口
-          data: { type: 1, message: this.userInput }
+          data: { type: 1, message: this.userInput, des: "故障诊断" }
         });
         this.userInput = ''
         this.isruning = true;

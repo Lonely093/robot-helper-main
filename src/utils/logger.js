@@ -33,7 +33,7 @@ const formatterTime = () => {
 }
 
 // 核心日志函数
-function log(level, message, context = {}) {
+async function log(level, message, context = {}) {
   if (context == null || context == undefined) {
     context = {};
   }
@@ -46,8 +46,8 @@ function log(level, message, context = {}) {
   }) + '\n';
 
   // 写入日志文件
-  fs.appendFile(LOG_FILE, logEntry, (err) => {
-    if (err) console.error('日志写入失败:', err);
+  fs.promises.appendFile(LOG_FILE, logEntry, (err) => {
+    //if (err) console.error('日志写入失败:', err);
   });
 }
 
@@ -59,7 +59,7 @@ module.exports = {
   error: (msg, ctx) => log(LogLevel.ERROR, msg, ctx),
   getLogs: () => {
     try {
-      return fs.readFileSync(LOG_FILE, 'utf-8').split('\n').filter(Boolean).map(JSON.parse);
+      return fs.promises.readFile(LOG_FILE, 'utf-8').split('\n').filter(Boolean).map(JSON.parse);
     } catch (err) {
       return [];
     }

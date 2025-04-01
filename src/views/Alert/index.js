@@ -6,18 +6,25 @@ const app = Vue.createApp({
   // },
   data() {
     return {
-      message: "当前零件(XXX.stp)已完成智能编程与仿真，输出加工程序O123，路径path/to/Gcode，是否开始加工？"
+      GcodePath: "",      message: "当前零件(XXX.stp)已完成智能编程与仿真，输出加工程序O123，路径path/to/Gcode，是否开始加工？"
     }
   },
 
   async mounted() {
-
+    ipcRenderer.on('message-to-renderer', (event, data) => {
+      this.GcodePath = data.message;
+    });
   },
   beforeUnmount() {
 
   },
   methods: {
     handleConfirm() {
+      //处理加工  发送指令给HMI
+      ipcRenderer.send('message-from-renderer', {
+        target: 'floatball',
+        data: { type: 32, command: "LOADFILE", message: GcodePath }
+      });
       ipcRenderer.send("close-alert")
     },
     handleCancel() {
