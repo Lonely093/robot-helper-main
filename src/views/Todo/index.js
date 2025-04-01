@@ -247,7 +247,7 @@ const app = Vue.createApp({
             this.isFinishProgress = false;
             this.nowStep = 1;
             this.SetStepStatus(0, 'process', '进行中');
-            this.SetStepStatus(1, '', '未开始');
+            this.SetStepStatus(1, 'waiting', '未开始');
             this.messages = [];
             this.messages.push({ text: '好的，正在为您进行智能编程与仿真', type: 'bot', commandlist: [] })
           } else {
@@ -266,8 +266,8 @@ const app = Vue.createApp({
         if (data.result.command == "handstop") {
           if (data.result.reply == true || data.result.reply == 'true') {
             this.messages.push({ text: '智能编程已终止', type: 'bot', commandlist: [] })
-            this.SetStepStatus(0, '', '未开始');
-            this.SetStepStatus(1, '', '未开始');
+            this.SetStepStatus(0, 'waiting', '未开始');
+            this.SetStepStatus(1, 'waiting', '未开始');
             this.isFinishProgress = true
           } else {
             this.messages.push({ text: '手动终止失败 ' + data.result.message, type: 'bot', commandlist: [] })
