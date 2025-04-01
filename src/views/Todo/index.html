@@ -22,7 +22,9 @@
             <div class="step-icon-container">
               <div class="step-icon" :class="{
             'processing': step.status === 'process',
-            'error': step.status === 'error'
+            'error': step.status === 'error',
+            'success': step.status === 'success',
+            'waiting': step.status === 'waiting',
           }"></div>
               <!-- 连接线 -->
               <div v-if="index !== steps.length - 1" class="step-line" :ref="'line-' + index"></div>
@@ -30,7 +32,12 @@
 
             <!-- 步骤内容 -->
             <div class="step-content" :ref="'content-' + index">
-              <div class="step-title">{{ step.title }}</div>
+              <div class="step-title" :class="{
+                'processing': step.status === 'process',
+                'error': step.status === 'error',
+                'success': step.status === 'success',
+                'waiting': step.status === 'waiting',
+              }">{{ step.title }}</div>
               <div class="step-description">
                 <!-- 进行中状态 -->
                 <span v-if="step.status === 'process'" class="processing-text">
@@ -38,6 +45,14 @@
                 </span>
                 <!-- 错误状态 -->
                 <span v-if="step.status === 'error'" class="error-text">
+                  {{ step.message }}
+                </span>
+                <!-- 已完成状态 -->
+                <span v-if="step.status === 'success'" class="success-text">
+                  {{ step.message }}
+                </span>
+                <!-- 等待状态 -->
+                <span v-if="step.status === 'waiting'" class="waiting-text">
                   {{ step.message }}
                 </span>
               </div>

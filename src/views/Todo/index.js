@@ -83,19 +83,19 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
-      showProgressInfo: false,
+      showProgressInfo: true,
       isFinishProgress: true,
       GcodePath: '',
       nowStep: 0,
       steps: [
         {
           title: '智能会话式编程',
-          status: 'process', // process | error | success
+          status: 'success', // process | error | success | waiting
           message: '进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中进行中'
         },
         {
           title: '智能仿真',
-          status: '',
+          status: 'waiting',
           message: '未开始'
         }
       ],

@@ -115,7 +115,7 @@ body {
   height: 25px;
   background: rgba(26, 40, 40, 1);
   position: relative;
-  border-radius: 11px;
+  /* border-radius: 11px; */
 }
 
 .close-btn {
@@ -338,7 +338,7 @@ body {
 
 .divider {
   width: 1px;
-  background: #05E6FF;
+  background: #FFEA75;
   margin: 0 8px;
 }
 
@@ -379,11 +379,9 @@ body {
 
 .step-line {
   position: absolute;
-  height: 200%;
-  width: 2px;
+  width: 1px;
   background-color: #e8e8e8;
   top: 20px;
-  /* 根据图标尺寸调整（图标高度14px + 边框3px*2） */
   left: 50%;
   transform: translateX(-50%);
   z-index: 1;
@@ -405,23 +403,46 @@ body {
 }
 
 /* 状态颜色 */
-.processing {
+.step-icon.processing {
   border-color: #016C42;
   background-color: #36FFAF;
 }
 
-.error {
+.step-icon.success {
+  border-color: #016C42;
+  background-color: #36FFAF;
+}
+
+.step-icon.error {
   border-color: #6C1A01;
   background-color: #FF3D36;
 }
 
+.step-icon.waiting {
+  border-color: #15362d;
+  background-color: #205343;
+}
+
+.step-title.waiting {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+
 /* 状态文字 */
 .processing-text {
-  color: #ffffff;
+  color: rgba(255, 255, 255, 1);
+}
+
+.success-text {
+  color: rgba(255, 255, 255, 1);
 }
 
 .error-text {
-  color: #ffffff;
+  color: rgba(255, 255, 255, 1);
+}
+
+.waiting-text {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* 最后一个步骤隐藏连接线 */
