@@ -408,7 +408,7 @@ ipcMain.handle('scan-directory', async (event) => {
         const files = await findSptFiles(drive.mountPoint)
         results.push(...files)
       } catch (err) {
-        console.error(`扫描 ${drive.name} 失败:`, err)
+        //console.error(`扫描 ${drive.name} 失败:`, err)
       }
     }
     return {
@@ -502,11 +502,11 @@ async function getRemovableDrives() {
   return new Promise((resolve, reject) => {
     exec('wmic logicaldisk get DeviceID,DriveType,VolumeName 2>&1', (error, stdout, stderr) => {
       if (error) {
-        console.error('命令执行失败:', error.message)
+        //console.error('命令执行失败:', error.message)
         return resolve([])
       }
       if (stderr) {
-        console.error('错误输出:', stderr)
+        //console.error('错误输出:', stderr)
         return resolve([])
       }
 
@@ -538,7 +538,7 @@ async function getRemovableDrives() {
 
         resolve(drives)
       } catch (parseError) {
-        console.error('解析错误:', parseError)
+        //console.error('解析错误:', parseError)
         resolve([])
       }
     })

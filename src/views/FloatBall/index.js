@@ -144,13 +144,17 @@ const app = Vue.createApp({
       }
     });
     this.initThrottledMove();
-
   },
   beforeUnmount() {
     this.throttledMoveHandler.cancel(); // 重要！销毁时取消节流
     this.throttledTouchMoveHandler.cancel(); // 重要！销毁时取消节流
     mqttClient._safeDisconnect();  //安全断开MQTT连接
     if (this.checkTimeoutId) clearTimeout(this.checkTimeoutId);
+    window.removeEventListener('app-command-result', this.handleCommandResult);
+    window.removeEventListener('shopcam-command-result', this.ShopCamhandleCommandResult);
+    window.removeEventListener('app-launch', this.handleAppLaunchResult);
+    window.removeEventListener('app-exit', this.handleAppExitResult);
+    window.removeEventListener('app-message', this.handleAppMessage);
   },
   methods: {
 
@@ -212,7 +216,7 @@ const app = Vue.createApp({
     // 拖动事件
     async handleTouchMove(e) {
       const touch = e.touches[0];
-      console.log(`触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`);
+      //console.log(`触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`);
       // console.log("handleTouchMove touch", touch);
       const rect = this.$refs.draggableElement.getBoundingClientRect();
       const display = await ipcRenderer.invoke('get-primary-display');
@@ -240,14 +244,14 @@ const app = Vue.createApp({
       } else {
         this.reverse = false;
       }
-      console.log("moveXPos moveYPos before", moveXPos, touch.clientX, biasX)
+      //console.log("moveXPos moveYPos before", moveXPos, touch.clientX, biasX)
       moveXPos = moveXPos + touch.clientX - biasX;
       moveYPos = moveYPos + touch.clientY - biasY;
 
       // console.log("resX", resX, resY, moveXPos, moveYPos)
       // console.log(this.movePosition)
       // console.log(biasX, biasY)
-      console.log("moveXPos moveYPos after", moveXPos, moveYPos)
+      //console.log("moveXPos moveYPos after", moveXPos, moveYPos)
 
       ipcRenderer.send('ballWindowMove', { x: moveXPos, y: moveYPos, closestEdge: closestEdge, display: display })
     },
@@ -807,7 +811,7 @@ const app = Vue.createApp({
       const touch = e.touches[0];
       const winPosition = await ipcRenderer.invoke('get-window-position');
       this.movePosition = winPosition;
-      console.log(`开始触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`, e);
+      //console.log(`开始触摸坐标：X=${touch.clientX}, Y=${touch.clientY}`, e);
 
       // 记录初始偏移量
       biasX = touch.clientX;
@@ -819,7 +823,7 @@ const app = Vue.createApp({
       // 记录初始位置用于点击判断
       moveS[0] = winPosition[0];
       moveS[1] = winPosition[1];
-      console.log("moveS[0], moveS[1]", moveS[0], moveS[1]);
+      //console.log("moveS[0], moveS[1]", moveS[0], moveS[1]);
       document.addEventListener('touchmove', this.throttledTouchMoveHandler);
       document.addEventListener('touchend', this.handleTouchEnd);
       document.addEventListener('touchcancel', this.handleTouchEnd);
@@ -837,7 +841,7 @@ const app = Vue.createApp({
       biasX = 0;
       biasY = 0;
       await this.snapToEdge();
-      if (calcS()) {
+      if (calcS() && !this.isSmartSessions) {
         this.closeTodo();
         this.showTip();
       }
@@ -856,7 +860,7 @@ const app = Vue.createApp({
       biasX = 0
       biasY = 0
       await this.snapToEdge();
-      if (calcS() && e.button == 0) {
+      if (calcS() && e.button == 0 && !this.isSmartSessions) {
         this.closeTodo();
         this.showTip();
       }

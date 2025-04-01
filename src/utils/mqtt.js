@@ -39,7 +39,7 @@ class MqttClient {
   }
 
   _test() {
-    console.log("_test");
+    //console.log("_test");
     const event = new CustomEvent('floatball-test', {
       detail: { type: 1, message: "teste121212" }
     });
@@ -111,7 +111,7 @@ class MqttClient {
 
   // 处理连接成功
   _handleConnectSuccess() {
-    console.log('MQTT Connected')
+    //console.log('MQTT Connected')
     this.isConnected = true
     this.reconnectAttempts = 0
     clearTimeout(this.reconnectTimer)
@@ -126,7 +126,7 @@ class MqttClient {
       try {
         this._realSubscribe(topic, callback)
       } catch (error) {
-        console.error(`订阅失败 [${topic}]:`, error)
+        ////console.error(`订阅失败 [${topic}]:`, error)
       }
     })
     this.pendingSubscribes = []
@@ -136,7 +136,7 @@ class MqttClient {
       try {
         this._realPublish(topic, message, options)
       } catch (error) {
-        console.error(`发布失败 [${topic}]:`, error)
+        //console.error(`发布失败 [${topic}]:`, error)
       }
     })
     this.pendingPublishes = []
@@ -147,7 +147,7 @@ class MqttClient {
 
   // 处理连接错误
   _handleConnectionError(error, reject) {
-    console.error('Initial connection failed:', error)
+    //console.error('Initial connection failed:', error)
 
     if (this.options.autoReconnect) {
       this._scheduleReconnect()
@@ -161,13 +161,13 @@ class MqttClient {
   _scheduleReconnect() {
     if (!this.options.autoReconnect) return
     if (this.reconnectAttempts >= this.options.maxReconnectAttempts) {
-      console.error('Maximum reconnect attempts reached')
+      //console.error('Maximum reconnect attempts reached')
       return
     }
 
     this.reconnectAttempts++
     const delay = this.options.reconnectInterval * Math.pow(2, this.reconnectAttempts)
-    console.log(`Scheduling reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`)
+    //console.log(`Scheduling reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`)
     this.reconnectTimer = setTimeout(async () => {
       try {
         await this.connect()
@@ -196,7 +196,7 @@ class MqttClient {
     // 连接断开处理
     this.client.on('close', () => {
       if (!this.isConnected) return
-      console.log('MQTT Disconnected')
+      //console.log('MQTT Disconnected')
       this.isConnected = false
       this._scheduleReconnect()
     })
@@ -214,7 +214,7 @@ class MqttClient {
     this.subscriptions.set(topic, callback)
     this.client.subscribe(topic, this.setoptions, (err) => {
       if (err) {
-        console.error('Subscribe error:', err)
+        //console.error('Subscribe error:', err)
       }
     })
   }
@@ -285,7 +285,7 @@ class MqttClient {
     if (this.subscriptions.length > 0) return;
     this.subscriptions.set('AppCenter/Apps', (topic, message) => {
       //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
-      console.log("AppCenter:", message);
+      //console.log("AppCenter:", message);
 
       if (message.apps && message.apps.length > 0) {
         message.apps.forEach(app => {
@@ -332,7 +332,7 @@ class MqttClient {
   }
 
   AppLaunch(topic, message) {
-    console.log("AppLaunch:", message);
+    //console.log("AppLaunch:", message);
     var app = stateStore.getApp(message.app_id);
     if (app) {
       app.state = "1";
@@ -342,7 +342,7 @@ class MqttClient {
   }
 
   AppExit(topic, message) {
-    console.log("AppExit:", message);
+    //console.log("AppExit:", message);
     var app = stateStore.getApp(message.app_id);
     if (app) {
       app.state = "0";
@@ -353,7 +353,7 @@ class MqttClient {
 
   //指令执行反馈
   AppReply(topic, message) {
-    console.log("AppReply:", message);
+    //console.log("AppReply:", message);
     this.triggerCommandResultEvent(message.app_id, message.reply, message.command, message.message);
   }
 

@@ -6,12 +6,14 @@ const app = Vue.createApp({
   // },
   data() {
     return {
-
+      GcodePath: "",
     }
   },
 
   async mounted() {
-
+    ipcRenderer.on('message-to-renderer', (event, data) => {
+      this.GcodePath = data.message;
+    });
   },
   beforeUnmount() {
 

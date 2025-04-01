@@ -83,14 +83,14 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
-      showProgressInfo: true,
+      showProgressInfo: false,
       isFinishProgress: true,
       GcodePath: '',
       nowStep: 0,
       steps: [
         {
           title: '智能会话式编程',
-          status: 'process', // process | error | success
+          status: 'process', // process | error | success | waiting
           message: '进行中'
         },
         {
@@ -247,7 +247,7 @@ const app = Vue.createApp({
             this.isFinishProgress = false;
             this.nowStep = 1;
             this.SetStepStatus(0, 'process', '进行中');
-            this.SetStepStatus(1, '', '未开始');
+            this.SetStepStatus(1, 'waiting', '未开始');
             this.messages = [];
             this.messages.push({ text: '好的，正在为您进行智能编程与仿真', type: 'bot', commandlist: [] })
           } else {
@@ -266,8 +266,8 @@ const app = Vue.createApp({
         if (data.result.command == "handstop") {
           if (data.result.reply == true || data.result.reply == 'true') {
             this.messages.push({ text: '智能编程已终止', type: 'bot', commandlist: [] })
-            this.SetStepStatus(0, '', '未开始');
-            this.SetStepStatus(1, '', '未开始');
+            this.SetStepStatus(0, 'waiting', '未开始');
+            this.SetStepStatus(1, 'waiting', '未开始');
             this.isFinishProgress = true
           } else {
             this.messages.push({ text: '手动终止失败 ' + data.result.message, type: 'bot', commandlist: [] })
@@ -289,12 +289,19 @@ const app = Vue.createApp({
           if (data.result.reply == true || data.result.reply == 'true') {
             this.SetStepStatus(1, 'success', '完成智能仿真');
             //弹出提示框，是否确认加工
+            ipcRenderer.send("showAlert");
+            setTimeout(() => {
+              ipcRenderer.send('message-from-renderer', { target: 'alert', data: { type: 1, message: this.GcodePath } });
+              ipcRenderer.send("close-todo");
+            }, 200);
+
           } else {
             this.SetStepStatus(1, 'error', data.result.message);
           }
           this.isFinishProgress = true
         }
       }
+      ipcRenderer.send('message-from-renderer', { target: 'floatball', data: { type: 31, success: !this.isFinishProgress } });
       this.isMQTTRuning = false;
     },
     SetStepStatus(index, status, message) {
