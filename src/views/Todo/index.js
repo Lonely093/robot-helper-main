@@ -83,7 +83,7 @@ const app = Vue.createApp({
       dataArray: null,
       canvsanimationFrameId: null,
       isUserStop: false,
-      showProgressInfo: false,
+      showProgressInfo: true,
       isFinishProgress: true,
       GcodePath: '',
       nowStep: 0,
@@ -95,7 +95,7 @@ const app = Vue.createApp({
         },
         {
           title: '智能仿真',
-          status: '',
+          status: 'waiting',
           message: '未开始'
         }
       ],
