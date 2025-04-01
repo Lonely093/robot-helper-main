@@ -115,7 +115,7 @@ body {
   height: 25px;
   background: rgba(26, 40, 40, 1);
   position: relative;
-  /* border-radius: 11px; */
+  border-radius: 11px;
 }
 
 .close-btn {
@@ -337,8 +337,9 @@ body {
 }
 
 .divider {
-  width: 1px;
-  background: #FFEA75;
+  width: 2px;
+  background: #FFF;
+  opacity: 0.2;
   margin: 0 8px;
 }
 
@@ -455,14 +456,14 @@ body {
   padding: 20px 0;
   position: absolute;
   bottom: 0px;
-  right: 35%;
+  left: 5%;
 }
 
 .terminate-btn {
   background-color: #ff4d4f;
   color: white;
   border: none;
-  padding: 5px 10px;
+  padding: 5px 15px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
