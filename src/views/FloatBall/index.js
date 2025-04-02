@@ -538,18 +538,18 @@ const app = Vue.createApp({
     },
 
     execdocommand(cmd, type) {
-      if (!this.checkMqttState(type == 1 ? "tip" : "todo", cmd)) return;
+      var target = type == 1 ? "tip" : "todo"
+      if (!this.checkMqttState(target, cmd)) return;
 
-      this.runingcmd = { type, cmd };
-      this.checkTimeout();
       //启动指令
       if (cmd.command == "appopen") {
         var sendcmd = {
           app_id: cmd.app_id,
           timestamp: Date.now()
         }
-        this.log("推送MQTT指令：", sendcmd);
+        this.log("推送MQTT指令--CommandOpen", sendcmd);
         mqttClient.CommandOpen(sendcmd)
+        this.setTimeoutSend(target, "已为您执行成功");
         return;
       }
       //关闭指令
@@ -558,17 +558,21 @@ const app = Vue.createApp({
           app_id: cmd.app_id,
           timestamp: Date.now()
         }
-        this.log("推送MQTT指令：", sendcmd);
+        this.log("推送MQTT指令--CommandClose", sendcmd);
         mqttClient.CommandClose(sendcmd)
+        this.setTimeoutSend(target, "已为您执行成功");
         return;
       }
+
+      this.runingcmd = { type, cmd };
+      this.checkTimeout();
       var app = stateStore.getApp(cmd.app_id);
       if (app.state == "0") { //先启动
         var sendcmd = {
           app_id: cmd.app_id,
           timestamp: Date.now()
         }
-        this.log("推送MQTT指令：", sendcmd);
+        this.log("推送MQTT指令--CommandOpen", sendcmd);
         mqttClient.CommandOpen(sendcmd)
 
         //模拟返回MQTT
@@ -585,7 +589,7 @@ const app = Vue.createApp({
           command: cmd.command,
           timestamp: Date.now()
         }
-        this.log("推送MQTT指令：", sendcmd);
+        this.log("推送MQTT指令--CommandAction", sendcmd);
         mqttClient.CommandAction(sendcmd)
 
         //模拟返回MQTT
@@ -633,7 +637,7 @@ const app = Vue.createApp({
           target: target, //指定目标窗口
           data: { type: 0, message }
         });
-      }, 1000);
+      }, 1500);
       this.commandList = [];
     },
 
