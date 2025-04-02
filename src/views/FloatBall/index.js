@@ -172,10 +172,10 @@ const app = Vue.createApp({
     initThrottledMove() {
       this.throttledMoveHandler = throttle(async (e) => {
         await this.handleMove(e);
-      }, 10); // 60 FPS
+      }, 3); // 60 FPS
       this.throttledTouchMoveHandler = throttle(async (e) => {
         await this.handleTouchMove(e);
-      }, 10); // 60 FPS
+      }, 3); // 60 FPS
     },
 
     async handleMove(e) {
@@ -519,7 +519,7 @@ const app = Vue.createApp({
 
     //执行指令交互
     async ExeHNC_TTI(message) {
-      return await this.FaultDiagnosis(message, 1);
+      //return await this.FaultDiagnosis(message, 1);
       try {
         //调用 指令交互接口    根据结果判断
         const res = await ipcRenderer.invoke('hnc_tti', message);
@@ -568,7 +568,7 @@ const app = Vue.createApp({
               app_id: 3,
               timestamp: Date.now()
             }
-            this.log("推送MQTT指令：", sendopencmd);
+            this.log("推送MQTT指令--CommandOpen", sendopencmd);
             mqttClient.CommandOpen(sendopencmd)
           }
           return;
@@ -602,18 +602,18 @@ const app = Vue.createApp({
     },
 
     execdocommand(cmd, type) {
-      if (!this.checkMqttState(type == 1 ? "tip" : "todo", cmd)) return;
+      var target = type == 1 ? "tip" : "todo"
+      if (!this.checkMqttState(target, cmd)) return;
 
-      this.runingcmd = { type, cmd };
-      this.checkTimeout();
       //启动指令
       if (cmd.command == "appopen") {
         var sendcmd = {
           app_id: cmd.app_id,
           timestamp: Date.now()
         }
-        this.log("推送MQTT指令：", sendcmd);
+        this.log("推送MQTT指令--CommandOpen", sendcmd);
         mqttClient.CommandOpen(sendcmd)
+        this.setTimeoutSend(target, "已为您执行成功");
         return;
       }
       //关闭指令
@@ -622,17 +622,21 @@ const app = Vue.createApp({
           app_id: cmd.app_id,
           timestamp: Date.now()
         }
-        this.log("推送MQTT指令：", sendcmd);
+        this.log("推送MQTT指令--CommandClose", sendcmd);
         mqttClient.CommandClose(sendcmd)
+        this.setTimeoutSend(target, "已为您执行成功");
         return;
       }
+
+      this.runingcmd = { type, cmd };
+      this.checkTimeout();
       var app = stateStore.getApp(cmd.app_id);
       if (app.state == "0") { //先启动
         var sendcmd = {
           app_id: cmd.app_id,
           timestamp: Date.now()
         }
-        this.log("推送MQTT指令：", sendcmd);
+        this.log("推送MQTT指令--CommandOpen", sendcmd);
         mqttClient.CommandOpen(sendcmd)
 
         //模拟返回MQTT
@@ -649,7 +653,7 @@ const app = Vue.createApp({
           command: cmd.command,
           timestamp: Date.now()
         }
-        this.log("推送MQTT指令：", sendcmd);
+        this.log("推送MQTT指令--CommandAction", sendcmd);
         mqttClient.CommandAction(sendcmd)
 
         //模拟返回MQTT
@@ -679,10 +683,10 @@ const app = Vue.createApp({
           app_id: sendcmd.app_id,
           timestamp: Date.now()
         }
-        this.log("推送MQTT指令：", sendopencmd);
+        this.log("推送MQTT指令--CommandOpen", sendopencmd);
         mqttClient.CommandOpen(sendopencmd)
       } else {
-        this.log("推送MQTT指令：", { command: sendcmd.command, app_id: sendcmd.app_id, message: sendcmd.message, timestamp: Date.now() });
+        this.log("推送MQTT指令--CommandActionToShopCam", { command: sendcmd.command, app_id: sendcmd.app_id, message: sendcmd.message, timestamp: Date.now() });
         mqttClient.CommandActionToShopCam(sendcmd)
       }
     },
