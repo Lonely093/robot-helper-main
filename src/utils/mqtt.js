@@ -297,20 +297,22 @@ class MqttClient {
     })
     this.client.subscribe('AppCenter/Apps', { qos: 1, retain: true });
 
-    this.subscriptions.set('AppCenter/Apps/#', (topic, message) => {
-      //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
-      if (message.apps && message.apps.length > 0) {
-        message.apps.forEach(app => {
-          app.state = "0";//默认设置为未启动
-          if (app.app_id == "1" || app.app_id == 1) {
-            app.state = "1"; //HMI默认为启动
-          }
-          stateStore.saveApp(app.app_id, app);
-        });
-      }
-    })
-    this.client.subscribe('AppCenter/Apps/#', { qos: 1, retain: true });
-
+    for (let index = 1; index < 30; index++) {
+      this.subscriptions.set('AppCenter/Apps/' + index, (topic, message) => {
+        //根据获取到的结果进行APP消息订阅  将APP注册数据持久化存储
+        if (message.apps && message.apps.length > 0) {
+          message.apps.forEach(app => {
+            app.state = "0";//默认设置为未启动
+            if (app.app_id == "1" || app.app_id == 1) {
+              app.state = "1"; //HMI默认为启动
+            }
+            stateStore.saveApp(app.app_id, app);
+          });
+        }
+      })
+      this.client.subscribe('AppCenter/Apps/' + index, { qos: 1, retain: true });
+    }
+    
     this.subscribe("App/Launch", (topic, message) => {
       this.AppLaunch(topic, message)
     });

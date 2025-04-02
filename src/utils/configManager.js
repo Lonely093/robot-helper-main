@@ -13,7 +13,7 @@ const DEFAULT_CONFIG = {
     password: '',
     protocolVersion: 4,    // 3.1 =	3   3.1.1  =  4   5.0 = 5
     protocolId: "MQTT",   // 3.1 =MQIsdp    3.1.1 & 5.0 = MQTT 
-    timeout: 5,           //配置MQTT指令执行超时时长(秒)
+    timeout: 8,           //配置MQTT指令执行超时时长(秒)
   },
   pagehidetime: 5,       //配置鼠标离开窗口后 自动隐藏的时间(秒)
   maxDuration: 20,       //配置最大录音时长(小于3不生效，不限制时长) (秒)
