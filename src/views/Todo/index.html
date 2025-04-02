@@ -11,6 +11,7 @@
   <div id="app">
     <div class="chatbot-container">
       <div class="custom-toolbar">
+        <div v-if="showProgressInfo" class="toolbar-divider"></div>
         <div class="close-btn" @click="handleWindowClose" v-if="isFinishProgress">x</div>
       </div>
       <div class="main-content">

@@ -118,6 +118,16 @@ body {
   border-radius: 11px;
 }
 
+.toolbar-divider {
+  width: 2px;
+  background: #FFF;
+  opacity: 0.2;
+  height: 25px;
+  margin: 0 8px;
+  left: 200px;
+  position: relative;
+}
+
 .close-btn {
   -webkit-app-region: no-drag;
   position: absolute;
