@@ -148,7 +148,7 @@ const app = Vue.createApp({
           data: {
             type: 4,
             message: this.userInput,
-            des: "发送消息"
+            des: "tip发送消息"
           }
         });
         //this.userInput="";

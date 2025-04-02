@@ -86,7 +86,11 @@ const app = Vue.createApp({
       isUserStop: false,
       showProgressInfo: false,
       isFinishProgress: true,
-      GcodePath: '',
+      selectFileInfo: {
+        filename: "",
+        gcodepath: "",
+        gcodename: ""
+      },
       nowStep: 0,
       steps: [
         {
@@ -276,7 +280,7 @@ const app = Vue.createApp({
           this.isFinishProgress = true
           //延时几秒主动关闭页面
           setTimeout(() => {
-            ipcRenderer.send("close-todo");
+            this.handleWindowClose();
           }, this.pagehidetime * 1000);
         }
         if (data.result.command == "programming") {
@@ -284,7 +288,10 @@ const app = Vue.createApp({
             this.SetStepStatus(0, 'success', '成功生成编程文件 ' + data.result.message);
             this.SetStepStatus(1, 'process', '进行中 ');
             this.nowStep = 2
-            this.GcodePath = data.result.message
+            //切割路径和文件名
+            pos = data.result.message.lastIndexOf('/')  // '/'所在的最后位置
+            this.selectFileInfo.gcodename = data.result.message.substr(pos + 1)  //截取文件名称和后缀   
+            this.selectFileInfo.gcodepath = data.result.message.substr(0, pos)  //截取路径字符串
           } else {
             this.SetStepStatus(0, 'error', data.result.message);
             this.isFinishProgress = true
@@ -296,8 +303,18 @@ const app = Vue.createApp({
             //弹出提示框，是否确认加工
             ipcRenderer.send("showAlert");
             setTimeout(() => {
-              ipcRenderer.send('message-from-renderer', { target: 'alert', data: { type: 1, message: this.GcodePath, des: "通知alterG代码地址" } });
-              ipcRenderer.send("close-todo");
+              ipcRenderer.send('message-from-renderer', {
+                target: 'alert', data: {
+                  type: 1, selectFileInfo:
+                  {
+                    filename: this.selectFileInfo.filename,
+                    gcodename: this.selectFileInfo.gcodename,
+                    gcodepath: this.selectFileInfo.gcodepath
+                  },
+                  des: "通知alterG代码地址"
+                }
+              });
+              this.handleWindowClose();
             }, 200);
 
           } else {
@@ -716,7 +733,7 @@ const app = Vue.createApp({
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball', // 指定目标窗口
         data: {
-          type: 2, des: "执行指令", command: {
+          type: 2, des: "doto执行指令", command: {
             command: appCommand,
             app_id: appId
           }
@@ -732,6 +749,7 @@ const app = Vue.createApp({
         // 输入: C:\Users\John\file.txt → 输出: C:/Users/John/file.txt
         var newpath = file.path.replace(/\\/g, '/');
         this.SendMQTTMessage("openfile", newpath);
+        this.selectFileInfo.filename = file.name
         this.messages.push({ text: '选择零件模型 ' + file.name, type: 'user', commandlist: [] })
         this.scrollToBottom()
       }

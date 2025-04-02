@@ -6,14 +6,20 @@ const app = Vue.createApp({
   // },
   data() {
     return {
-      GcodePath: "",
-      message: "当前零件(XXX.stp)已完成智能编程与仿真，输出加工程序O123，路径path/to/Gcode，是否开始加工？"
+      selectFileInfo: {
+        filename: "",
+        gcodepath: "",
+        gcodename: ""
+      },
+      message: "当前零件(XXX.stp)已完成智能编程与仿真，输出加工程序O123，路径path/to/Gcode，是否开始加工？",
+      //message: "当前零件(" + selectFileInfo.filename + ")已完成智能编程与仿真，输出加工程序" + selectFileInfo.gcodename + "，路径" + selectFileInfo.gcodepath + "，是否开始加工？"
     }
   },
 
   async mounted() {
     ipcRenderer.on('message-to-renderer', (event, data) => {
-      this.GcodePath = data.message;
+      this.selectFileInfo = data.selectFileInfo;
+      this.message = "当前零件(" + this.selectFileInfo.filename + ")已完成智能编程与仿真，输出加工程序" + this.selectFileInfo.gcodename + "，路径" + this.selectFileInfo.gcodepath + "，是否开始加工？"
     });
   },
   beforeUnmount() {
@@ -24,7 +30,7 @@ const app = Vue.createApp({
       //处理加工  发送指令给HMI
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball',
-        data: { type: 32, command: "LOADFILE", message: this.GcodePath }
+        data: { type: 32, command: "******PROGRAM" }
       });
       ipcRenderer.send("close-alert")
     },
