@@ -27,7 +27,15 @@ const createSuspensionWindow = (suspensionConfig) => {
     },
   });
   win.loadFile(path.join(__dirname, 'views/FloatBall/index.html'));
-  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 85, top: screen.getPrimaryDisplay().workAreaSize.height - 100 }
+  let topVal = screen.getPrimaryDisplay().workAreaSize.height - 85;
+  if (screen.getPrimaryDisplay().workAreaSize.height > 1000 && screen.getPrimaryDisplay().workAreaSize.height <= 1080) {
+    topVal = screen.getPrimaryDisplay().workAreaSize.height - 85;
+  }
+  if (screen.getPrimaryDisplay().workAreaSize.height > 1800 && screen.getPrimaryDisplay().workAreaSize.height <= 1920) {
+    topVal = 590;
+  }
+  const { left, top } = { left: screen.getPrimaryDisplay().workAreaSize.width - 85, top: topVal }
+
   // mainWindow.setBounds({ x: left, y: top, width: suspensionConfig.width, height: suspensionConfig.height })
   win.setPosition(left, top)
   // mainWindow.setIgnoreMouseEvents(true, { forward: true })
