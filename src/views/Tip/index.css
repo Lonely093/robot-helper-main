@@ -9,7 +9,7 @@ body::-webkit-scrollbar {
 
 div {
   box-sizing: border-box;
-  font-size: 12px;
+  font-size: 16px;
 }
 
 .tip-root {
@@ -159,7 +159,7 @@ div {
   /* 保持中文完整性 */
   hyphens: auto;
   /* 英文连字符换行 */
-  font-size: 15px;
+  font-size: 19px;
   /* 排版美化 */
   line-height: 1.6;
   text-align: justify;
@@ -188,7 +188,7 @@ div {
   left: 5px;
   right: 5px;
   color: white;
-  font-size: 12px;
+  font-size: 16px;
   margin: 0;
   white-space: normal;
   /* 覆盖可能的 nowrap 设置 */
@@ -218,7 +218,7 @@ div {
   width: 150px;
   border-radius: 4px;
   outline: none;
-  font-size: 12px;
+  font-size: 16px;
 }
 
 input::-webkit-input-placeholder {
@@ -234,7 +234,7 @@ input::-webkit-input-placeholder {
   cursor: pointer;
   line-height: 1.5;
   transition: background 0.3s;
-  font-size: 12px;
+  font-size: 16px;
 }
 
 .send-button:hover {
