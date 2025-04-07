@@ -262,7 +262,7 @@ const app = Vue.createApp({
         }
         if (data.result.command == "interaction_order") {
           if (data.result.reply == true || data.result.reply == 'true') {
-            this.messages.push({ text: '好的，已为您成功执行', type: 'bot', commandlist: [] })
+            this.messages.push({ text: data.result.message, type: 'bot', commandlist: [] })
           } else {
             this.messages.push({ text: '执行失败 ' + data.result.message, type: 'bot', commandlist: [] })
           }
@@ -654,7 +654,7 @@ const app = Vue.createApp({
           this.userInput = uploadres.data.result;
           if (this.userInput.trim() !== '') {
             //this.autoSendMessageId= setTimeout(() => {
-            this.sendMessage();
+            //this.sendMessage();
             //}, 800);
           } else {
             this.sendErrorMessage("没听清您的声音，请重试");

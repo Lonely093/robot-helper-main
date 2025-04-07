@@ -153,6 +153,16 @@ const app = Vue.createApp({
         }
         this.programing(sendcmd);
       }
+      //Alter传过来的 发送mqtt消息
+      if (data.type == 43) {
+        var sendcmd = {
+          app_id: "1",
+          command: data.command,
+          timestamp: Date.now()
+        }
+        this.log("推送MQTT指令--CommandAction", sendcmd);
+        mqttClient.CommandAction(sendcmd)
+      }
     });
     this.initThrottledMove();
   },

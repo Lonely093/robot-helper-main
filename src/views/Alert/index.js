@@ -30,7 +30,7 @@ const app = Vue.createApp({
       //处理加工  发送指令给HMI
       ipcRenderer.send('message-from-renderer', {
         target: 'floatball',
-        data: { type: 32, command: "******PROGRAM" }
+        data: { type: 43, command: "1******W_SDSKMAN" }
       });
       ipcRenderer.send("close-alert")
     },

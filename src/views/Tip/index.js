@@ -480,7 +480,7 @@ const app = Vue.createApp({
         this.userInput = result.message;
         //两秒钟后自动发送，若两秒钟内点击输入框则停止发送
         //this.autoSendMessageId= setTimeout(() => {
-        this.sendMessage();
+        //this.sendMessage();
         //}, 800);
       } catch (error) {
         this.RecordingErrorMessage(99, "无法启用语音，请试试手动输入吧");
