@@ -102,6 +102,11 @@ const app = Vue.createApp({
           title: '智能仿真',
           status: 'waiting',
           message: '未开始'
+        },
+        {
+          title: '加工',
+          status: 'waiting',
+          message: '未开始'
         }
       ],
       fileList: [],
