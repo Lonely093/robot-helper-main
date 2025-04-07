@@ -233,6 +233,7 @@ const app = Vue.createApp({
     async Programming(data) {
       // 搜索零件模型
       if (data.type == 11) {
+        this.selectFileInfo.filename = "";
         this.messages = [];
         this.messages.push({ text: data.message, type: 'user', commandlist: [] })
         const scanres = await ipcRenderer.invoke('scan-directory')
@@ -251,6 +252,7 @@ const app = Vue.createApp({
       }
       //判断指令返回结果
       if (data.type == 12) {
+        if (this.selectFileInfo.filename == "") return;
         if (data.result.command == "openfile") {
           if (data.result.reply == true || data.result.reply == 'true') {
             this.showProgressInfo = true;
