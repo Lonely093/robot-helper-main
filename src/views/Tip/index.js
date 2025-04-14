@@ -78,7 +78,7 @@ const app = Vue.createApp({
       //鼠标离开了机器人
       else if (data.type == 5) {
         this.isMouseOnFloatBall = false;
-        if (this.IsMouseLeave && !this.isRecording && !this.isStopRecording) {
+        if (this.IsMouseLeave && !this.isRecording && !this.isStopRecording && this.userInput == "") {
           this.startTipCloseTimer();
         }
       }
@@ -132,7 +132,7 @@ const app = Vue.createApp({
     log(msg, ctx) {
       ipcRenderer.invoke('app-log', { msg: 'tip--' + msg, ctx });
     },
-   
+
     async handleMouseDown(e) {
       if (this.autoSendMessageId) clearTimeout(this.autoSendMessageId)
     },
@@ -158,7 +158,7 @@ const app = Vue.createApp({
     startTipCloseTimer() {
       if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId) // 清除旧定时器
       this.tipCloseTimeoutId = setTimeout(() => {
-        if (this.IsMouseLeave && !this.isRecording && !this.isStopRecording) {
+        if (this.IsMouseLeave && !this.isRecording && !this.isStopRecording && this.userInput == "") {
           ipcRenderer.send("close-tip");
         }
       }, parseInt(configManager.pagehidetime) * 1000)
@@ -172,7 +172,7 @@ const app = Vue.createApp({
     hanleMouseLeave() {
       this.IsMouseLeave = true;
       if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
-      if (!this.isRecording && !this.isStopRecording && !this.isruning) {
+      if (!this.isRecording && !this.isStopRecording && !this.isruning && this.userInput == "") {
         this.startTipCloseTimer();
       }
     },
@@ -232,6 +232,7 @@ const app = Vue.createApp({
     RecordingErrorMessage(type, message) {
       this.topmessage = message;
       this.isRecording = false;
+      this.startTipCloseTimer();
     },
     async toggleRecording() {
       if (this.isruning) return;
@@ -254,6 +255,7 @@ const app = Vue.createApp({
       if (this.isRecording || this.isStopRecording) {
         return;
       }
+      if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
       try {
         // 初始化音频流
         try {
@@ -431,6 +433,7 @@ const app = Vue.createApp({
       try {
         this.isRecording = false;
         this.isStopRecording = true;
+        if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId)
         // 停止媒体录音器
         if (this.mediaRecorder?.state === 'recording') {
           this.mediaRecorder.stop();
