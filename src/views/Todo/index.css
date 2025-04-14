@@ -90,7 +90,7 @@ body {
   background: #303d3d;
   border-radius: 4px;
   outline: none;
-  font-size: 17px;
+  font-size: 19px;
   color: #FFF;
 }
 
@@ -103,7 +103,7 @@ body {
   cursor: pointer;
   line-height: 1.5;
   transition: background 0.3s;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .send-button:hover {
@@ -134,7 +134,7 @@ body {
   right: 6px;
   top: 1px;
   color: #FFEAEA;
-  font-size: 17px;
+  font-size: 19px;
   cursor: pointer;
   width: 20px;
   height: 20px;
@@ -202,7 +202,7 @@ body {
   padding: 4px 6px;
   border-radius: 2px;
   line-height: 1.5;
-  font-size: 17px;
+  font-size: 19px;
   word-break: break-word;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
@@ -288,7 +288,7 @@ body {
   display: flex;
   align-items: center;
   color: #FFF;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 /* 跳动点动画 */
@@ -410,7 +410,7 @@ body {
 }
 
 .step-description {
-  font-size: 17px;
+  font-size: 19px;
 }
 
 /* 状态颜色 */
@@ -476,7 +476,7 @@ body {
   padding: 5px 15px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 17px;
+  font-size: 19px;
   transition: all 0.3s;
   position: relative;
   display: inline-flex;
@@ -490,7 +490,7 @@ body {
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 17px;
+  font-size: 19px;
   transition: all 0.3s;
   position: relative;
   display: inline-flex;

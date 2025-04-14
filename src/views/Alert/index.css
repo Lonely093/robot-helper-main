@@ -61,7 +61,7 @@ body::-webkit-scrollbar {
   margin: 0;
   color: #FFF;
   line-height: 1.5;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .dialog-footer {
@@ -81,7 +81,7 @@ body::-webkit-scrollbar {
 .btn.confirm {
   background-color: #13CCCF;
   color: white;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .btn.confirm:hover {
