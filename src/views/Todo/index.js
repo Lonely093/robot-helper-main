@@ -661,7 +661,7 @@ const app = Vue.createApp({
           this.userInput = uploadres.data.result;
           if (this.userInput.trim() !== '') {
             //this.autoSendMessageId= setTimeout(() => {
-            //this.sendMessage();
+            this.sendMessage();
             //}, 800);
           } else {
             this.sendErrorMessage("没听清您的声音，请重试");

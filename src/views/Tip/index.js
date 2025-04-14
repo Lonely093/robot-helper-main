@@ -58,6 +58,8 @@ const app = Vue.createApp({
       canvasCtx: null,
       dataArray: null,
       canvsanimationFrameId: null,
+      isConfirm: false,
+      confirmmessage: "",
     }
   },
 
@@ -78,7 +80,7 @@ const app = Vue.createApp({
       //鼠标离开了机器人
       else if (data.type == 5) {
         this.isMouseOnFloatBall = false;
-        if (this.IsMouseLeave && !this.isRecording && !this.isStopRecording && this.userInput == "") {
+        if (this.IsMouseLeave && !this.isRecording && !this.isStopRecording) {
           this.startTipCloseTimer();
         }
       }
@@ -98,7 +100,7 @@ const app = Vue.createApp({
     ipcRenderer.invoke('audio-clear');
 
     //初始化画布
-    this.initCanvas();
+    this.initCanvas(275, 55);
 
     // 初始化设备变化监听
     navigator.mediaDevices.addEventListener('devicechange',
@@ -112,6 +114,7 @@ const app = Vue.createApp({
     if (this.isCanRecording) {
       //间隔一秒启动录音
       setTimeout(async () => {
+        this.initCanvas(275, 55);
         await this.startRecording();
         this.isFirst = false;
       }, 800);
@@ -158,7 +161,7 @@ const app = Vue.createApp({
     startTipCloseTimer() {
       if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId) // 清除旧定时器
       this.tipCloseTimeoutId = setTimeout(() => {
-        if (this.IsMouseLeave && !this.isRecording && !this.isStopRecording && this.userInput == "") {
+        if (this.IsMouseLeave && !this.isRecording && !this.isStopRecording) {
           ipcRenderer.send("close-tip");
         }
       }, parseInt(configManager.pagehidetime) * 1000)
@@ -172,7 +175,7 @@ const app = Vue.createApp({
     hanleMouseLeave() {
       this.IsMouseLeave = true;
       if (this.tipCloseTimeoutId) clearTimeout(this.tipCloseTimeoutId);
-      if (!this.isRecording && !this.isStopRecording && !this.isruning && this.userInput == "") {
+      if (!this.isRecording && !this.isStopRecording && !this.isruning) {
         this.startTipCloseTimer();
       }
     },
@@ -245,6 +248,7 @@ const app = Vue.createApp({
       if (this.isRecording) {
         await this.stopRecording();
       } else {
+        this.initCanvas(275, 55);
         await this.startRecording();
       }
     },
@@ -278,7 +282,7 @@ const app = Vue.createApp({
         this.setupDataHandler();
         this.isRecording = true;
         this.userInput = "";
-        this.topmessage = this.dfmessage;
+        //this.topmessage = this.dfmessage;
         this.recordingStartTime = new Date();
         this.startMonitoring();
         if (this.maxDuration > 2) {
@@ -342,14 +346,14 @@ const app = Vue.createApp({
     },
 
     // 初始化画布
-    initCanvas() {
+    initCanvas(width, height) {
       const canvas = this.$refs.waveCanvas
       const container = canvas.parentElement
 
       // 高清屏适配
       // const dpr = window.devicePixelRatio || 1
-      canvas.width = 275
-      canvas.height = 55
+      canvas.width = width
+      canvas.height = height
       canvas.style.width = canvas.width + 'px'
       canvas.style.height = canvas.height + 'px'
 
@@ -479,18 +483,37 @@ const app = Vue.createApp({
           this.RecordingErrorMessage(99, "没听清您的声音，请重试");
           return;
         }
-        //发送消息给悬浮窗处理
         this.userInput = result.message;
-        //两秒钟后自动发送，若两秒钟内点击输入框则停止发送
-        //this.autoSendMessageId= setTimeout(() => {
-        //this.sendMessage();
-        //}, 800);
+        if (!this.isConfirm) {
+          this.confirmmessage = result.message;
+          this.isConfirm = true;
+        } else {
+          this.isConfirm = false;
+        }
       } catch (error) {
         this.RecordingErrorMessage(99, "无法启用语音，请试试手动输入吧");
         this.log("语音交互异常 ", error.message);
       } finally {
         //等所有的接口处理完成之后，在进行录音资源释放
         this.cleanup();
+        if (this.isConfirm) {
+          //发送消息给悬浮窗处理
+          this.topmessage = this.confirmmessage + " 请确认？";
+          //继续收音确认
+          this.initCanvas(275, 35);
+          this.startRecording();
+        } else {
+          //调用接口
+          // const hnc_cfmres = await ipcRenderer.invoke('hnc_cfm', this.userInput);
+          // if (!hnc_cfmres || hnc_cfmres.code != 200 || hnc_cfmres.data.result != true) {
+          //   this.topmessage = this.dfmessage;
+          //   this.userInput = "";
+          // } else {
+            this.userInput = this.confirmmessage
+            this.sendMessage();
+          //}
+          this.confirmmessage = "";
+        }
       }
     },
 

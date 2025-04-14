@@ -14,6 +14,7 @@ const fs = require('fs');
 //请求URL地址
 const urlconfig = {
   hnc_stt: readConfig.http.hnc_stt,
+  hnc_cfm: readConfig.http.hnc_cfm,
   hnc_tti: readConfig.http.hnc_tti,
   hnc_fd: readConfig.http.hnc_fd
 };
@@ -125,6 +126,30 @@ ipcMain.handle('hnc_tti', async (event, info) => {
     return response.data;
   } catch (error) {
     logger.error('请求接口hnc_tti异常', error);
+    return { code: "999", data: { message: error.message } };
+  }
+});
+
+// 处理渲染进程发起的指令交互请求
+ipcMain.handle('hnc_cfm', async (event, info) => {
+  try {
+
+    // 3. 发送请求
+    const response = await axios({
+      method: 'post',
+      url: urlconfig.hnc_cfm,
+      data: {
+        "inputs": info
+      },
+      headers: {
+        'Content-Type': 'application/json' // ✅ 必须明确指定
+      },
+      timeout: 5000
+    });
+    logger.info('请求接口hnc_cfm', response.data);
+    return response.data;
+  } catch (error) {
+    logger.error('请求接口hnc_cfm异常', error);
     return { code: "999", data: { message: error.message } };
   }
 });

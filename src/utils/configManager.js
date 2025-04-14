@@ -3,6 +3,7 @@
 const DEFAULT_CONFIG = {
   http: {
     hnc_stt: 'http://172.20.11.80:9000/api/hnc_stt',
+    hnc_cfm: 'http://172.20.11.80:9001/api/hnc_cfm',
     hnc_tti: 'http://172.20.11.80:9001/api/hnc_tti',
     hnc_fd: 'http://172.20.11.80:9002/api/hnc_fd'
   },

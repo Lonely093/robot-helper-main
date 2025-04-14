@@ -13,13 +13,13 @@
     <div class="tip-root" :class="{'reverse': reverse}" @mouseleave="hanleMouseLeave"
       @mouseenter.native="hanleMouseEnter" @touchstart.native="hanleMouseEnter" @touchend="hanleMouseLeave">
       <div class="tip-inner">
-        <div class="input-message" v-show="!isRecording && !isStopRecording">
+        <div class="input-message" v-show="(!isRecording && !isStopRecording) || isConfirm">
           {{topmessage}}
         </div>
-        <div class="input-vedio" v-show="isRecording || isStopRecording || isFirst" @click="userStopRecording">
+        <div class="input-vedio" v-show="isRecording || isStopRecording || isFirst || isConfirm" @click="userStopRecording">
           <canvas ref="waveCanvas" class="visualizer "></canvas>
         </div>
-        <div class="input-container" v-show="!isRecording && !isStopRecording && !isFirst">
+        <div class="input-container" v-show="!isRecording && !isStopRecording && !isFirst && !isConfirm">
           <input v-model="userInput" :placeholder="placeholdertext" @keyup.enter="sendMessage" @click="handleMouseDown"
             class="input-field">
           </input>
