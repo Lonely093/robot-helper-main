@@ -183,6 +183,7 @@ const app = Vue.createApp({
     //暂停录音并不做后续处理
     async userStopRecording() {
       if (this.isUserStop) return;
+      if (this.isConfirm) return;
       this.isUserStop = true;
       //在1秒间隔内点击 则不触发事件
       var inttimeout = 1;
@@ -330,7 +331,7 @@ const app = Vue.createApp({
 
     /* 1. 基础柱状图 */
     drawBars(width, height) {
-      const barWidth = (width / this.dataArray.length) * 15
+      const barWidth = (width / this.dataArray.length) * 20
       let x = 0
 
       for (let i = 0; i < this.dataArray.length; i++) {
@@ -504,14 +505,15 @@ const app = Vue.createApp({
           this.startRecording();
         } else {
           //调用接口
-          // const hnc_cfmres = await ipcRenderer.invoke('hnc_cfm', this.userInput);
-          // if (!hnc_cfmres || hnc_cfmres.code != 200 || hnc_cfmres.data.result != true) {
-          //   this.topmessage = this.dfmessage;
-          //   this.userInput = "";
-          // } else {
+          const hnc_cfmres = await ipcRenderer.invoke('hnc_yn', this.userInput);
+          if (hnc_cfmres && hnc_cfmres.code == 200 && hnc_cfmres.data.result == true) {
+            //if (true) {
             this.userInput = this.confirmmessage
             this.sendMessage();
-          //}
+          } else {
+            this.topmessage = this.dfmessage;
+            this.userInput = "";
+          }
           this.confirmmessage = "";
         }
       }

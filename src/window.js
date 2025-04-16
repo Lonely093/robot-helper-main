@@ -128,8 +128,8 @@ const createTipWindow = (data) => {
   }
   if (tipWinY < 0) {
     tipWinY = 0
-  } else if (tipWinY > display.workArea.height - 70) {
-    tipWinY = display.workArea.height - 70
+  } else if (tipWinY > display.workArea.height - 75) {
+    tipWinY = display.workArea.height - 75
   }
 
   const win = new BrowserWindow({
@@ -137,7 +137,7 @@ const createTipWindow = (data) => {
     width: 300,
     minWidth: 300,
     resizable: false,
-    height: 70,
+    height: 75,
     x: tipWinX,
     y: tipWinY,
     frame: false,
